@@ -55,17 +55,17 @@ PARTS = {
 # Each part legitimately stops at a different bar (the outro drops instruments
 # one by one), so the minimum length is checked per part, not globally.
 EXPECT_MIN = {
-    "piano": 238.0,
-    "acoustic_guitar": 232.0,
-    "drums_kick": 227.0,
-    "drums_kit": 227.0,
-    "bass_sub": 229.0,
-    "bass_electric": 218.0,
-    "strings_violin": 232.0,
-    "strings_cello": 235.0,
-    "electric_clean": 218.0,
-    "electric_power": 218.0,
-    "electric_power2": 218.0,
+    "piano": 245.0,
+    "acoustic_guitar": 239.0,
+    "drums_kick": 234.0,
+    "drums_kit": 236.0,
+    "bass_sub": 235.0,
+    "bass_electric": 230.0,
+    "strings_violin": 235.0,
+    "strings_cello": 238.0,
+    "electric_clean": 210.0,
+    "electric_power": 230.0,
+    "electric_power2": 230.0,
 }
 
 

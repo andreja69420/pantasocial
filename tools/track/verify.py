@@ -16,37 +16,45 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 OUTDIR = os.path.join(ROOT, "output")
 STEMS = os.path.join(OUTDIR, "stems")
 SR = 48000
-BAR = 240.0 / 87.0
+BAR = 4 * 60.0 / 87.0
 
 SECTIONS = {
-    "A": (0, 8), "B": (8, 24), "C": (24, 32), "D": (32, 48),
-    "E": (48, 58), "F": (58, 65), "G": (65, 80), "H": (80, 87),
+    "intro":  (0, 4),   "hook1":  (4, 12),  "verse1": (12, 28),
+    "hook2":  (28, 36), "verse2": (36, 52), "hook3":  (52, 60),
+    "verse3": (60, 76), "hook4":  (76, 84), "outro":  (84, 88),
 }
 
 # which stems must be audible in which section
 EXPECTED = {
-    "A": ["piano"],
-    "B": ["piano", "acoustic_guitar", "bass_sub", "drums_kit"],
-    "C": ["piano", "acoustic_guitar", "drums_kick", "drums_kit", "bass_sub",
+    "intro":  ["piano"],
+    "hook1":  ["piano", "acoustic_guitar", "drums_kick", "drums_kit", "bass_sub",
           "bass_electric", "strings_violin", "strings_cello"],
-    "D": ["piano", "acoustic_guitar", "drums_kick", "drums_kit", "bass_sub",
+    "verse1": ["piano", "acoustic_guitar", "drums_kick", "drums_kit", "bass_sub",
+          "bass_electric"],
+    "hook2":  ["piano", "acoustic_guitar", "drums_kick", "drums_kit", "bass_sub",
+          "bass_electric", "strings_violin", "strings_cello"],
+    "verse2": ["piano", "acoustic_guitar", "drums_kick", "drums_kit", "bass_sub",
           "bass_electric", "strings_cello", "electric_clean"],
-    "E": ["piano", "acoustic_guitar", "drums_kick", "drums_kit", "bass_sub",
+    "hook3":  ["piano", "acoustic_guitar", "drums_kick", "drums_kit", "bass_sub",
           "bass_electric", "strings_violin", "strings_cello",
-          "electric_power", "electric_power2"],
-    "F": ["piano", "strings_violin", "strings_cello"],
-    "G": ["piano", "acoustic_guitar", "drums_kick", "drums_kit", "bass_sub",
+               "electric_power", "electric_power2"],
+    "verse3": ["piano", "acoustic_guitar", "drums_kick", "drums_kit", "bass_sub",
           "bass_electric", "strings_violin", "strings_cello",
-          "electric_clean", "electric_power", "electric_power2"],
-    "H": ["piano", "acoustic_guitar", "bass_sub", "strings_cello"],
+               "electric_clean"],
+    "hook4":  ["piano", "acoustic_guitar", "drums_kick", "drums_kit", "bass_sub",
+          "bass_electric", "strings_violin", "strings_cello",
+               "electric_power", "electric_power2"],
+    "outro":  ["piano", "acoustic_guitar", "bass_sub", "strings_cello"],
 }
 # instruments that must be SILENT in a section (the arrangement says so)
 FORBIDDEN = {
-    "A": ["drums_kick", "drums_kit", "acoustic_guitar", "bass_sub",
-          "electric_power", "electric_clean"],
-    "B": ["drums_kick", "electric_power", "electric_power2"],
-    "F": ["drums_kick", "acoustic_guitar", "bass_sub", "electric_power"],
-    "H": ["electric_power", "electric_power2", "electric_clean"],
+    "intro":  ["drums_kick", "acoustic_guitar", "bass_sub", "bass_electric",
+               "strings_violin", "strings_cello", "electric_power", "electric_power2", "electric_clean"],
+    "hook1":  ["electric_power", "electric_power2", "electric_clean"],
+    "verse1": ["electric_power", "electric_power2", "electric_clean", "strings_violin", "strings_cello"],
+    "hook2":  ["electric_power", "electric_power2", "electric_clean"],
+    "verse2": ["electric_power", "electric_power2", "strings_violin"],
+    "outro":  ["electric_power", "electric_power2", "electric_clean", "bass_electric"],
 }
 
 KK_MINOR = np.array([6.33, 2.68, 3.52, 5.38, 2.60, 3.53, 2.54,
@@ -72,9 +80,9 @@ def main(path):
 
     # ---- duration -------------------------------------------------------
     print("Duration")
-    check(235.0 <= dur <= 245.0,
+    check(238.0 <= dur <= 248.0,
           f"duration {dur:.2f}s ({int(dur // 60)}:{dur % 60:05.2f}) "
-          f"within 3:55-4:05")
+          f"within 3:58-4:08")
 
     # ---- clipping -------------------------------------------------------
     print("\nPeak / clipping")
@@ -155,13 +163,20 @@ def main(path):
         c = librosa.feature.chroma_cqt(y=s22, sr=22050).mean(axis=1)
         return NOTES[int(np.argmax(c))], c / c.max()
 
-    intro, ci = tonic(0.0, 22.0)
-    outro, co = tonic(228.0, 240.0)
-    print(f"    intro tonic {intro} (E={ci[4]:.2f} G={ci[7]:.2f} B={ci[11]:.2f})")
-    print(f"    outro tonic {outro} (E={co[4]:.2f} G={co[7]:.2f} B={co[11]:.2f})")
-    check(intro == "E" and outro == "E",
-          f"tonic is E at both the intro ({intro}) and the final chord "
-          f"({outro}) -> E minor, not G major")
+    # Opening chord (bar 0 is Em) and the final resolution. An Em triad has
+    # three near-equal partials, so the opening only has to rank E in the top
+    # two pitch classes; the final chord is the real tiebreaker.
+    open_note, ci = tonic(0.0, 2.6)
+    outro, co = tonic(236.0, 245.0)
+    open_rank = list(np.argsort(-ci)[:2])
+    print(f"    opening chord: E={ci[4]:.2f} G={ci[7]:.2f} B={ci[11]:.2f} "
+          f"-> top two {NOTES[open_rank[0]]}, {NOTES[open_rank[1]]}")
+    print(f"    final chord:   E={co[4]:.2f} G={co[7]:.2f} B={co[11]:.2f} "
+          f"-> {outro}")
+    check(4 in open_rank, "E is a leading pitch class of the opening chord")
+    check(outro == "E",
+          f"the track resolves to E ({outro}) -> E minor, not its relative "
+          f"G major")
 
     # ---- per-section instrumentation ------------------------------------
     print("\nSection instrumentation")

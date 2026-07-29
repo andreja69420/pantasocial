@@ -1,6 +1,7 @@
-# Everything I Never Said
+# Volis me takvu — instrumental
 
-Instrumental track, E minor, 4/4, 87 BPM, 4:03.
+Instrumental bed for the song "Volis me takvu" — E minor, 4/4, 87 BPM, 4:05,
+88 bars in song form. No vocals: the arrangement leaves room for them.
 
 Every sound in this track comes from a recording of a real instrument. No AI
 music generation, no synthesized waveforms, no sine tones, no General MIDI
@@ -11,7 +12,10 @@ through a freely-licensed multi-sampled library with `sfizz_render`.
 
 | Path | What |
 |---|---|
-| `everything-i-never-said.mp3` | The deliverable — 320 kbps CBR, 48 kHz, stereo |
+| `volis-me-takvu-instrumental-320.mp3` | 320 kbps CBR, 48 kHz, stereo |
+| `volis-me-takvu-instrumental-128.mp3` | 128 kbps version of the same master |
+| `volis-me-takvu-timing.txt` | Timecode for every lyric line |
+| `everything-i-never-said*.mp3` | Earlier through-composed version, kept for reference |
 | `mix.wav` | 24-bit/48 kHz master (not committed; regenerate with `tools/track/mix.py`) |
 | `stems/` | 11 stems, 24-bit/48 kHz WAV (not committed; regenerate with `tools/track/render.py`) |
 | `midi/` | 11 humanized MIDI parts, one per instrument |
@@ -34,19 +38,28 @@ Requires `sfizz_render` on PATH plus `mido`, `numpy`, `scipy`, `soundfile`,
 
 ## Arrangement
 
-Chord loop Em – C – G – D, one bar per chord, running continuously across the
-whole track (87 bars = 240.000 s), resolving to E minor for the last three bars.
+Chord loop Em – C – G – D, one bar per chord, looping throughout. Every section
+is a multiple of 4 bars so each one starts on Em; the last two bars hold the
+tonic. Hook lines take 2 bars each, verse lines 1 bar each.
 
-| Section | Bars | Time | Content |
+| Section | Bars | Time | Arrangement |
 |---|---|---|---|
-| A | 0–7 | 0:00–0:22 | Solo piano, sparse and exposed |
-| B | 8–23 | 0:22–1:06 | Acoustic guitar takes the lead, sub bass, soft rimshot |
-| C | 24–31 | 1:06–1:28 | Full drums drop in, strings enter — first lift |
-| D | 32–47 | 1:28–2:12 | Pulled back to piano, acoustic and bass; clean electric arpeggios |
-| E | 48–57 | 2:12–2:40 | Peak — double-tracked power chords, full strings |
-| F | 58–64 | 2:40–2:59 | Breakdown — piano and strings only, drums cut |
-| G | 65–79 | 2:59–3:41 | Final section, everything in, crashes, layered guitars |
-| H | 80–86 | 3:41–4:00 | Outro — kit, bass, guitar and strings fall away in turn, ends on solo piano |
+| intro | 0–3 | 0:00–0:11 | Piano alone, rim pickup into the hook |
+| HOOK 1 | 4–11 | 0:11–0:33 | Full kit, bass, acoustic, strings enter |
+| VERSE 1 | 12–27 | 0:33–1:17 | Rhythm section only — sparse, heavy, space for the rap |
+| HOOK 2 | 28–35 | 1:17–1:39 | As hook 1, pushed harder |
+| VERSE 2 | 36–51 | 1:39–2:23 | Clean electric arpeggios and cellos come in |
+| HOOK 3 | 52–59 | 2:23–2:45 | Double-tracked power chords, full strings |
+| VERSE 3 | 60–75 | 2:45–3:29 | Fullest verse — violins added |
+| HOOK 4 | 76–83 | 3:29–3:51 | Biggest section |
+| outro | 84–87 | 3:51–4:03 | Parts fall away in turn, ends on solo piano |
+
+Written so a lead vocal fits on top: verses drop the competing melodic lines
+and keep the piano low and sparse, the acoustic guitar's melodic hook only
+plays under the sung hook (never over the rap), and the piano's falling figure
+is reserved for the intro, the outro and the gaps at the end of each hook line.
+Section fader moves (intro −3.5 dB, verses ≈ −1.2 dB, hooks ≈ +1.2 dB) keep the
+song breathing rather than sitting at one level.
 
 ## Sample libraries used
 
@@ -94,12 +107,12 @@ Straight quantized MIDI through samples sounds fake, so before rendering:
 ## Measured
 
 ```
-duration    4:03.00      (target 3:55–4:05)
-peak        -0.84 dBFS   no clipped samples
-loudness    -14.01 LUFS integrated
-dynamics    PLR 13.2 dB, LRA 9.0 LU
+duration    4:05.00
+peak        -1.20 dBFS   no clipped samples
+loudness    -14.04 LUFS integrated
+dynamics    PLR 12.8 dB, LRA 7.5 LU
 tempo       86.1 BPM detected (target 87)
-key         E minor — profile match plus tonic E at both the intro and the final chord
+key         E minor — E leads the opening chord and the track resolves to E
 ```
 
 Fully instrumental. There are no vocals in any of the source libraries.

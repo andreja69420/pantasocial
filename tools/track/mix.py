@@ -12,7 +12,7 @@ STEMS = os.path.join(ROOT, "output", "stems")
 OUTDIR = os.path.join(ROOT, "output")
 SR = 48000
 BAR = 240.0 / 87.0
-LENGTH = 243.0          # final length in seconds (inside the 3:55-4:05 window)
+LENGTH = 245.0          # 88 bars of music (242.76 s) plus the piano tail
 TARGET_LUFS = -14.0
 
 # part -> mixing recipe
@@ -100,12 +100,13 @@ def stereo_place(x, pan, width):
 
 
 def swell_envelope(n):
-    """Strings swell through the second half rather than sitting flat."""
+    """Gentle lift across the song. Section-by-section string dynamics are set
+    in the composition, so this only adds a slow overall rise plus a taper
+    through the outro."""
     t = np.arange(n) / SR
-    env = np.full(n, 0.72, dtype=np.float32)
-    ramp = np.clip((t - 88.0) / 70.0, 0.0, 1.0)      # 1:28 -> 2:38
-    env = 0.72 + 0.28 * ramp
-    env *= np.where(t > 220.7, np.clip(1.0 - (t - 220.7) / 22.0, 0.12, 1.0), 1.0)
+    env = 0.82 + 0.18 * np.clip((t - 33.1) / 176.0, 0.0, 1.0)   # verse 1 -> hook 4
+    env *= np.where(t > 231.7,
+                    np.clip(1.0 - (t - 231.7) / 14.0, 0.15, 1.0), 1.0)
     return env.astype(np.float32)[:, None]
 
 
@@ -140,6 +141,26 @@ def process(part, cfg):
     return x.astype(np.float32), measured
 
 
+def arrangement_automation(n):
+    """Section-level fader moves: intro and outro sit back, verses drop under
+    the hooks. This is ordinary verse/chorus automation - it also keeps the
+    song's loudness range from collapsing into one flat level."""
+    # (start bar, gain dB) for the 88-bar form
+    moves = [(0, -3.5), (4, 0.8), (12, -1.5), (28, 1.0), (36, -1.3),
+             (52, 1.2), (60, -1.1), (76, 1.4), (84, -2.5)]
+    db = np.zeros(n, dtype=np.float32)
+    for i, (bar, g) in enumerate(moves):
+        t0 = bar * BAR
+        t1 = moves[i + 1][0] * BAR if i + 1 < len(moves) else LENGTH
+        db[int(t0 * SR):int(min(t1, LENGTH) * SR)] = g
+    # smooth the steps so the moves ride in over ~0.6 s instead of jumping
+    k = int(0.6 * SR)
+    win = np.hanning(k)
+    win /= win.sum()
+    db = np.convolve(np.pad(db, (k, k), mode="edge"), win, mode="same")[k:-k]
+    return (10.0 ** (db / 20.0)).astype(np.float32)[:, None]
+
+
 def main():
     mixed = np.zeros((int(LENGTH * SR), 2), dtype=np.float32)
     print(f"{'stem':<18}{'measured':>10}{'target':>9}{'gain':>9}")
@@ -157,6 +178,9 @@ def main():
         HighShelfFilter(cutoff_frequency_hz=9000, gain_db=1.0),
     ])
     mixed = bus(mixed, SR)
+
+    # master-fader moves, after the glue compressor so they survive it
+    mixed = mixed * arrangement_automation(len(mixed))
 
     # Normalise to target, then let the limiter shave only what pokes above
     # the ceiling. Converges in a couple of passes because limiting this light
