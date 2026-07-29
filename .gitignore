@@ -5,3 +5,8 @@ node_modules
 dist
 build
 .DS_Store
+# Rendered audio for output/everything-i-never-said.mp3 - regenerate with tools/track/
+output/stems/
+output/mix.wav
+__pycache__/
+*.pyc
