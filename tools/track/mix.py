@@ -12,7 +12,7 @@ STEMS = os.path.join(ROOT, "output", "stems")
 OUTDIR = os.path.join(ROOT, "output")
 SR = 48000
 BAR = 240.0 / 87.0
-LENGTH = 245.0          # 88 bars of music (242.76 s) plus the piano tail
+LENGTH = 287.0          # 103 bars of music (284.14 s) plus the piano tail
 TARGET_LUFS = -14.0
 
 # part -> mixing recipe
@@ -104,9 +104,9 @@ def swell_envelope(n):
     in the composition, so this only adds a slow overall rise plus a taper
     through the outro."""
     t = np.arange(n) / SR
-    env = 0.82 + 0.18 * np.clip((t - 33.1) / 176.0, 0.0, 1.0)   # verse 1 -> hook 4
-    env *= np.where(t > 231.7,
-                    np.clip(1.0 - (t - 231.7) / 14.0, 0.15, 1.0), 1.0)
+    env = 0.82 + 0.18 * np.clip((t - 33.1) / 209.0, 0.0, 1.0)   # verse 1 -> hook 4
+    env *= np.where(t > 275.9,
+                    np.clip(1.0 - (t - 275.9) / 11.0, 0.15, 1.0), 1.0)
     return env.astype(np.float32)[:, None]
 
 
@@ -145,9 +145,9 @@ def arrangement_automation(n):
     """Section-level fader moves: intro and outro sit back, verses drop under
     the hooks. This is ordinary verse/chorus automation - it also keeps the
     song's loudness range from collapsing into one flat level."""
-    # (start bar, gain dB) for the 88-bar form
-    moves = [(0, -3.5), (4, 0.8), (12, -1.5), (28, 1.0), (36, -1.3),
-             (52, 1.2), (60, -1.1), (76, 1.4), (84, -2.5)]
+    # (start bar, gain dB) for the 103-bar form
+    moves = [(0, -3.0), (12, -1.3), (28, 1.0), (40, -1.2), (56, 1.2),
+             (68, -1.0), (84, -2.0), (88, 1.5), (100, -2.5)]
     db = np.zeros(n, dtype=np.float32)
     for i, (bar, g) in enumerate(moves):
         t0 = bar * BAR

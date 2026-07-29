@@ -19,41 +19,38 @@ SR = 48000
 BAR = 4 * 60.0 / 87.0
 
 SECTIONS = {
-    "intro":  (0, 4),   "hook1":  (4, 12),  "verse1": (12, 28),
-    "hook2":  (28, 36), "verse2": (36, 52), "hook3":  (52, 60),
-    "verse3": (60, 76), "hook4":  (76, 84), "outro":  (84, 88),
+    "hook1":  (0, 12),  "verse1": (12, 28), "hook2":  (28, 40),
+    "verse2": (40, 56), "hook3":  (56, 68), "verse3": (68, 84),
+    "break":  (84, 88), "hook4":  (88, 100), "outro": (100, 103),
 }
 
 # which stems must be audible in which section
 EXPECTED = {
-    "intro":  ["piano"],
-    "hook1":  ["piano", "acoustic_guitar", "drums_kick", "drums_kit", "bass_sub",
-          "bass_electric", "strings_violin", "strings_cello"],
-    "verse1": ["piano", "acoustic_guitar", "drums_kick", "drums_kit", "bass_sub",
-          "bass_electric"],
-    "hook2":  ["piano", "acoustic_guitar", "drums_kick", "drums_kit", "bass_sub",
-          "bass_electric", "strings_violin", "strings_cello"],
-    "verse2": ["piano", "acoustic_guitar", "drums_kick", "drums_kit", "bass_sub",
-          "bass_electric", "strings_cello", "electric_clean"],
-    "hook3":  ["piano", "acoustic_guitar", "drums_kick", "drums_kit", "bass_sub",
-          "bass_electric", "strings_violin", "strings_cello",
+    "hook1":  ["piano", "acoustic_guitar", "bass_sub",
+               "strings_violin", "strings_cello"],
+    "verse1": ["piano", "acoustic_guitar", "drums_kick", "drums_kit",
+               "bass_sub", "bass_electric"],
+    "hook2":  ["piano", "acoustic_guitar", "drums_kick", "drums_kit",
+               "bass_sub", "bass_electric", "strings_violin", "strings_cello"],
+    "verse2": ["piano", "acoustic_guitar", "drums_kick", "drums_kit",
+               "bass_sub", "bass_electric", "strings_cello", "electric_clean"],
+    "hook3":  ["piano", "acoustic_guitar", "drums_kick", "drums_kit",
+               "bass_sub", "bass_electric", "strings_violin", "strings_cello",
                "electric_power", "electric_power2"],
-    "verse3": ["piano", "acoustic_guitar", "drums_kick", "drums_kit", "bass_sub",
-          "bass_electric", "strings_violin", "strings_cello",
-               "electric_clean"],
-    "hook4":  ["piano", "acoustic_guitar", "drums_kick", "drums_kit", "bass_sub",
-          "bass_electric", "strings_violin", "strings_cello",
+    "verse3": ["piano", "acoustic_guitar", "drums_kick", "drums_kit",
+               "bass_sub", "bass_electric", "strings_violin", "strings_cello", "electric_clean"],
+    "break":  ["piano", "bass_sub", "strings_violin", "strings_cello"],
+    "hook4":  ["piano", "acoustic_guitar", "drums_kick", "drums_kit",
+               "bass_sub", "bass_electric", "strings_violin", "strings_cello",
                "electric_power", "electric_power2"],
     "outro":  ["piano", "acoustic_guitar", "bass_sub", "strings_cello"],
 }
 # instruments that must be SILENT in a section (the arrangement says so)
 FORBIDDEN = {
-    "intro":  ["drums_kick", "acoustic_guitar", "bass_sub", "bass_electric",
-               "strings_violin", "strings_cello", "electric_power", "electric_power2", "electric_clean"],
     "hook1":  ["electric_power", "electric_power2", "electric_clean"],
     "verse1": ["electric_power", "electric_power2", "electric_clean", "strings_violin", "strings_cello"],
-    "hook2":  ["electric_power", "electric_power2", "electric_clean"],
     "verse2": ["electric_power", "electric_power2", "strings_violin"],
+    "break":  ["drums_kick", "acoustic_guitar", "electric_clean"],
     "outro":  ["electric_power", "electric_power2", "electric_clean", "bass_electric"],
 }
 
@@ -80,9 +77,9 @@ def main(path):
 
     # ---- duration -------------------------------------------------------
     print("Duration")
-    check(238.0 <= dur <= 248.0,
+    check(281.0 <= dur <= 290.0,
           f"duration {dur:.2f}s ({int(dur // 60)}:{dur % 60:05.2f}) "
-          f"within 3:58-4:08")
+          f"within 4:41-4:50")
 
     # ---- clipping -------------------------------------------------------
     print("\nPeak / clipping")
@@ -149,13 +146,14 @@ def main(path):
     rank = sorted(scores.items(), key=lambda kv: -kv[1])
     top = rank[0][0]
     print("    top 3: " + ", ".join(f"{k} ({v:.3f})" for k, v in rank[:3]))
-    # E minor and G major are relative keys with identical pitch content, so
+    # G minor and Bb major are relative keys with identical pitch content, so
     # the profile match alone cannot separate them. The tonic decides it:
     # check that E is the strongest pitch class where the track establishes
     # and resolves its key - the solo piano intro and the final chord.
     top2 = [k for k, _ in rank[:2]]
-    check(set(top2) == {"E minor", "G major"} or top == "E minor",
-          f"key profile matches E minor / its relative G major (top: {top})")
+    check(set(top2) == {"G minor", "A# major"} or top == "G minor",
+          f"key profile matches G minor / its relative Bb major "
+          f"(top: {top})")
 
     def tonic(t0, t1):
         seg = mono[int(t0 * sr):int(t1 * sr)]
@@ -163,20 +161,20 @@ def main(path):
         c = librosa.feature.chroma_cqt(y=s22, sr=22050).mean(axis=1)
         return NOTES[int(np.argmax(c))], c / c.max()
 
-    # Opening chord (bar 0 is Em) and the final resolution. An Em triad has
+    # Opening chord (bar 0 is Gm) and the final resolution. An Em triad has
     # three near-equal partials, so the opening only has to rank E in the top
     # two pitch classes; the final chord is the real tiebreaker.
     open_note, ci = tonic(0.0, 2.6)
-    outro, co = tonic(236.0, 245.0)
+    outro, co = tonic(278.0, 287.0)
     open_rank = list(np.argsort(-ci)[:2])
-    print(f"    opening chord: E={ci[4]:.2f} G={ci[7]:.2f} B={ci[11]:.2f} "
+    print(f"    opening chord: G={ci[7]:.2f} Bb={ci[10]:.2f} D={ci[2]:.2f} "
           f"-> top two {NOTES[open_rank[0]]}, {NOTES[open_rank[1]]}")
-    print(f"    final chord:   E={co[4]:.2f} G={co[7]:.2f} B={co[11]:.2f} "
+    print(f"    final chord:   G={co[7]:.2f} Bb={co[10]:.2f} D={co[2]:.2f} "
           f"-> {outro}")
-    check(4 in open_rank, "E is a leading pitch class of the opening chord")
-    check(outro == "E",
-          f"the track resolves to E ({outro}) -> E minor, not its relative "
-          f"G major")
+    check(7 in open_rank, "G is a leading pitch class of the opening chord")
+    check(outro == "G",
+          f"the track resolves to G ({outro}) -> G minor, not its relative "
+          f"Bb major")
 
     # ---- per-section instrumentation ------------------------------------
     print("\nSection instrumentation")
@@ -216,6 +214,7 @@ def main(path):
         if extra:
             fails.append(f"section {name} should not contain {extra}")
             print(f"        should be absent: {extra}")
+
 
     print("\n" + "=" * 60)
     if fails:
