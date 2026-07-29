@@ -37,7 +37,7 @@ SPB = 60.0 / BPM              # 0.689655 s per beat
 BAR = 4 * SPB                 # 2.758621 s per bar
 TPB = 480                     # ticks per beat
 TEMPO = mido.bpm2tempo(BPM)
-TOTAL_BARS = 103
+TOTAL_BARS = 99
 TAIL = 7.0                    # let the final piano and reverb tails decay
 
 OUT = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(
@@ -49,7 +49,7 @@ os.makedirs(OUT, exist_ok=True)
 # section length is a multiple of 4 bars, so each one starts on Em.
 # --------------------------------------------------------------------------
 CH = ["Em", "C", "G", "D"]
-FINAL_CADENCE = 101  # the last two bars hold the tonic instead of the loop
+FINAL_CADENCE = 97  # the last two bars hold the tonic instead of the loop
 
 
 def chord_at(bar):
@@ -63,21 +63,21 @@ def chord_at(bar):
 # (4 sung lines at 2 bars each, then the tag twice), a sparse opening hook
 # standing in for an intro, and a 4-bar break before the last hook.
 SECTIONS = {
-    "hook1":  (0, 12, "hook_soft", 0.35),
-    "verse1": (12, 28, "verse", 0.55),
-    "hook2":  (28, 40, "hook", 0.78),
-    "verse2": (40, 56, "verse", 0.66),
-    "hook3":  (56, 68, "hook", 0.90),
-    "verse3": (68, 84, "verse", 0.78),
-    "break":  (84, 88, "break", 0.30),
-    "hook4":  (88, 100, "hook", 1.00),
-    "outro":  (100, 103, "outro", 0.20),
+    "hook1":  (0, 8, "hook_soft", 0.35),
+    "verse1": (8, 24, "verse", 0.55),
+    "hook2":  (24, 36, "hook", 0.78),
+    "verse2": (36, 52, "verse", 0.66),
+    "hook3":  (52, 64, "hook", 0.90),
+    "verse3": (64, 80, "verse", 0.78),
+    "break":  (80, 84, "break", 0.30),
+    "hook4":  (84, 96, "hook", 1.00),
+    "outro":  (96, 99, "outro", 0.20),
 }
 
 # Outro: who stops when, so the track thins out one instrument at a time.
 OUTRO_END = {
-    "drums": 101, "bass_sub": 101,
-    "acoustic_guitar": 102, "strings_violin": 102, "strings_cello": 103,
+    "drums": 97, "bass_sub": 97,
+    "acoustic_guitar": 98, "strings_violin": 98, "strings_cello": 99,
 }
 
 
@@ -261,6 +261,9 @@ def build_piano():
     t = Track("piano", jitter=0.009, len_var=0.14)
     for name, (a, b, k, lv) in SECTIONS.items():
         for bar in sec_bars(name):
+            # the piano comes in a bar late so the vocal opens alone
+            if k == "hook_soft" and bar == a:
+                continue
             root, upper = PIANO_VOICE[chord_at(bar)]
             t0 = bar_t(bar)
             cv = int(34 + 52 * lv)
@@ -327,9 +330,7 @@ def build_acoustic():
         for bar in sec_bars(name, OUTRO_END["acoustic_guitar"]
                             if k == "outro" else None):
             # the opening hook stays bare for its first half
-            if k == "hook_soft" and bar < a + 4:
-                continue
-            if k == "break":
+            if k in ("hook_soft", "break"):
                 continue
             voice = AG_VOICE[chord_at(bar)]
             t0 = bar_t(bar)
@@ -417,14 +418,7 @@ def build_drums():
 
     for name, (a, b, k, lv) in SECTIONS.items():
         if k == "hook_soft":
-            # reference keeps its opening bare: no kit until the second half,
-            # then a rim pulse and a fill into the first verse
-            for bar in range(a + 4, b):
-                d.drum(bar_t(bar, 1.0), RIM, 44)
-                d.drum(bar_t(bar, 3.0), RIM, 50)
-                if bar >= a + 8:
-                    d.drum(bar_t(bar), K, 74, 0.5)
-            fill(b - 1)
+            # solo piano, exactly as the reference: no kit at all
             continue
         if k == "break":
             # drums out, cymbal wash only, then a fill into the last hook
@@ -571,16 +565,16 @@ if __name__ == "__main__":
         build_acoustic(),
         *build_drums(),
         build_bass("bass_sub", 0, 92,
-                   ("hook", "hook_soft", "verse", "break", "outro")),
+                   ("hook", "verse", "break", "outro")),
         build_bass("bass_electric", 12, 88,
                    ("hook", "verse")),
         # violins carry the hooks; cellos also underpin the later verses
         build_strings("strings_violin", STR_VIOLIN, 58, {
-            "hook1": 0.55, "hook2": 0.92, "hook3": 1.0,
+            "hook2": 0.92, "hook3": 1.0,
             "verse3": 0.62, "break": 1.0, "hook4": 1.0,
             "outro": 0.55}),
         build_strings("strings_cello", STR_CELLO, 62, {
-            "hook1": 0.62, "hook2": 0.95, "verse2": 0.58,
+            "hook2": 0.95, "verse2": 0.58,
             "hook3": 1.0, "verse3": 0.70, "break": 1.0,
             "hook4": 1.0, "outro": 0.60}),
         build_electric_clean(),
