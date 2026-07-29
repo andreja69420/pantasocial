@@ -17,8 +17,8 @@ VPO = f"{S}/vpo/Virtual-Playing-Orchestra3/Strings"
 # part -> (sfz library, human-readable source)
 PARTS = {
     "piano": (
-        f"{S}/SalamanderGrandPianoV3_48khz24bit/SalamanderGrandPianoV3.sfz",
-        "Salamander Grand Piano V3 (Yamaha C5, 16 vel layers)"),
+        f"{S}/upright/UprightPianoKW-SFZ-20220221/UprightPianoKW-20220221.sfz",
+        "FreePats Upright Piano KW (Kawai upright, living room, CC0)"),
     "acoustic_guitar": (
         f"{S}/freepats/FSS-SteelStringGuitar-SFZ-20200521/"
         f"FSS-SteelStringGuitar-20200521.sfz",
@@ -55,17 +55,17 @@ PARTS = {
 # Each part legitimately stops at a different bar (the outro drops instruments
 # one by one), so the minimum length is checked per part, not globally.
 EXPECT_MIN = {
-    "piano": 286.0,
-    "acoustic_guitar": 278.0,
-    "drums_kick": 274.0,
-    "drums_kit": 276.0,
-    "bass_sub": 275.0,
-    "bass_electric": 272.0,
-    "strings_violin": 279.0,
-    "strings_cello": 282.0,
-    "electric_clean": 230.0,
-    "electric_power": 272.0,
-    "electric_power2": 272.0,
+    "piano": 278.0,
+    "acoustic_guitar": 271.0,
+    "drums_kick": 266.0,
+    "drums_kit": 268.0,
+    "bass_sub": 268.0,
+    "bass_electric": 266.0,
+    "strings_violin": 271.0,
+    "strings_cello": 274.0,
+    "electric_clean": 222.0,
+    "electric_power": 265.0,
+    "electric_power2": 265.0,
 }
 
 

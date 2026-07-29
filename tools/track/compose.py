@@ -37,7 +37,7 @@ SPB = 60.0 / BPM              # 0.689655 s per beat
 BAR = 4 * SPB                 # 2.758621 s per bar
 TPB = 480                     # ticks per beat
 TEMPO = mido.bpm2tempo(BPM)
-TOTAL_BARS = 99
+TOTAL_BARS = 100
 TAIL = 7.0                    # let the final piano and reverb tails decay
 
 OUT = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(
@@ -49,13 +49,20 @@ os.makedirs(OUT, exist_ok=True)
 # section length is a multiple of 4 bars, so each one starts on Em.
 # --------------------------------------------------------------------------
 CH = ["Em", "C", "G", "D"]
-FINAL_CADENCE = 97  # the last two bars hold the tonic instead of the loop
+FINAL_CADENCE = 98  # the last two bars hold the tonic instead of the loop
+
+
+def loop_pos(bar):
+    """Position in the 4-bar chord loop. Bar 0 is an empty lead-in so the
+    singer can take the pickup, so the loop starts on bar 1 - which puts the
+    piano's first audible chord on the tonic, as in the reference."""
+    return (bar - 1) % 4
 
 
 def chord_at(bar):
     if bar >= FINAL_CADENCE:
         return "Em"
-    return CH[bar % 4]
+    return CH[loop_pos(bar)]
 
 
 # name -> (first bar, end bar, kind, intensity 0..1)
@@ -63,21 +70,21 @@ def chord_at(bar):
 # (4 sung lines at 2 bars each, then the tag twice), a sparse opening hook
 # standing in for an intro, and a 4-bar break before the last hook.
 SECTIONS = {
-    "hook1":  (0, 8, "hook_soft", 0.35),
-    "verse1": (8, 24, "verse", 0.55),
-    "hook2":  (24, 36, "hook", 0.78),
-    "verse2": (36, 52, "verse", 0.66),
-    "hook3":  (52, 64, "hook", 0.90),
-    "verse3": (64, 80, "verse", 0.78),
-    "break":  (80, 84, "break", 0.30),
-    "hook4":  (84, 96, "hook", 1.00),
-    "outro":  (96, 99, "outro", 0.20),
+    "hook1":  (0, 9, "hook_soft", 0.35),
+    "verse1": (9, 25, "verse", 0.55),
+    "hook2":  (25, 37, "hook", 0.78),
+    "verse2": (37, 53, "verse", 0.66),
+    "hook3":  (53, 65, "hook", 0.90),
+    "verse3": (65, 81, "verse", 0.78),
+    "break":  (81, 85, "break", 0.30),
+    "hook4":  (85, 97, "hook", 1.00),
+    "outro":  (97, 100, "outro", 0.20),
 }
 
 # Outro: who stops when, so the track thins out one instrument at a time.
 OUTRO_END = {
-    "drums": 97, "bass_sub": 97,
-    "acoustic_guitar": 98, "strings_violin": 98, "strings_cello": 99,
+    "drums": 98, "bass_sub": 98,
+    "acoustic_guitar": 99, "strings_violin": 99, "strings_cello": 100,
 }
 
 
@@ -293,7 +300,7 @@ def build_piano():
 
             if k == "outro" or (k == "hook_soft" and bar < a + 4):
                 # exposed opening and the ending: the piano's own falling hook
-                for (beat, note) in PIANO_FIG[bar % 4]:
+                for (beat, note) in PIANO_FIG[loop_pos(bar)]:
                     t.n(bar_t(bar, beat), note, cv + 12 + accent(beat),
                         SPB * random.uniform(1.1, 1.9))
             elif k in ("hook", "hook_soft") and (bar - a) % 2 == 1:
@@ -348,7 +355,7 @@ def build_acoustic():
 
             # the melodic hook plays under the sung hook, never over the rap
             if k in ("hook", "hook_soft", "outro"):
-                hook = (AG_HOOK_ALT if (bar // 4) % 2 else AG_HOOK)[bar % 4]
+                hook = (AG_HOOK_ALT if (bar // 4) % 2 else AG_HOOK)[loop_pos(bar)]
                 for j, beat in enumerate((0.0, 2.0)):
                     t.n(bar_t(bar, beat) + random.uniform(0.002, 0.010),
                         hook[j], base + 8 + accent(beat),
@@ -390,7 +397,7 @@ def build_drums():
         # deep kick, never busy: beat 1 and the "and of 3"
         d.drum(t0, K, kv + 6, 0.5)
         d.drum(bar_t(bar, 2.5), K, kv - 4, 0.5)
-        if bar % 4 in (1, 3):
+        if loop_pos(bar) in (1, 3):
             d.drum(bar_t(bar, 3.75), K, kv - 12, 0.4)
         # hard backbeat, alternating centre / edge so no two are alike
         for i, beat in enumerate((1.0, 3.0)):
@@ -402,7 +409,7 @@ def build_drums():
                     d.drum(bar_t(bar, beat), SD_EDGE, 22, 0.2)
         if hats:
             for beat in (0.0, 1.0, 2.0, 3.0):
-                key = HH_OPEN if (beat == 3.0 and bar % 4 == 3) else HH
+                key = HH_OPEN if (beat == 3.0 and loop_pos(bar) == 3) else HH
                 d.drum(bar_t(bar, beat) + 0.005, key,
                        int(42 + 16 * lv) + accent(beat), 0.3)
         if ride:
@@ -466,9 +473,9 @@ def build_bass(name, octave, base_vel, kinds):
             ch = chord_at(bar)
             root = BASS_ROOT[ch] + octave
             pat = [(0.0, 0), (2.5, 0)]          # locked to the kick
-            if bar % 4 in (1, 3):
+            if loop_pos(bar) in (1, 3):
                 pat.append((3.75, 7 if ch in ("Em", "G") else 5))
-            if bar % 8 == 7:
+            if bar % 8 == 0:
                 pat.append((3.0, 12))
             for (beat, off) in pat:
                 t.n(bar_t(bar, beat), root + off,
@@ -493,7 +500,7 @@ def build_strings(name, voicing, base_vel, plan):
         for bar in sec_bars(sname, OUTRO_END.get(name) if k == "outro"
                             else None):
             notes = voicing[chord_at(bar)]
-            v = int((base_vel + 16 * lv) * mult) + int(6 * ((bar % 4) / 3.0))
+            v = int((base_vel + 16 * lv) * mult) + int(6 * (loop_pos(bar) / 3.0))
             for i, nn in enumerate(notes):
                 lead = (random.uniform(-0.045, 0.055)
                         + i * random.uniform(0.01, 0.04))
@@ -544,7 +551,7 @@ def build_electric_power(name="electric_power"):
                     spread=(0.008, 0.014))
             t.strum(bar_t(bar, 2.0), ch, base, BAR * 0.42, down=True,
                     spread=(0.010, 0.020), accent_top=4)
-            if bar % 4 == 3:
+            if loop_pos(bar) == 3:
                 t.strum(bar_t(bar, 3.5), ch, base - 8, SPB * 0.6, down=False,
                         spread=(0.008, 0.016))
     return t

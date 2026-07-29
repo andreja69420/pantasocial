@@ -19,15 +19,14 @@ SR = 48000
 BAR = 4 * 60.0 / 87.0
 
 SECTIONS = {
-    "hook1":  (0, 12),  "verse1": (12, 28), "hook2":  (28, 40),
-    "verse2": (40, 56), "hook3":  (56, 68), "verse3": (68, 84),
-    "break":  (84, 88), "hook4":  (88, 100), "outro": (100, 103),
+    "hook1":  (0, 9),   "verse1": (9, 25),  "hook2":  (25, 37),
+    "verse2": (37, 53), "hook3":  (53, 65), "verse3": (65, 81),
+    "break":  (81, 85), "hook4":  (85, 97), "outro":  (97, 100),
 }
 
 # which stems must be audible in which section
 EXPECTED = {
-    "hook1":  ["piano", "acoustic_guitar", "bass_sub",
-               "strings_violin", "strings_cello"],
+    "hook1":  ["piano"],
     "verse1": ["piano", "acoustic_guitar", "drums_kick", "drums_kit",
                "bass_sub", "bass_electric"],
     "hook2":  ["piano", "acoustic_guitar", "drums_kick", "drums_kit",
@@ -47,7 +46,9 @@ EXPECTED = {
 }
 # instruments that must be SILENT in a section (the arrangement says so)
 FORBIDDEN = {
-    "hook1":  ["electric_power", "electric_power2", "electric_clean"],
+    "hook1":  ["electric_power", "electric_power2", "electric_clean",
+               "drums_kick", "drums_kit", "acoustic_guitar", "bass_sub",
+               "bass_electric", "strings_violin", "strings_cello"],
     "verse1": ["electric_power", "electric_power2", "electric_clean", "strings_violin", "strings_cello"],
     "verse2": ["electric_power", "electric_power2", "strings_violin"],
     "break":  ["drums_kick", "acoustic_guitar", "electric_clean"],
@@ -77,9 +78,9 @@ def main(path):
 
     # ---- duration -------------------------------------------------------
     print("Duration")
-    check(281.0 <= dur <= 290.0,
+    check(273.0 <= dur <= 283.0,
           f"duration {dur:.2f}s ({int(dur // 60)}:{dur % 60:05.2f}) "
-          f"within 4:41-4:50")
+          f"within 4:33-4:43")
 
     # ---- clipping -------------------------------------------------------
     print("\nPeak / clipping")
@@ -115,11 +116,18 @@ def main(path):
     n = len(mono) // win
     rms = np.array([np.sqrt(np.mean(mono[i * win:(i + 1) * win] ** 2))
                     for i in range(n)])
-    body = rms[:-3]  # ignore the deliberate fade-out tail
+    # Bar 0 is deliberately empty - the vocal opens unaccompanied and the
+    # piano answers a bar later, as the reference does. Skip it, and skip the
+    # fade-out tail.
+    lead = int(np.ceil(BAR)) + 1
+    body = rms[lead:-3]
     quiet = np.where(body < 1e-4)[0]
     check(len(quiet) == 0,
-          f"no silent passages (quietest 1s window "
+          f"no silent passages after the opening bar (quietest 1s window "
           f"{20 * np.log10(max(body.min(), 1e-12)):.1f} dBFS RMS)")
+    opening = rms[:lead]
+    print(f"  NOTE  bar 0 left empty for the vocal pickup "
+          f"({20 * np.log10(max(opening.max(), 1e-12)):.0f} dBFS peak RMS)")
 
     # ---- tempo ----------------------------------------------------------
     print("\nTempo")
@@ -164,8 +172,8 @@ def main(path):
     # Opening chord (bar 0 is Gm) and the final resolution. An Em triad has
     # three near-equal partials, so the opening only has to rank E in the top
     # two pitch classes; the final chord is the real tiebreaker.
-    open_note, ci = tonic(0.0, 2.6)
-    outro, co = tonic(278.0, 287.0)
+    open_note, ci = tonic(BAR + 0.05, BAR + 2.7)   # bar 1: piano enters
+    outro, co = tonic(270.0, 279.0)
     open_rank = list(np.argsort(-ci)[:2])
     print(f"    opening chord: G={ci[7]:.2f} Bb={ci[10]:.2f} D={ci[2]:.2f} "
           f"-> top two {NOTES[open_rank[0]]}, {NOTES[open_rank[1]]}")

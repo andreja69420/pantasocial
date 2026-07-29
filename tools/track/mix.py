@@ -12,7 +12,7 @@ STEMS = os.path.join(ROOT, "output", "stems")
 OUTDIR = os.path.join(ROOT, "output")
 SR = 48000
 BAR = 240.0 / 87.0
-LENGTH = 287.0          # 103 bars of music (284.14 s) plus the piano tail
+LENGTH = 279.0          # 100 bars of music (275.86 s) plus the piano tail
 TARGET_LUFS = -14.0
 
 # part -> mixing recipe
@@ -26,8 +26,8 @@ MIX = {
     # forward in the mix
     "acoustic_guitar": dict(lufs=-16.5, pan=-0.18, width=1.15, hpf=95,
                             verb=(0.62, 0.16), comp=(-19, 2.2)),
-    "piano":           dict(lufs=-16.8, pan=0.0, width=1.05, hpf=85,
-                            verb=(0.74, 0.21), comp=(-22, 1.8)),
+    "piano":           dict(lufs=-16.8, pan=0.0, width=1.05, hpf=75,
+                            verb=(0.68, 0.15), comp=(-22, 1.8)),
     # rhythm section, centred
     "drums_kick":      dict(lufs=-19.5, pan=0.0, width=0.35, hpf=0,
                             verb=None, comp=(-17, 3.5)),
@@ -104,9 +104,9 @@ def swell_envelope(n):
     in the composition, so this only adds a slow overall rise plus a taper
     through the outro."""
     t = np.arange(n) / SR
-    env = 0.82 + 0.18 * np.clip((t - 33.1) / 209.0, 0.0, 1.0)   # verse 1 -> hook 4
-    env *= np.where(t > 275.9,
-                    np.clip(1.0 - (t - 275.9) / 11.0, 0.15, 1.0), 1.0)
+    env = 0.82 + 0.18 * np.clip((t - 24.8) / 210.0, 0.0, 1.0)   # verse 1 -> hook 4
+    env *= np.where(t > 267.6,
+                    np.clip(1.0 - (t - 267.6) / 11.0, 0.15, 1.0), 1.0)
     return env.astype(np.float32)[:, None]
 
 
@@ -145,9 +145,9 @@ def arrangement_automation(n):
     """Section-level fader moves: intro and outro sit back, verses drop under
     the hooks. This is ordinary verse/chorus automation - it also keeps the
     song's loudness range from collapsing into one flat level."""
-    # (start bar, gain dB) for the 103-bar form
-    moves = [(0, -3.0), (12, -1.3), (28, 1.0), (40, -1.2), (56, 1.2),
-             (68, -1.0), (84, -2.0), (88, 1.5), (100, -2.5)]
+    # (start bar, gain dB) for the 100-bar form
+    moves = [(0, -3.0), (9, -1.3), (25, 1.0), (37, -1.2), (53, 1.2),
+             (65, -1.0), (81, -2.0), (85, 1.5), (97, -2.5)]
     db = np.zeros(n, dtype=np.float32)
     for i, (bar, g) in enumerate(moves):
         t0 = bar * BAR
