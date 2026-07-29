@@ -121,12 +121,14 @@ class Track:
         self._last_vel = None
         self._last_bucket = {}
 
-    def n(self, t, note, vel, dur, jitter=None):
+    def n(self, t, note, vel, dur, jitter=None, max_dur=None):
         if jitter is None:
             jitter = self.jitter
         vel = self._vary_vel(vel)
         t = t + random.uniform(-jitter, jitter)
         dur = dur * random.uniform(1.0 - self.len_var, 1.0 + self.len_var)
+        if max_dur is not None:
+            dur = min(dur, max_dur)
         self.notes.append((max(0.0, t), int(note) + TRANSPOSE, vel,
                            max(0.03, dur)))
 
@@ -271,6 +273,9 @@ def build_piano():
             # the piano comes in a bar late so the vocal opens alone
             if k == "hook_soft" and bar == a:
                 continue
+            # the closing gesture voices the final bar itself
+            if bar == TOTAL_BARS - 1:
+                continue
             root, upper = PIANO_VOICE[chord_at(bar)]
             t0 = bar_t(bar)
             cv = int(34 + 52 * lv)
@@ -280,33 +285,65 @@ def build_piano():
 
             if k == "verse":
                 # low, sparse and out of the way - the rap owns the midrange
-                t.n(t0, root, cv - 4, BAR * 0.9)
-                t.n(t0 + 0.014, root + 7, cv - 10, BAR * 0.8)
+                voice = [root, root + 7]
                 if bar % 2 == 0:
-                    roll = random.uniform(0.014, 0.028)
-                    for i, nn in enumerate(upper[:2]):
-                        t.n(t0 + 0.02 + i * roll, nn - 12, cv - 8 - i * 3,
-                            BAR * random.uniform(0.6, 0.85), jitter=0.004)
+                    voice += [nn - 12 for nn in upper[:2]]
+                seen = set()
+                voice = [n for n in voice
+                         if not (n in seen or seen.add(n))]
+                roll = random.uniform(0.014, 0.028)
+                for i, nn in enumerate(voice):
+                    off = 0.0 if i == 0 else 0.014 + (i - 1) * roll
+                    t.n(t0 + off, nn, cv - 4 - i * 3,
+                        BAR * (0.9 if i == 0 else random.uniform(0.6, 0.85)),
+                        jitter=0.004 if i else None,
+                        max_dur=BAR - off - 0.06)
                 continue
 
-            # intro, hooks and outro: full voicing, rolled like a real hand
-            t.n(t0, root, cv + accent(0) - 4, BAR * 0.95)
-            if k in ("hook", "hook_soft", "break"):
-                t.n(t0 + 0.012, root + 7, cv - 8, BAR * 0.9)
-            roll = random.uniform(0.012, 0.026)
-            for i, nn in enumerate(upper):
-                t.n(t0 + 0.02 + i * roll, nn, cv + accent(0) - i * 3,
-                    BAR * random.uniform(0.72, 0.95), jitter=0.004)
-
-            if k == "outro" or (k == "hook_soft" and bar < a + 4):
-                # exposed opening and the ending: the piano's own falling hook
-                for (beat, note) in PIANO_FIG[loop_pos(bar)]:
-                    t.n(bar_t(bar, beat), note, cv + 12 + accent(beat),
-                        SPB * random.uniform(1.1, 1.9))
+            # Intro, hooks and outro. Work out the melody first, then voice
+            # the chord around it: restriking a pitch that is still ringing
+            # under the pedal starts a second copy of the same sample over the
+            # first, and the two beat against each other - it reads as the
+            # piano being out of tune. A pianist voices around the melody
+            # rather than doubling it, so the chord gives the note up.
+            fig = []
+            if k == "outro" or (k == "hook_soft" and bar < a + 5):
+                fig = list(PIANO_FIG[loop_pos(bar)])
             elif k in ("hook", "hook_soft") and (bar - a) % 2 == 1:
                 idx = ((bar - a) // 2) % len(ANSWER)
-                t.n(bar_t(bar, 3.0), ANSWER[idx], cv + 6,
-                    SPB * random.uniform(1.2, 1.8))
+                fig = [(3.0, ANSWER[idx])]
+            mel_pitches = {n for _, n in fig}
+
+            chord = [root]
+            # the exposed opening stays lean: no added fifth to thicken it
+            if k in ("hook", "break"):
+                chord.append(root + 7)
+            chord += [n for n in upper if n not in mel_pitches]
+            seen = set()
+            chord = [n for n in chord if not (n in seen or seen.add(n))]
+
+            roll = random.uniform(0.012, 0.026)
+            for i, nn in enumerate(chord):
+                off = 0.0 if i == 0 else 0.02 + (i - 1) * roll
+                t.n(t0 + off, nn, cv + accent(0) - max(0, i - 1) * 3,
+                    BAR * (0.95 if i == 0 else random.uniform(0.72, 0.95)),
+                    jitter=0.004 if i else None,
+                    max_dur=BAR - off - 0.06)
+
+            # A melody may legitimately repeat a pitch inside a bar. On a real
+            # piano the hammer just re-strikes a vibrating string; in a sampler
+            # it starts a second copy of the same recording over the first,
+            # which comb-filters. So release the first note and blip the pedal
+            # before the restrike - what a pianist actually does.
+            for j, (beat, note) in enumerate(fig):
+                nxt = next((bt for bt, nn in fig[j + 1:] if nn == note), None)
+                dur = SPB * random.uniform(1.1, 1.9)
+                if nxt is not None:
+                    dur = min(dur, max(0.12, (nxt - beat) * SPB - 0.07))
+                    t.cc(bar_t(bar, nxt) - 0.055, 64, 0)
+                    t.cc(bar_t(bar, nxt) - 0.010, 64, 127)
+                t.n(bar_t(bar, beat), note, cv + 12 + accent(beat), dur,
+                    max_dur=BAR - beat * SPB - 0.05)
 
     # final Em, let ring
     last = TOTAL_BARS - 1
