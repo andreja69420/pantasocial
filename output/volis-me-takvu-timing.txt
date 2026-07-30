@@ -1,0 +1,88 @@
+VOLIS ME TAKVU - lyric timing sheet
+87 BPM, 4/4, E minor.  1 bar = 2.759 s.  88 bars total.
+
+--- INTRO  (bars 0-3)  0:00.00 - 0:11.03  piano alone, count in ---
+
+--- HOOK 1  (bars 4-11)  0:11.03 - 0:33.10  [2 bars per line] ---
+  0:11.03  bar 4   svake burne noci ne mogu da spavam
+  0:16.55  bar 6   a mozda je i bolje da se ne nadam
+  0:22.07  bar 8   a ja zbog tebe zivim ko u staklu
+  0:27.59  bar 10  al to je u redu jer volis me takvu
+  0:30.34  bar 11  volis me takvu  (tag)
+
+--- VERSE 1  (bars 12-27)  0:33.10 - 1:17.24  [1 bar per line] ---
+  0:33.10  bar 12  od malena mi u glavu tuku vazne teme
+  0:35.86  bar 13  govore mi da sa tobom samo tracim vreme
+  0:38.62  bar 14  krecu prve suze ne znam sta da mislim
+  0:41.38  bar 15  da nekog drugog volis mozda si sa bivsim
+  0:44.14  bar 16  ma nemoguce to ne moze meni da se desi
+  0:46.90  bar 17  jedno smo za drugo oboje smo svesni
+  0:49.66  bar 18  a onda meni nada jedina preostaje
+  0:52.41  bar 19  za svaku moju gresku sto treba da se spoznaje
+  0:55.17  bar 20  ali ovo nase nikako da ispari
+  0:57.93  bar 21  ostace u srcu cak i kad se ostari
+  1:00.69  bar 22  ti nekada najglasnija sada tiha i bleda
+  1:03.45  bar 23  ovo polako pocinje da mi smeta
+  1:06.21  bar 24  u hodniku je rupa jos od one zime
+  1:08.97  bar 25  niko je ne zatvara navikli smo s time
+  1:11.72  bar 26  kod nas se tako radi o tome se ne prica
+  1:14.48  bar 27  iza zatvorenih vrata ista je ta slika
+
+--- HOOK 2  (bars 28-35)  1:17.24 - 1:39.31  [2 bars per line] ---
+  1:17.24  bar 28  svake burne noci ne mogu da spavam
+  1:22.76  bar 30  a mozda je i bolje da se ne nadam
+  1:28.28  bar 32  a ja zbog tebe zivim ko u staklu
+  1:33.79  bar 34  al to je u redu jer volis me takvu
+  1:36.55  bar 35  volis me takvu  (tag)
+
+--- VERSE 2  (bars 36-51)  1:39.31 - 2:23.45  [1 bar per line] ---
+  1:39.31  bar 36  a onda dolazi moja strana price
+  1:42.07  bar 37  kao malo seme sto tek krece da nice
+  1:44.83  bar 38  od malih nogu se znamo ali ovo moram reci
+  1:47.59  bar 39  i ovo razdoblje trebalo je proci
+  1:50.34  bar 40  prevare i lazi ma nek prestanu bre vise
+  1:53.10  bar 41  iako mome srcu nikad nisi bila blize
+  1:55.86  bar 42  ali evo bacam sada ove rime
+  1:58.62  bar 43  pokusavam da razumem sta nam sve ne ide
+  2:01.38  bar 44  ali ova prica ne moze da stane
+  2:04.14  bar 45  necu dati svojoj dusi da mi klone
+  2:06.90  bar 46  ne mogu da podnesem ne mogu da shvatim
+  2:09.66  bar 47  od toliko ljudi sta te je navelo da svratis
+  2:12.41  bar 48  u moj zivot i promenis me celog
+  2:15.17  bar 49  da si videla bar lepog a ne mene vrednog
+  2:17.93  bar 50  znam da strepis znam da bezis mogu sve da vidim
+  2:20.69  bar 51  i dalje nista ne menjam samo dalje krivim
+
+--- HOOK 3  (bars 52-59)  2:23.45 - 2:45.52  [2 bars per line] ---
+  2:23.45  bar 52  svake burne noci ne mogu da spavam
+  2:28.97  bar 54  a mozda je i bolje da se ne nadam
+  2:34.48  bar 56  a ja zbog tebe zivim ko u staklu
+  2:40.00  bar 58  al to je u redu jer volis me takvu
+  2:42.76  bar 59  volis me takvu  (tag)
+
+--- VERSE 3  (bars 60-75)  2:45.52 - 3:29.66  [1 bar per line] ---
+  2:45.52  bar 60  ne pustam da odes ne pustam da dises
+  2:48.28  bar 61  sa ovog voza ne mozes da sidjes
+  2:51.03  bar 62  rascistimo ovo jednom i za svagda
+  2:53.79  bar 63  kao nasa prva svadja nek i ovo tako strada
+  2:56.55  bar 64  volim te priznajem nikada negiro
+  2:59.31  bar 65  zao mi je sto se sve ovako desilo
+  3:02.07  bar 66  prikrada se polako kajanje me spopada
+  3:04.83  bar 67  mozda su tako skovana deca belog grada
+  3:07.59  bar 68  odrastali i druzili samo se provodili
+  3:10.34  bar 69  dok smo bili zajedno opet smo se rodili
+  3:13.10  bar 70  i pored kraja ostao je ukus tog istog grada
+  3:15.86  bar 71  i dalje pamtim sve sto si mi rekla tada
+  3:18.62  bar 72  zaboravi na psovke nasilje i vike
+  3:21.38  bar 73  a meni fale jutra kada trazim izlike
+  3:24.14  bar 74  i za kraj ovog sumornoga dana
+  3:26.90  bar 75  vrata su zakljucana ti nemas kuda sama
+
+--- HOOK 4  (bars 76-83)  3:29.66 - 3:51.72  [2 bars per line] ---
+  3:29.66  bar 76  svake burne noci ne mogu da spavam
+  3:35.17  bar 78  a mozda je i bolje da se ne nadam
+  3:40.69  bar 80  a ja zbog tebe zivim ko u staklu
+  3:46.21  bar 82  al to je u redu jer volis me takvu
+  3:48.97  bar 83  volis me takvu  (tag)
+
+--- OUTRO  (bars 84-87)  3:51.72 - 4:02.76  instruments fall away, ends solo piano ---

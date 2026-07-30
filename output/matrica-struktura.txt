@@ -1,0 +1,33 @@
+VOLIS ME TAKVU - matrica
+G mol, 87 BPM, 4/4.  1 takt = 2.759 s.  100 taktova = 4:35.9.
+Akordi: Gm - Eb - Bb - F, po jedan takt, u krug.
+Takt 0 je prazan - vokal ulazi sam, klavir odgovara od takta 1.
+
+sekcija                      taktovi   pocetak     kraj  trajanje
+------------------------------------------------------------------
+REFREN 1 (samo klavir)           0-8   0:00.00  0:24.83     24.8s
+STROFA 1                        9-24   0:24.83  1:08.97     44.1s
+REFREN 2                       25-36   1:08.97  1:42.07     33.1s
+STROFA 2                       37-52   1:42.07  2:26.21     44.1s
+REFREN 3                       53-64   2:26.21  2:59.31     33.1s
+STROFA 3                       65-80   2:59.31  3:43.45     44.1s
+BREAK (bubnjevi napolju)       81-84   3:43.45  3:54.48     11.0s
+REFREN 4                       85-96   3:54.48  4:27.59     33.1s
+OUTRO                          97-99   4:27.59  4:35.86      8.3s
+
+REFREN - 12 taktova (refren 1 je 9):
+   +0 linija 1   +2 linija 2   +4 linija 3   +6 linija 4
+   +8 tag        +10 tag
+
+STROFA - 16 taktova, jedna linija po taktu.
+
+Refreni pocinju:
+   REFREN 1 (samo klavir)     0:00.00
+   REFREN 2                   1:08.97
+   REFREN 3                   2:26.21
+   REFREN 4                   3:54.48
+
+Strofe pocinju:
+   STROFA 1                   0:24.83   linija N = 0:24.83 + N x 2.759 s
+   STROFA 2                   1:42.07   linija N = 1:42.07 + N x 2.759 s
+   STROFA 3                   2:59.31   linija N = 2:59.31 + N x 2.759 s
