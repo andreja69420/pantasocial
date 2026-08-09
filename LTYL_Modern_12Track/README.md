@@ -59,7 +59,7 @@ the run log reports what was fetched).
 | # | Track | Synthesis method | DSP chain |
 | --- | --- | --- | --- |
 | T1 | Main Guitar | Extended Karplus–Strong with filtered pick burst + body resonance | LP 2.5 kHz ×2, Chorus (vinyl wobble), light room |
-| T2 | Ambient Piano | Additive, stiff-string inharmonicity, per-partial decay, hammer noise | HP 150 Hz ×2, large hall (room 0.92, 40 % wet) |
+| T2 | Ambient Synth | FM bell (fast-decaying index) + detuned triangle body, filtered dark | HP 150 Hz ×2, large hall (room 0.92, 40 % wet) |
 | T3 | Synth Pad | 3× detuned additive saw stack, slow filter bloom | LP 3 kHz ×2, per-channel chorus + M/S widening |
 | T4 | Reverse Swell | Inharmonic cymbal + guitar chord, decayed then reversed | HP 180 Hz, heavy reverb (62 % wet) |
 | T5 | High Pluck | Sine core + two inharmonic bell partials | Stereo delay (1/4 L, 1/8 R) + reverb |
@@ -97,15 +97,23 @@ The two behaviours the research called out are both sequenced in: the filter
 opens (620 Hz → 1350 Hz) in the back half of each chorus, and the riff jumps an
 octave for the final two bars.
 
-**Placement.** Choruses only, plus a rising 2-beat pickup into choruses B and C.
-It is kept out of the verses on purpose — the riff occupies the same range the
-rap needs, and the entire mix is built around leaving that range empty. It also
-routes through the harmonic bed bus, so it takes the same 1.6 kHz / 3.2 kHz
-pocket carve as everything else melodic.
+**Placement — chorus 1 only (bars 1–8).** It is an opening statement, not a
+recurring hook: it announces the track and never returns. It is kept out of the
+verses because the riff occupies the same range the rap needs, and the entire
+mix is built around leaving that range empty. It also routes through the
+harmonic bed bus, so it takes the same 1.6 kHz / 3.2 kHz pocket carve as
+everything else melodic.
 
-Measured effect: chorus-to-verse contrast in the musical band went from
-**2.1 dB to 2.5 dB**, and the 1–5 kHz pocket stayed the quietest region of the
-spectrum.
+Because choruses 2 and 3 have no synth, **T5 (high pluck) plays every bar there
+instead of alternating bars**, becoming their melodic signature. That keeps the
+three choruses level with each other rather than letting the later two sag:
+
+```
+chorus 1  300 Hz-6 kHz  -26.5 dBFS   (lead synth)
+chorus 2  300 Hz-6 kHz  -26.7 dBFS   (dense pluck)
+chorus 3  300 Hz-6 kHz  -26.6 dBFS   (dense pluck)
+verses    300 Hz-6 kHz  -29.1 dBFS
+```
 
 ---
 

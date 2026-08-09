@@ -122,28 +122,41 @@ def guitar_note(name: str, dur: float, seed: int) -> np.ndarray:
 
 # ---------------------------------------------------------------- T2  piano
 
-def piano_note(name: str, dur: float, seed: int) -> np.ndarray:
-    """Additive grand piano: stiff-string inharmonicity plus per-partial decay
-    (highs die first), a detuned unison pair, and hammer noise."""
-    f0 = nf(name)
-    t = t_axis(dur)
-    B = 0.0004                                  # inharmonicity coefficient
+def _tri(f: float, t: np.ndarray, nharm: int, phase: float) -> np.ndarray:
     out = np.zeros(len(t))
-    rng = np.random.default_rng(seed)
-    for k in range(1, 25):
-        fk = f0 * k * np.sqrt(1.0 + B * k * k)
-        if fk > SR / 2 * 0.9:
+    s = 1.0
+    for k in range(1, nharm + 1, 2):
+        if f * k > SR / 2 * 0.85:
             break
-        amp = 1.0 / (k ** 1.35)
-        tau = 2.6 / (1.0 + 0.55 * k)
-        for det in (-0.6, 0.6):                 # unison shimmer
-            ph = rng.uniform(0, 2 * np.pi)
-            out += amp * 0.5 * np.sin(2 * np.pi * (fk + det) * t + ph) * np.exp(-t / tau)
+        out += s * np.sin(2 * np.pi * f * k * t + phase) / (k * k)
+        s = -s
+    return out * (8 / np.pi ** 2)
 
-    hammer = noise(int(0.012 * SR), seed + 7) * exp_env(int(0.012 * SR), 0.003)
-    out[:len(hammer)] += bp(hammer, 900, 5000, order=2) * 0.25
-    out *= adsr(len(out), 0.002, 0.05, 0.82, 0.35)
-    return fade(norm(out, 0.9), 4.0)
+
+def synth_chord(names: list[str], dur: float, seed: int) -> np.ndarray:
+    """Dark FM-bell chord — the harmonic anchor on beat 1.
+
+    Replaces the acoustic piano this slot used to hold. A fast-decaying FM
+    index gives a struck attack for definition, while a detuned triangle body
+    carries the sustain; the whole thing is filtered dark so it reads as
+    atmosphere rather than as a keyboard part.
+    """
+    t = t_axis(dur)
+    rng = np.random.default_rng(seed)
+    out = np.zeros(len(t))
+    for name in names:
+        f = nf(name)
+        idx = 3.2 * np.exp(-t / 0.09)                     # struck attack
+        mod = np.sin(2 * np.pi * f * 2.0 * t + rng.uniform(0, 2 * np.pi))
+        voice = np.sin(2 * np.pi * f * t + idx * mod)
+        for cents in (-5.0, 5.0):
+            voice += 0.45 * _tri(f * 2 ** (cents / 1200), t, 16,
+                                 rng.uniform(0, 2 * np.pi))
+        out += voice * exp_env(len(t), dur * 0.30)
+    out /= len(names)
+    out = lp(out, 2200, order=2)
+    out *= adsr(len(out), 0.012, 0.10, 0.75, 0.40)
+    return fade(norm(out, 0.9), 6.0)
 
 
 # ------------------------------------------------------------------ T3  pad

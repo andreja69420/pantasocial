@@ -21,7 +21,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 OUT_NAME = "LoveTheWayYouLie_Modern12Track.wav"
 
 TRACK_NAMES = {
-    "T1": "Main Guitar", "T2": "Ambient Piano", "T3": "Synth Pad",
+    "T1": "Main Guitar", "T2": "Ambient Synth", "T3": "Synth Pad",
     "T4": "Reverse Swell", "T5": "High Pluck", "T6": "Kick",
     "T7": "Snare/Rim", "T8": "Hi-Hat", "T9": "Perc/Open Hat",
     "T10": "Crash/Impact", "T11": "808 Sub", "T12": "Vocal Textures",

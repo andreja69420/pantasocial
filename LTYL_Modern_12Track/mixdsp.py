@@ -85,7 +85,7 @@ def lufs_integrated(stereo: np.ndarray) -> float:
 # ------------------------------------------------------------ track chains
 
 TRACK_GAIN_DB = {
-    "T1": -7.0, "T2": -10.5, "T3": -13.0, "T4": -12.0, "T5": -12.0, "T6": -5.5,
+    "T1": -7.0, "T2": -3.0, "T3": -13.0, "T4": -12.0, "T5": -12.0, "T6": -5.5,
     "T7": -6.0, "T8": -11.5, "T9": -14.5, "T10": -9.0, "T11": -11.0, "T12": -19.0,
     "T13": -16.0,
 }
@@ -103,7 +103,7 @@ def process_tracks(tracks: dict[str, np.ndarray], kick_times) -> dict[str, np.nd
         Reverb(room_size=0.42, damping=0.72, wet_level=0.14, dry_level=0.9, width=0.85),
     ]), pan(tracks["T1"], -0.22))
 
-    # T2 piano — thinned out of the low end, drowned in a big hall
+    # T2 synth chord — thinned out of the low end, drowned in a big hall
     out["T2"] = run(Pedalboard([
         HighpassFilter(150), HighpassFilter(150), LowpassFilter(6000),
         Reverb(room_size=0.92, damping=0.28, wet_level=0.40, dry_level=0.60, width=1.0),

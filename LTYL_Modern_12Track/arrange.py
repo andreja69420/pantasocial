@@ -105,11 +105,8 @@ def build() -> tuple[dict[str, np.ndarray], list[float]]:
                 sd = abs(hash(n)) % 10_000
                 guitar[n] = S.guitar_note(n, 2.2, seed=sd)
                 guitar_short[n] = S.guitar_note(n, 0.95, seed=sd)
-    piano = {}
-    for ch in PROGRESSION:
-        for n in ch["piano"]:
-            if n not in piano:
-                piano[n] = S.piano_note(n, 2.8, seed=(abs(hash(n)) // 3) % 10_000)
+    chords = [S.synth_chord(ch["piano"], 3.0, seed=500 + i)
+              for i, ch in enumerate(PROGRESSION)]
     pads = [S.pad_chord(ch["pad"], BAR * 1.12, seed=100 + i) for i, ch in enumerate(PROGRESSION)]
 
     swell = S.reverse_swell(BAR, seed=7)
@@ -144,9 +141,8 @@ def build() -> tuple[dict[str, np.ndarray], list[float]]:
             n = ch["guitar"][(i + 1) % len(ch["guitar"])]
             place(tracks["T1"], guitar_short[n], t0 + beat * BEAT, 0.34 * lift)
 
-        # T2 piano: beat 1 only
-        for i, n in enumerate(ch["piano"]):
-            place(tracks["T2"], piano[n], t0 + i * 0.008, 0.50 * lift)
+        # T2 synth chord: beat 1 only
+        place(tracks["T2"], chords[bar % 4], t0, 0.50 * lift)
 
         # T3 pad: sustained, one chord per bar
         place(tracks["T3"], pads[bar % 4], t0, 0.58 * lift)
@@ -160,15 +156,19 @@ def build() -> tuple[dict[str, np.ndarray], list[float]]:
 
     # ---------------------------------------------------------- T5 high pluck
     # Dark 3-note counter-melody, choruses only, sitting in the offbeat gaps.
+    # Chorus 1 has the lead synth carrying the melody, so the pluck stays sparse
+    # there. Choruses 2 and 3 have no synth, so the pluck plays every bar and
+    # becomes their melodic signature instead.
     for kind, a, b in SECTIONS:
         if kind != "chorus":
             continue
+        dense = a != 0
         for bar in range(a, b):
-            if (bar - a) % 2:                                   # every other bar
+            if not dense and (bar - a) % 2:
                 continue
             t0 = bar_time(bar)
             for n, beat, g in (("D5", 2.5, 0.55), ("Bb4", 3.0, 0.45), ("G4", 3.5, 0.50)):
-                place(tracks["T5"], plucks[n], t0 + beat * BEAT, g)
+                place(tracks["T5"], plucks[n], t0 + beat * BEAT, g * (1.1 if dense else 1.0))
 
     # ------------------------------------------------------------ T6/T7 drums
     for bar in range(BARS):
@@ -263,7 +263,7 @@ def build() -> tuple[dict[str, np.ndarray], list[float]]:
         return lead[key]
 
     for kind, a, b in SECTIONS:
-        if kind != "chorus":
+        if kind != "chorus" or a != 0:      # opening statement only
             continue
         for bar in range(a, b):
             pos = bar - a
@@ -277,15 +277,5 @@ def build() -> tuple[dict[str, np.ndarray], list[float]]:
                 g = 0.62 if slot in (0, 8) else 0.44
                 place(tracks["T13"], lead_note(n, bright, 400 + hash(n) % 500),
                       bar_time(bar, slot * 0.25), g)
-
-    for cs in CHORUS_STARTS:
-        if cs == 0:
-            continue
-        bar = cs - 1                                   # last bar of the verse
-        cell = RIFF_CELLS[PROGRESSION[bar % 4]["name"]]
-        for i, slot in enumerate(range(8, 16)):        # straight 16ths, rising
-            note = cell[i]
-            place(tracks["T13"], lead_note(note, 1, 400 + hash(note) % 500),
-                  bar_time(bar, slot * 0.25), 0.28 + 0.045 * i)
 
     return tracks, sorted(kick_times)
