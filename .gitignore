@@ -5,3 +5,6 @@ node_modules
 dist
 build
 .DS_Store
+
+# Derived from the committed 24-bit master by LTYL_Modern_12Track/build.py
+LoveTheWayYouLie_Modern12Track_16bit.wav
