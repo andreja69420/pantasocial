@@ -1,6 +1,8 @@
-# Love The Way You Lie — Modern 12-Track Rework
+# Love The Way You Lie — Modern Rework (13 tracks)
 
 A fully synthesized, mixed and mastered 56-bar dark trap/drill instrumental.
+Started as 12 tracks; T13 (lead synth) was added later. Output filenames keep
+the original `12Track` name so existing links stay valid.
 104 BPM, G minor, 48 kHz / 24-bit stereo, peaks at exactly **−6.00 dBFS** so
 there is headroom to record raw vocals on top.
 
@@ -68,6 +70,42 @@ the run log reports what was fetched).
 | T10 | Crash / Impact | 33 Hz sub boom + dark inharmonic crash | HP 24 Hz, very long tail (room 0.97) |
 | T11 | 808 Sub | Pure sine driven by a per-sample frequency curve | Distortion +5 dB, +100 Hz bell, **sidechain duck** |
 | T12 | Vocal Textures | Formant-synthesized vowel, resampled 2:1 (−12 semitones) | 100 % wet reverb, LP 2 kHz ×2 |
+| T13 | Lead Synth | 5× detuned saw stack + pulse + sub octave through a block-stepped filter sweep | Drive +3 dB, 350 Hz dip, LP 3.8 kHz, per-channel decorrelation |
+
+---
+
+## T13 — the lead synth (Godzilla-informed sound design)
+
+**Research.** *Godzilla* (Eminem ft. Juice WRLD, 2020, prod. D.A. Got That Dope)
+is **E♭ minor at 166 BPM** (83 half-time), progression **E♭m–G♭**. Its synth is
+characterised as a growling, monstrous line that evolves *through filtering and
+register shifts*.
+
+**What was borrowed and what was not.** The *patch* is modelled on it —
+a detuned saw stack for the growl, a hard filter-swept pluck for the bite, drive
+for aggression. The *riff is original*: transcribing a recognisable melodic hook
+into a releasable beat is the part that carries copyright exposure, and the line
+had to be rewritten for G minor at 104 BPM regardless.
+
+**Implementation.** `synth.lead_pluck()` sums five saws detuned ±18 cents plus a
+pulse layer and a sub octave, then runs them through `_sweep_lp()` — a lowpass
+whose coefficients are recomputed per 256-sample block while the biquad state
+carries across the boundary, so the cutoff glides from 7 kHz down to 620 Hz
+without zipper noise.
+
+The two behaviours the research called out are both sequenced in: the filter
+opens (620 Hz → 1350 Hz) in the back half of each chorus, and the riff jumps an
+octave for the final two bars.
+
+**Placement.** Choruses only, plus a rising 2-beat pickup into choruses B and C.
+It is kept out of the verses on purpose — the riff occupies the same range the
+rap needs, and the entire mix is built around leaving that range empty. It also
+routes through the harmonic bed bus, so it takes the same 1.6 kHz / 3.2 kHz
+pocket carve as everything else melodic.
+
+Measured effect: chorus-to-verse contrast in the musical band went from
+**2.1 dB to 2.5 dB**, and the 1–5 kHz pocket stayed the quietest region of the
+spectrum.
 
 ---
 

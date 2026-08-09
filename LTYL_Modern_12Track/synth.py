@@ -313,6 +313,64 @@ def sub808(freqs: np.ndarray, dur: float, glide_ms: float = 60.0,
     return out * env
 
 
+# ------------------------------------------------- T13  aggressive lead synth
+
+def _square(f: float, t: np.ndarray, nharm: int, phase: float) -> np.ndarray:
+    out = np.zeros(len(t))
+    for k in range(1, nharm + 1, 2):
+        if f * k > SR / 2 * 0.85:
+            break
+        out += np.sin(2 * np.pi * f * k * t + phase) / k
+    return out * (4 / np.pi)
+
+
+def _sweep_lp(x: np.ndarray, f_hi: float, f_lo: float, tau: float,
+              block: int = 256) -> np.ndarray:
+    """Time-varying lowpass — the filter envelope is what makes a pluck pluck.
+
+    Coefficients are recomputed per block while the biquad state carries across
+    the boundary, so the cutoff glides instead of producing the zipper noise a
+    naive block-by-block refilter would.
+    """
+    out = np.zeros_like(x)
+    zi = None
+    for i in range(0, len(x), block):
+        j = min(i + block, len(x))
+        fc = float(np.clip(f_lo + (f_hi - f_lo) * np.exp(-(i / SR) / tau),
+                           60.0, SR / 2 * 0.95))
+        sos = butter(2, fc / (SR / 2), btype="low", output="sos")
+        if zi is None:
+            zi = np.zeros((sos.shape[0], 2))
+        out[i:j], zi = sosfilt(sos, x[i:j], zi=zi)
+    return out
+
+
+def lead_pluck(name: str, dur: float, seed: int, voices: int = 5,
+               detune_cents: float = 18.0, f_hi: float = 7000.0,
+               f_lo: float = 620.0, sweep_tau: float = 0.055,
+               drive: float = 2.4) -> np.ndarray:
+    """Detuned saw/pulse stack through a fast downward filter sweep, then
+    driven. The detune spread is the growl, the sweep is the attack bite."""
+    f = nf(name)
+    t = t_axis(dur)
+    rng = np.random.default_rng(seed)
+
+    x = np.zeros(len(t))
+    spread = max(1.0, (voices - 1) / 2)
+    for v in range(voices):
+        cents = (v - (voices - 1) / 2) / spread * detune_cents
+        x += _saw(f * 2 ** (cents / 1200), t, 48, rng.uniform(0, 2 * np.pi))
+    x /= voices
+    x += 0.32 * _square(f, t, 24, rng.uniform(0, 2 * np.pi))      # hollow edge
+    x += 0.18 * _saw(f * 0.5, t, 24, rng.uniform(0, 2 * np.pi))   # sub octave
+
+    x = _sweep_lp(x, f_hi, f_lo, sweep_tau)
+    n = len(t)
+    x *= np.minimum(1.0, np.arange(n) / max(1.0, 0.0015 * SR)) * exp_env(n, dur * 0.30)
+    x = np.tanh(x * drive) / np.tanh(drive)
+    return fade(norm(x, 0.9), 3.0)
+
+
 # --------------------------------------------------------- T12  vocal chops
 
 def vocal_chop(name: str, dur: float, seed: int, vowel=(690.0, 1180.0, 2560.0)) -> np.ndarray:

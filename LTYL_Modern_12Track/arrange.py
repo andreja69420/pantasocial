@@ -68,8 +68,31 @@ def place(buf: np.ndarray, x: np.ndarray, at: float, gain: float = 1.0) -> None:
     buf[i:i + n] += x[:n] * gain
 
 
+# T13 lead riff. Original melodic content written for this track — the synth
+# *design* is modelled on the Godzilla intro (detuned saw growl, hard filter-
+# swept pluck), but the line itself outlines our own Gm-Eb-Bb-F loop rather
+# than transcribing anyone's hook.
+#
+# Eight staccato 16ths per bar, syncopated so the figure pushes against the
+# kick instead of doubling it.
+RIFF_SLOTS = [0, 2, 3, 6, 8, 10, 11, 14]          # in 16ths
+RIFF_CELLS = {
+    "Gm": ["G4", "G4", "Bb4", "D5", "G4", "Bb4", "D5", "C5"],
+    "Eb": ["Eb4", "Eb4", "G4", "Bb4", "Eb4", "G4", "Bb4", "D5"],
+    "Bb": ["Bb3", "Bb3", "D4", "F4", "Bb3", "D4", "F4", "Eb4"],
+    "F":  ["F4", "F4", "A4", "C5", "F4", "A4", "C5", "Bb4"],
+}
+
+
+def _up_octave(name: str) -> str:
+    k = len(name)
+    while name[k - 1].isdigit():
+        k -= 1
+    return f"{name[:k]}{int(name[k:]) + 1}"
+
+
 def build() -> tuple[dict[str, np.ndarray], list[float]]:
-    tracks = {f"T{i}": np.zeros(TOTAL) for i in range(1, 13)}
+    tracks = {f"T{i}": np.zeros(TOTAL) for i in range(1, 14)}
     kick_times: list[float] = []
 
     # ---------------------------------------------------------- asset cache
@@ -224,5 +247,45 @@ def build() -> tuple[dict[str, np.ndarray], list[float]]:
         place(tracks["T12"], chops[order[i % len(order)]], bar_time(bar, beat), 0.42)
     for i, bar in enumerate(range(4, BARS, 8)):
         place(tracks["T12"], chops[order[(i + 2) % len(order)]], bar_time(bar, 3.0), 0.26)
+
+    # ----------------------------------------------------------- T13 lead riff
+    # Choruses only, plus a 2-beat pickup into choruses B and C. Keeping it out
+    # of the verses is deliberate: this riff lives in the same range the rap
+    # needs, and the whole mix is built around leaving that range empty.
+    lead: dict[tuple[str, int, int], np.ndarray] = {}
+
+    def lead_note(name: str, bright: int, seed: int) -> np.ndarray:
+        key = (name, bright, 0)
+        if key not in lead:
+            lead[key] = S.lead_pluck(name, 0.22, seed=seed,
+                                     f_lo=620.0 if bright == 0 else 1350.0,
+                                     f_hi=7000.0 if bright == 0 else 9000.0)
+        return lead[key]
+
+    for kind, a, b in SECTIONS:
+        if kind != "chorus":
+            continue
+        for bar in range(a, b):
+            pos = bar - a
+            cell = RIFF_CELLS[PROGRESSION[bar % 4]["name"]]
+            # Filter opens in the back half, then the last two bars jump an
+            # octave: the "register shift" the original leans on for lift.
+            bright = 1 if pos >= 4 else 0
+            octv = pos >= 6
+            for slot, note in zip(RIFF_SLOTS, cell):
+                n = _up_octave(note) if octv else note
+                g = 0.62 if slot in (0, 8) else 0.44
+                place(tracks["T13"], lead_note(n, bright, 400 + hash(n) % 500),
+                      bar_time(bar, slot * 0.25), g)
+
+    for cs in CHORUS_STARTS:
+        if cs == 0:
+            continue
+        bar = cs - 1                                   # last bar of the verse
+        cell = RIFF_CELLS[PROGRESSION[bar % 4]["name"]]
+        for i, slot in enumerate(range(8, 16)):        # straight 16ths, rising
+            note = cell[i]
+            place(tracks["T13"], lead_note(note, 1, 400 + hash(note) % 500),
+                  bar_time(bar, slot * 0.25), 0.28 + 0.045 * i)
 
     return tracks, sorted(kick_times)
