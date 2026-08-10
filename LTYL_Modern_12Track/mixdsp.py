@@ -86,7 +86,7 @@ def lufs_integrated(stereo: np.ndarray) -> float:
 # ------------------------------------------------------------ track chains
 
 TRACK_GAIN_DB = {
-    "T1": -7.0, "T2": -3.0, "T3": -13.0, "T4": -12.0, "T5": -12.0, "T6": -5.5,
+    "T1": -11.0, "T2": -3.0, "T3": -13.0, "T4": -12.0, "T5": -12.0, "T6": -5.5,
     "T7": -6.0, "T8": -11.5, "T9": -14.5, "T10": -9.0, "T11": -11.0, "T12": -19.0,
     "T13": -18.0,
 }
@@ -95,11 +95,17 @@ TRACK_GAIN_DB = {
 def process_tracks(tracks: dict[str, np.ndarray], kick_times) -> dict[str, np.ndarray]:
     out: dict[str, np.ndarray] = {}
 
-    # T1 guitar — dark, vinyl-wobbly, slightly left
+    # T1 electric guitar. The pickup resonance at 2.7 kHz is what makes it read
+    # as electric, but it lands squarely where the vocal needs presence, and
+    # the long solid-body sustain piles energy up there rather than decaying
+    # out of the way. So it is notched at 2.4 kHz and capped lower than the
+    # cabinet already caps it — exactly what a mix engineer does to an electric
+    # sitting under a rap vocal.
     out["T1"] = run(Pedalboard([
-        HighpassFilter(90), LowpassFilter(2500), LowpassFilter(2500),
-        Chorus(rate_hz=0.45, depth=0.16, centre_delay_ms=6.5, feedback=0.05, mix=0.22),
-        Reverb(room_size=0.42, damping=0.72, wet_level=0.14, dry_level=0.9, width=0.85),
+        HighpassFilter(100), LowpassFilter(2800),
+        PeakFilter(cutoff_frequency_hz=2400, gain_db=-3.5, q=0.9),
+        Chorus(rate_hz=0.45, depth=0.20, centre_delay_ms=6.5, feedback=0.08, mix=0.28),
+        Reverb(room_size=0.58, damping=0.62, wet_level=0.21, dry_level=0.86, width=0.9),
     ]), pan(tracks["T1"], -0.22))
 
     # T2 synth chord — thinned out of the low end, drowned in a big hall

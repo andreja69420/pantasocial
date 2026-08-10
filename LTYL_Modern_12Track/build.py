@@ -125,11 +125,18 @@ def main() -> int:
     # Raw pre-DSP stems, mono. Pitch verification wants these: the mix chains
     # add filtering, distortion and reverb that obscure fundamentals, none of
     # which changes what note was actually sequenced.
+    # Written as float, NOT PCM_24. These buffers legitimately exceed 1.0 —
+    # per-track gains are applied downstream in the mix stage — so a fixed-point
+    # export clamps them and reports clipping that does not exist in the mix.
     raw_dir = os.path.join(HERE, "stems_raw")
     os.makedirs(raw_dir, exist_ok=True)
     for k, a in tracks.items():
         sf.write(os.path.join(raw_dir, f"{k}_{TRACK_NAMES[k].replace('/', '-')}.wav"),
-                 a, SR, subtype="PCM_24")
+                 a, SR, subtype="FLOAT")
+    hot = {k: float(np.max(np.abs(a))) for k, a in tracks.items() if np.max(np.abs(a)) > 1.0}
+    if hot:
+        print("    raw buffers above 1.0 (fine — gains applied downstream): "
+              + ", ".join(f"{k} {v:.2f}" for k, v in sorted(hot.items())))
 
     for path in (os.path.join(HERE, OUT_NAME), os.path.join(HERE, "..", OUT_NAME)):
         sf.write(path, final.T.astype(np.float32), SR, subtype="PCM_24")

@@ -120,6 +120,70 @@ def guitar_note(name: str, dur: float, seed: int) -> np.ndarray:
     return karplus(nf(name), dur, seed)
 
 
+def peaking(x: np.ndarray, f0: float, q: float, gain_db: float) -> np.ndarray:
+    """RBJ peaking EQ biquad."""
+    A = 10 ** (gain_db / 40.0)
+    w0 = 2 * np.pi * f0 / SR
+    alpha = np.sin(w0) / (2 * q)
+    b = np.array([1 + alpha * A, -2 * np.cos(w0), 1 - alpha * A])
+    a = np.array([1 + alpha / A, -2 * np.cos(w0), 1 - alpha / A])
+    return lfilter(b / a[0], a / a[0], x)
+
+
+def electric_note(name: str, dur: float, seed: int, pickup: float = 0.22,
+                  drive: float = 1.7) -> np.ndarray:
+    """Solid-body electric guitar.
+
+    The differences from the acoustic model are physical, not cosmetic:
+
+    - **Sustain.** A solid body does not pump energy into a soundboard, so the
+      string loses far less per cycle. The loop decay goes 0.9965 -> 0.9993.
+    - **No body resonance.** There is no air cavity, so the acoustic model's
+      90-5200 Hz body bandpass is gone entirely.
+    - **Magnetic pickup position.** A pickup reads string displacement at one
+      point, so mode k is scaled by |sin(k*pi*p)| — mathematically a comb
+      filter with a delay of p * (SR/f0) samples. At p = 0.22 that notches
+      roughly every 4th-5th harmonic, which is most of what makes a pickup
+      sound like a pickup rather than a microphone.
+    - **Passive pickup resonance.** A magnetic pickup is an LC circuit with a
+      resonant peak around 2-3 kHz followed by a steep inductive rolloff.
+    - **Speaker cabinet.** A guitar speaker rolls off hard above ~5 kHz; that
+      ceiling is why electrics sit under vocals so easily.
+    """
+    f0 = nf(name)
+    n = int(dur * SR)
+    delay = max(2, int(round(SR / f0)))
+    rng = np.random.default_rng(seed)
+    buf = rng.uniform(-1.0, 1.0, delay)
+    buf = lfilter([0.72], [1.0, -0.28], buf)          # brighter pick than a finger
+    buf /= np.max(np.abs(buf)) + 1e-12
+
+    out = np.empty(n)
+    idx, prev = 0, 0.0
+    for i in range(n):
+        cur = buf[idx]
+        out[i] = cur
+        buf[idx] = 0.9993 * 0.5 * (cur + prev)
+        prev = cur
+        idx += 1
+        if idx == delay:
+            idx = 0
+
+    d = max(1, int(round(pickup * SR / f0)))          # pickup comb
+    combed = out.copy()
+    combed[d:] -= out[:-d]
+    out = combed * 0.6
+
+    out = peaking(out, 2700.0, q=1.6, gain_db=5.0)    # pickup LC resonance
+    out = lp(out, 5200, order=4)                      # cabinet
+    out = np.tanh(out * drive) / np.tanh(drive)       # amp breakup
+    out = hp(out, 85, order=2)
+
+    pick = noise(int(0.006 * SR), seed + 313) * exp_env(int(0.006 * SR), 0.0018)
+    out[:len(pick)] += bp(pick, 2000, 5000, order=2) * 0.22
+    return fade(norm(out, 0.9), 4.0)
+
+
 # ---------------------------------------------------------------- T2  piano
 
 def steinway_note(name: str, dur: float, seed: int, velocity: float = 0.72) -> np.ndarray:

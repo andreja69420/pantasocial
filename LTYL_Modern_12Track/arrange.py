@@ -136,14 +136,16 @@ def build() -> tuple[dict[str, np.ndarray], list[float]]:
 
     # ---------------------------------------------------------- asset cache
     # Two guitar lengths: the downbeat strum rings, the arpeggio is choked
-    # short so eight overlapping voices per bar never turn to mud.
+    # short so eight overlapping voices per bar never turn to mud. The electric
+    # sustains far longer than the acoustic did, so the arpeggio is choked
+    # harder (0.95 -> 0.70 s) to keep the same amount of space.
     guitar, guitar_short = {}, {}
     for ch in PROGRESSION:
         for n in ch["guitar"]:
             if n not in guitar:
                 sd = abs(hash(n)) % 10_000
-                guitar[n] = S.guitar_note(n, 2.2, seed=sd)
-                guitar_short[n] = S.guitar_note(n, 0.95, seed=sd)
+                guitar[n] = S.electric_note(n, 2.4, seed=sd)
+                guitar_short[n] = S.electric_note(n, 0.70, seed=sd)
     chords = [S.synth_chord(ch["piano"], 3.0, seed=500 + i)
               for i, ch in enumerate(PROGRESSION)]
     pads = [S.pad_chord(ch["pad"], BAR * 1.12, seed=100 + i) for i, ch in enumerate(PROGRESSION)]

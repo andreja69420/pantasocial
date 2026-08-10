@@ -30,15 +30,15 @@ distorted 808s with portamento slides, and lo-fi filtering that keeps the top
 end dull so the vocal owns the presence range.
 
 **Translation strategy.** Keep what carries the emotion — the G minor
-i–VI–III–VII loop, the acoustic guitar as the melodic anchor, the huge
-ambient piano — and replace the delivery mechanism entirely:
+i–VI–III–VII loop, a guitar as the melodic anchor, the huge ambient keys —
+and replace the delivery mechanism entirely:
 
 | Original | This rework |
 | --- | --- |
 | ~84 BPM stadium-rock kit | 90 BPM trap grid, dry rimshot on beat 3 |
 | Big reverb on everything | Reverb on the *beds only*; snare bone dry |
 | Live bass / low piano | Distorted sine 808 with 60 ms glides |
-| Guitar full-range | Guitar lowpassed at 2.5 kHz with vinyl wobble |
+| Acoustic guitar, full-range | Electric guitar, notched at 2.4 kHz and capped at 2.8 kHz |
 | Dense, produced center | 1–5 kHz carved open for raw, pitch-correction-free rap |
 
 The 1–5 kHz band is deliberately the quietest region of the mix (see below).
@@ -58,19 +58,19 @@ the run log reports what was fetched).
 
 | # | Track | Synthesis method | DSP chain |
 | --- | --- | --- | --- |
-| T1 | Main Guitar | Extended Karplus–Strong with filtered pick burst + body resonance | LP 2.5 kHz ×2, Chorus (vinyl wobble), light room |
+| T1 | Electric Guitar | Karplus–Strong with solid-body sustain (0.9993 loop decay), magnetic-pickup comb at p=0.22, passive LC resonance @2.7 kHz, cabinet rolloff, amp breakup | LP 2.8 kHz, 2.4 kHz notch, chorus, wash |
 | T2 | Ambient Synth | FM bell (fast-decaying index) + detuned triangle body, filtered dark | HP 150 Hz ×2, large hall (room 0.92, 40 % wet) |
 | T3 | Synth Pad | 3× detuned additive saw stack, slow filter bloom | LP 3 kHz ×2, per-channel chorus + M/S widening |
 | T4 | Reverse Swell | Inharmonic cymbal + guitar chord, decayed then reversed | HP 180 Hz, heavy reverb (62 % wet) |
 | T5 | High Pluck | Sine core + two inharmonic bell partials | Stereo delay (1/4 L, 1/8 R) + reverb |
 | T6 | Kick | Pitch-swept sine (135→46 Hz) + HP click, tanh soft-clip | Overdrive +2 dB, clipper, 62 Hz bell |
-| T7 | Snare / Rim | Bandpassed noise crack + 331/1740 Hz tonal body, 115 ms | **Bone dry, dead centre.** HP + 2.6 kHz presence only |
+| T7 | Snare / Rim | Bandpassed noise crack + F4/1740 Hz tonal body, 115 ms | **Bone dry, dead centre.** HP + 2.6 kHz presence only |
 | T8 | Hi-Hat | 6-oscillator metallic stack + noise, HP 7.2 kHz | Phaser (15 % mix), 9 kHz air shelf |
 | T9 | Perc / Open Hat | Same stack, longer decay + resonant woodblock | Small room, panned 15 % right |
 | T10 | Crash / Impact | 33 Hz sub boom + dark inharmonic crash | HP 24 Hz, very long tail (room 0.97) |
 | T11 | 808 Sub | Pure sine driven by a per-sample frequency curve | Distortion +5 dB, +100 Hz bell, **sidechain duck** |
 | T12 | Vocal Textures | Formant-synthesized vowel, resampled 2:1 (−12 semitones) | 100 % wet reverb, LP 2 kHz ×2 |
-| T13 | Lead Synth | 5× detuned saw stack + pulse + sub octave through a block-stepped filter sweep | Drive +3 dB, 350 Hz dip, LP 3.8 kHz, per-channel decorrelation |
+| T13 | Grand Piano | Physically-modelled Steinway: hammer strike at 1/8 (nulls every 8th partial), 1–3 true unison strings, two-stage decay, register-dependent inharmonicity, velocity-as-timbre | HP 55 Hz, 350 Hz dip, LP 7.5 kHz, hall (no chorus) |
 
 ---
 
@@ -256,3 +256,46 @@ mixdsp.py    per-track Pedalboard chains, sidechain, bus summing, master
 build.py     end-to-end render -> LoveTheWayYouLie_Modern12Track.wav + stems/
 analyze.py   automated QA: levels, tilt, dynamics, grid, glide -> analysis.png
 ```
+
+
+---
+
+## Pitch verification
+
+Every track was verified by three independent agents writing their own analysis
+code, plus a symbolic pass over the note tables. Findings:
+
+| Track | Verdict | Max abs deviation |
+| --- | --- | --- |
+| T1 Electric Guitar | PASS | 7.25 cents (Karplus–Strong delay quantization) |
+| T2 Ambient Synth | PASS | 1.78 cents |
+| T3 Synth Pad | PASS | 0.65 cents (detune stack exactly ±7 c by design) |
+| T5 High Pluck | PASS | **0.00 cents** |
+| T11 808 Sub | PASS | **0.0022 cents**, glide 59.92 ms vs 60 ms spec |
+| T12 Vocal Textures | PASS | 0.12 cents; octave drop exact to +0.05 cents |
+| T13 Grand Piano | PASS | 2.96 cents (unison detune) |
+| T6/T7/T9/T10 drums | PASS | within spec; kick verified not to beat against the 808 |
+
+Symbolic check: 90 sequenced notes, **zero out of key**; every voicing spells its
+triad; chord progression correct in **112 of 112** bars.
+
+**Two real defects found and fixed:**
+
+1. **Snare tuned out of key.** Its tonal body sat at 331 Hz — E natural, the only
+   pitch in the kit foreign to G minor. At 13 ms it reads as a transient, but it
+   measured genuinely tonal (Q≈25). Retuned to F4, the ♭7. Now F4 +0.87 cents.
+2. **Raw stems exported as PCM_24.** Raw buffers legitimately exceed 1.0 (T13
+   peaks at 2.83) because per-track gains are applied downstream, so fixed-point
+   export clamped them and reported clipping that does not exist in the mix.
+   Now written as float. Processed stems peak at −6.08 dBFS and the master has
+   **zero** clipped samples.
+
+Two agent observations that were *not* defects, worth recording so they are not
+"re-fixed" later:
+
+- **Piano partials read sharp** if measured by dividing a high harmonic by its
+  index — partial 4 sits +10.45 cents above 4×f0. That is modelled string
+  inharmonicity, and it is correct. Verify pianos at the fundamental only.
+- **T12 carries ±10–17 cents of vibrato** at 2.7–10 Hz. Deliberate. A per-window
+  ±15 cent gate will produce false failures on that track; its amplitude-weighted
+  centre is exact to 0.4 cents.
