@@ -25,17 +25,20 @@ import synth as S
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT_DIR = os.path.join(HERE, "midi")
 
-# (filename, event-list key, GM program number, channel, display name)
-# Program numbers are General MIDI defaults so the files play back sanely
-# even before you swap in your own patch: 0 Grand Piano, 25 Steel Guitar,
-# 49 Strings Ensemble, 41 Violin, 89 Pad (warm), 33 Fingered Bass.
+# (filename, event-list key, GM program byte, channel, display name)
+# GM program *bytes* are 0-indexed (byte = GM patch number - 1), which is
+# easy to get off by one against the 1-indexed patch list everyone actually
+# reads: byte 27 is GM #28 "Electric Guitar (clean)", not #27. Values below
+# are the correct bytes for: 0 Acoustic Grand Piano, 27 Electric Guitar
+# (clean) -- T1 is electric, not acoustic, see README Phase 0 -- 89 Pad 2
+# (warm), 48 String Ensemble 1, 40 Violin, 33 Electric Bass (finger).
 INSTRUMENTS = [
     ("piano_RH.mid",  "piano_RH", 0,  0, "Grand Piano — right hand (stabs)"),
     ("piano_LH.mid",  "piano_LH", 0,  1, "Grand Piano — left hand (two-hand zones only)"),
-    ("guitar.mid",    "guitar",   25, 2, "Electric/Acoustic Guitar"),
+    ("guitar.mid",    "guitar",   27, 2, "Electric Guitar"),
     ("pad.mid",       "pad",      89, 3, "Synth Pad"),
-    ("strings.mid",   "strings",  49, 4, "String Ensemble"),
-    ("violin.mid",    "violin",   41, 5, "Solo Violin"),
+    ("strings.mid",   "strings",  48, 4, "String Ensemble"),
+    ("violin.mid",    "violin",   40, 5, "Solo Violin"),
     ("bass808.mid",   "bass808",  33, 6, "808 Bass"),
 ]
 
