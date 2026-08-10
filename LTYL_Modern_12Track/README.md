@@ -89,6 +89,16 @@ breathe before the chord switches. The first two hits are choked to 0.95 s so
 they read as stabs; the third rings 2.9 s through the empty bar. Over an 8-bar
 chorus that is 4 chords × 3 hits = **12 stabs**.
 
+**Damper release.** Notes are not truncated at a fixed length. `steinway_note`
+and `electric_note` take a `release` argument that applies an exponential damper
+over the tail, because a struck string stops when felt lands on it — fast, but
+finite. Rendering a fixed-length note and ending it with a 4 ms fade was cutting
+notes off while they were still **15–21 dB from silence**, which reads as an
+unnatural click between hits rather than as a note ending. Stabs are now 1.15 s
+with a 0.25 s damper (3.2 s / 0.60 s for the ringing third hit), and the electric
+guitar got the same treatment (0.80/0.22 arp, 2.4/0.55 strum). All four now end
+below −52 dB relative to their own peak instead of −15 to −21 dB.
+
 Verified: **84 of 84** scheduled stabs land with a clear attack (energy ratio
 2.15–4.15× across the hit). A naive envelope detector reports ~180 onsets on
 this stem — those extra points measure at most 1.18×, i.e. unison-string decay

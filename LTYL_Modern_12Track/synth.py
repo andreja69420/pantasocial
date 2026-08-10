@@ -81,6 +81,23 @@ def fade(x, ms=6.0):
     return x
 
 
+def release_tail(x: np.ndarray, seconds: float, shape: float = 5.0) -> np.ndarray:
+    """Damper release over the last `seconds`.
+
+    A struck or plucked note does not stop dead — it stops because felt lands
+    on the string, which is fast but finite (~80-150 ms on a mid-register
+    piano). Rendering a fixed-length note and ending it with a few-millisecond
+    fade truncates it while it is still 15-20 dB from silence, and that reads
+    as an unnatural cut between hits rather than as a note ending.
+    """
+    r = min(int(seconds * SR), len(x))
+    if r < 2:
+        return x
+    x = x.copy()
+    x[-r:] *= np.exp(-np.arange(r) / (r / shape))
+    return x
+
+
 def noise(n: int, seed: int) -> np.ndarray:
     return np.random.default_rng(seed).standard_normal(n)
 
@@ -131,7 +148,7 @@ def peaking(x: np.ndarray, f0: float, q: float, gain_db: float) -> np.ndarray:
 
 
 def electric_note(name: str, dur: float, seed: int, pickup: float = 0.22,
-                  drive: float = 1.7) -> np.ndarray:
+                  drive: float = 1.7, release: float = 0.22) -> np.ndarray:
     """Solid-body electric guitar.
 
     The differences from the acoustic model are physical, not cosmetic:
@@ -181,12 +198,13 @@ def electric_note(name: str, dur: float, seed: int, pickup: float = 0.22,
 
     pick = noise(int(0.006 * SR), seed + 313) * exp_env(int(0.006 * SR), 0.0018)
     out[:len(pick)] += bp(pick, 2000, 5000, order=2) * 0.22
-    return fade(norm(out, 0.9), 4.0)
+    return release_tail(fade(norm(out, 0.9), 4.0), release)
 
 
 # ---------------------------------------------------------------- T2  piano
 
-def steinway_note(name: str, dur: float, seed: int, velocity: float = 0.72) -> np.ndarray:
+def steinway_note(name: str, dur: float, seed: int, velocity: float = 0.72,
+                  release: float = 0.20) -> np.ndarray:
     """Physically-modelled grand piano.
 
     Five things separate a convincing grand from a generic additive stack, and
@@ -251,7 +269,7 @@ def steinway_note(name: str, dur: float, seed: int, velocity: float = 0.72) -> n
         w = fc / (SR / 2)
         b, a = butter(2, [max(w * 0.72, 1e-4), min(w * 1.38, 0.99)], btype="band")
         out += lfilter(b, a, out) * (10 ** (g / 20) - 1.0) * 0.5   # soundboard body
-    return fade(norm(out, 0.9), 4.0)
+    return release_tail(fade(norm(out, 0.9), 4.0), release)
 
 
 def _tri(f: float, t: np.ndarray, nharm: int, phase: float) -> np.ndarray:

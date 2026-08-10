@@ -151,8 +151,8 @@ def build() -> tuple[dict[str, np.ndarray], list[float]]:
         for n in ch["guitar"]:
             if n not in guitar:
                 sd = abs(hash(n)) % 10_000
-                guitar[n] = S.electric_note(n, 2.4, seed=sd)
-                guitar_short[n] = S.electric_note(n, 0.70, seed=sd)
+                guitar[n] = S.electric_note(n, 2.4, seed=sd, release=0.55)
+                guitar_short[n] = S.electric_note(n, 0.80, seed=sd, release=0.22)
     chords = [S.synth_chord(ch["piano"], 3.0, seed=500 + i)
               for i, ch in enumerate(PROGRESSION)]
     pads = [S.pad_chord(ch["pad"], BAR * 1.12, seed=100 + i) for i, ch in enumerate(PROGRESSION)]
@@ -317,8 +317,10 @@ def build() -> tuple[dict[str, np.ndarray], list[float]]:
             # Velocity is a timbre control on a real piano, not just a level:
             # the soft touch is darker, not merely quieter. `ring` sets how long
             # the note is allowed to sound before the damper lands.
-            dur = 2.9 if ring == "long" else 0.95
-            keys[key] = S.steinway_note(name, dur, seed=seed,
+            # Length includes the damper release, so the note is still ringing
+            # freely for dur-release and is then damped rather than truncated.
+            dur, rel = (3.2, 0.60) if ring == "long" else (1.15, 0.25)
+            keys[key] = S.steinway_note(name, dur, seed=seed, release=rel,
                                         velocity=0.50 if touch == "soft" else 0.82)
         return keys[key]
 
