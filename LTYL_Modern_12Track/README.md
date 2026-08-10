@@ -84,9 +84,12 @@ keys held down. Voice-led so common tones hold and the top moves by step:
 Gm  G4 Bb4 D5   ->  Eb  G4 Bb4 Eb5   ->  Bb  F4 Bb4 D5   ->  F  F4 A4 C5
 ```
 
-Each chord lasts **2 bars** and is struck **3 times** — on the downbeat, the
-"and" of 2, and beat 4 — after which the whole second bar is left empty to
-breathe before the chord switches. The first two hits are choked to 0.95 s so
+Each chord lasts **2 bars** and is struck **3 times**, spread across the whole
+section — bar 1 downbeat, the "and" of 3 in bar 1, then beat 2 of bar 2 —
+leaving 3 beats to breathe before the chord switches. Hits are 1.67 s apart with
+a 2.0 s gap at the end. An earlier version packed all three into the first four
+of eight beats, which read as busy rather than somber; the original is a
+midtempo ballad and the piano is there to set tone, not to drive rhythm. The first two hits are choked to 0.95 s so
 they read as stabs; the third rings 2.9 s through the empty bar. Over an 8-bar
 chorus that is 4 chords × 3 hits = **12 stabs**.
 
@@ -406,3 +409,38 @@ a finished master; mastered to −1 dBTP with a vocal, this lands in spec.
 Groove verification is now schedule-based rather than edge-counting (a two-hump
 layered kick envelope reads as two onsets to a naive detector):
 **116/116 kick, 48/48 snare, 516/516 hat** scheduled hits confirmed.
+
+
+---
+
+## Leaving room for the rap
+
+Verses have to be measurably more open than choruses, or a vocal has nowhere to
+sit. Measured as *how much of the time the 1–5 kHz band is occupied*:
+
+```
+             before   after
+chorus1       78.5%   89.9%
+verse1a       68.3%   52.4%
+verse1b       76.9%   64.7%
+chorus2       79.6%   84.7%
+verse2a       48.4%   35.4%
+verse2b       78.9%   66.6%
+chorus3       82.1%   90.1%
+
+verses avg    68.1%   54.8%
+choruses avg  80.1%   88.2%
+gap           12.0    33.5 points
+```
+
+Before, verses were nearly as dense as choruses — 77–79% against 80–82%. Two
+changes fixed it: the guitar arpeggio drops from four notes per bar to two under
+the verses (at 8 events/bar it was the densest melodic source), and the piano
+sits 3–5 dB further back there.
+
+**Known cosmetic detail:** 82 of 84 piano stabs show a measurable attack. The
+two that don't are the downbeats of bars 9 and 33 — zone boundaries where the
+piano level drops ~11 dB into a verse while the previous chorus note is still
+ringing, so the new stab is masked by its own predecessor's tail. The note is
+sequenced and written; it is simply quieter than what is already decaying. The
+full band enters at both points, so it is inaudible either way.

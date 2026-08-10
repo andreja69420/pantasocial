@@ -49,8 +49,8 @@ LAYERS = {
     # Strings enter with the build and carry the full sections, the way the
     # 2010 record uses them. Never in the bare chorus 1.
     "T14": {"verse1b": 0.55, "chorus2": 1.00, "verse2b": 0.65, "chorus3": 1.00},
-    "T13": {"chorus1": 2.20, "verse1a": 0.85, "verse1b": 0.95, "chorus2": 1.00,
-            "verse2a": 0.70, "verse2b": 0.90, "chorus3": 1.00},
+    "T13": {"chorus1": 2.20, "verse1a": 0.62, "verse1b": 0.70, "chorus2": 1.00,
+            "verse2a": 0.52, "verse2b": 0.66, "chorus3": 1.00},
 }
 
 
@@ -173,10 +173,12 @@ STAB_VOICINGS = {
     "F":  ["F4", "A4", "C5"],
 }
 
-# Three hits inside the first bar of each 2-bar chord section, then the whole
-# second bar is left empty to breathe before the chord switches. Beat offsets
-# are 0-indexed: downbeat, the "and" of 2, and beat 4.
-STAB_HITS = [0.0, 1.5, 3.0]
+# Three hits spread across the whole 2-bar chord section rather than crammed
+# into the first bar. Beat offsets are 0-indexed over 8 beats: bar 1 downbeat,
+# the "and" of 3 in bar 1, then beat 2 of bar 2 — leaving 3 beats to breathe
+# before the chord switches. The original is a midtempo ballad whose piano sets
+# a somber tone; hits packed into four beats read as busy rather than somber.
+STAB_HITS = [0.0, 2.5, 5.0]
 
 
 def build() -> tuple[dict[str, np.ndarray], list[float]]:
@@ -227,7 +229,11 @@ def build() -> tuple[dict[str, np.ndarray], list[float]]:
         if (g1 := lg("T1", bar)):
             for i, n in enumerate(ch["guitar"]):
                 place(tracks["T1"], guitar[n], t0 + i * 0.011, 0.62 * g1)  # strum spread
-            for i, beat in enumerate((1.0, 2.0, 3.0, 3.5)):
+            # Four arpeggio notes under the choruses, two under the verses. At
+            # 8 events/bar the guitar was the densest melodic source, and the
+            # verses have to leave room for a vocal.
+            arp = (1.0, 2.0, 3.0, 3.5) if sect == "chorus" else (2.0, 3.5)
+            for i, beat in enumerate(arp):
                 n = ch["guitar"][(i + 1) % len(ch["guitar"])]
                 place(tracks["T1"], guitar_short[n], t0 + beat * BEAT, 0.34 * g1)
 
@@ -381,7 +387,7 @@ def build() -> tuple[dict[str, np.ndarray], list[float]]:
             # the note is allowed to sound before the damper lands.
             # Length includes the damper release, so the note is still ringing
             # freely for dur-release and is then damped rather than truncated.
-            dur, rel = (3.2, 0.60) if ring == "long" else (1.15, 0.25)
+            dur, rel = (3.4, 0.70) if ring == "long" else (1.75, 0.40)
             keys[key] = S.steinway_note(name, dur, seed=seed, release=rel,
                                         velocity=0.50 if touch == "soft" else 0.82)
         return keys[key]
