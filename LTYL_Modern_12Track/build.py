@@ -87,7 +87,7 @@ def main() -> int:
     t_start = time.time()
     print("=" * 72)
     print("  LOVE THE WAY YOU LIE — modern dark trap/drill rework")
-    print(f"  104 BPM | G minor | 56 bars | {arrange.BARS * arrange.BAR:.1f}s | {SR} Hz")
+    print(f"  {arrange.BPM:.0f} BPM | G minor | 56 bars | {arrange.BARS * arrange.BAR:.1f}s | {SR} Hz")
     print("=" * 72)
 
     print("\n[1/5] Asset acquisition")

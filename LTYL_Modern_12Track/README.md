@@ -3,7 +3,7 @@
 A fully synthesized, mixed and mastered 56-bar dark trap/drill instrumental.
 Started as 12 tracks; T13 (lead synth) was added later. Output filenames keep
 the original `12Track` name so existing links stay valid.
-104 BPM, G minor, 48 kHz / 24-bit stereo, peaks at exactly **−6.00 dBFS** so
+90 BPM, G minor, 48 kHz / 24-bit stereo, peaks at exactly **−6.00 dBFS** so
 there is headroom to record raw vocals on top.
 
 ```
@@ -35,7 +35,7 @@ ambient piano — and replace the delivery mechanism entirely:
 
 | Original | This rework |
 | --- | --- |
-| ~84 BPM stadium-rock kit | 104 BPM trap grid, dry rimshot on beat 3 |
+| ~84 BPM stadium-rock kit | 90 BPM trap grid, dry rimshot on beat 3 |
 | Big reverb on everything | Reverb on the *beds only*; snare bone dry |
 | Live bass / low piano | Distorted sine 808 with 60 ms glides |
 | Guitar full-range | Guitar lowpassed at 2.5 kHz with vinyl wobble |
@@ -85,7 +85,7 @@ register shifts*.
 a detuned saw stack for the growl, a hard filter-swept pluck for the bite, drive
 for aggression. The *riff is original*: transcribing a recognisable melodic hook
 into a releasable beat is the part that carries copyright exposure, and the line
-had to be rewritten for G minor at 104 BPM regardless.
+had to be rewritten for G minor at 90 BPM regardless.
 
 **Implementation.** `synth.lead_pluck()` sums five saws detuned ±18 cents plus a
 pulse layer and a sub octave, then runs them through `_sweep_lp()` — a lowpass
@@ -97,34 +97,53 @@ The two behaviours the research called out are both sequenced in: the filter
 opens (620 Hz → 1350 Hz) in the back half of each chorus, and the riff jumps an
 octave for the final two bars.
 
-**Placement — chorus 1 only (bars 1–8).** It is an opening statement, not a
-recurring hook: it announces the track and never returns. It is kept out of the
-verses because the riff occupies the same range the rap needs, and the entire
-mix is built around leaving that range empty. It also routes through the
-harmonic bed bus, so it takes the same 1.6 kHz / 3.2 kHz pocket carve as
-everything else melodic.
+**Placement.** Two voicings, not one. Chorus 1 is the synth *alone* — the
+research on the original notes that its first chorus is a solo instrument, used
+to set the somber tone before the beat arrives. An aggressive detuned-saw patch
+would set entirely the wrong tone there, so `lead_pluck()` is run in a **soft
+voicing**: filter mostly shut (3 kHz → 420 Hz), a slower sweep, four voices
+instead of five, detune cut to ±11 cents, drive down to 1.25, longer notes and a
+sparser 4-note-per-bar figure. The hard voicing returns for choruses 2 and 3.
 
-Because choruses 2 and 3 have no synth, **T5 (high pluck) plays every bar there
-instead of alternating bars**, becoming their melodic signature. That keeps the
-three choruses level with each other rather than letting the later two sag:
+The synth is kept out of the verses entirely: the riff occupies the same range
+the rap needs, and the mix is built around leaving that range empty. It routes
+through the harmonic bed bus, so it takes the same 1.6 kHz / 3.2 kHz pocket
+carve as everything else melodic.
 
-```
-chorus 1  300 Hz-6 kHz  -26.5 dBFS   (lead synth)
-chorus 2  300 Hz-6 kHz  -26.7 dBFS   (dense pluck)
-chorus 3  300 Hz-6 kHz  -26.6 dBFS   (dense pluck)
-verses    300 Hz-6 kHz  -29.1 dBFS
-```
+Its chorus-1 arrangement gain is **3.0** rather than 1.0. Its mix level was set
+to sit inside an 11-track chorus, which left the solo intro 16 dB below the rest
+of the record; the boost brings it to ~10 dB down on broadband while making it
+the *loudest* zone in the 300 Hz–6 kHz band, so it reads as present and
+deliberate rather than as a quiet fade-in.
 
 ---
 
 ## Phase 2 — the 56-bar grid
 
 ```
-bars  1–8    CHORUS
-bars  9–24   VERSE   (16)
-bars 25–32   CHORUS
-bars 33–48   VERSE   (16)
-bars 49–56   CHORUS
+bars  1–8    CHORUS 1   solo lead synth — nothing else at all
+bars  9–16   VERSE 1a   drums + 808 + guitar enter
+bars 17–24   VERSE 1b   + pad, FM chord, perc, hats up
+bars 25–32   CHORUS 2   full — every track
+bars 33–40   VERSE 2a   stripped back hardest
+bars 41–48   VERSE 2b   rebuild
+bars 49–56   CHORUS 3   full again
+```
+
+Track presence is a table (`arrange.LAYERS`), not scattered conditionals: each
+of the seven zones maps every track to a gain, where 0.0 means silent. Measured
+result — the 300 Hz–6 kHz column is where the arrangement actually moves, since
+broadband RMS just tracks the 808:
+
+```
+zone       tracks   broadband   300 Hz-6 kHz
+chorus1       1      -25.4        -26.2      solo synth, no low end at all
+verse1a       6      -16.4        -30.5
+verse1b       9      -16.3        -29.2
+chorus2      11      -15.3        -27.6
+verse2a       6      -16.5        -32.5      the drop
+verse2b       9      -16.3        -29.3
+chorus3      11      -15.3        -27.6
 ```
 
 Chord loop, one bar each: **Gm → Eb → Bb → F** (i–VI–III–VII).
@@ -132,13 +151,14 @@ Chord loop, one bar each: **Gm → Eb → Bb → F** (i–VI–III–VII).
 - **T4** crests exactly on each chorus downbeat. Chorus 1 sits at bar 1, so its
   lead-in falls off the front of the grid — a double-length swell placed two bars
   early leaves precisely the final bar audible, still peaking on the downbeat.
-- **T5** plays D5→Bb4→G4 on the "and of 3 / 4 / and of 4" of alternating chorus
-  bars, threading between the kick and snare rather than over them.
+- **T5** plays D5→Bb4→G4 on the "and of 3 / 4 / and of 4" of alternating bars in
+  the two full choruses, threading between the kick and snare rather than over
+  them.
 - **T6** hits beat 1 and the "and" of 2, plus beat 4 in choruses (and the "and"
-  of 4 every fourth bar). 142 triggers total.
-- **T7** lands on beat 3 of all 56 bars.
+  of 4 every fourth bar). 116 triggers — chorus 1 has no drums at all.
+- **T7** lands on beat 3 of all 48 bars that have drums.
 - **T8** runs steady 1/8ths with 1/32 rolls filling beat 4 of every 2nd and 4th
-  bar. 616 hits.
+  bar, at reduced velocity in the stripped verses. 528 hits.
 - **T11** follows the roots with a 60 ms portamento between overlapping notes,
   and drops 2 dB through the verses.
 
@@ -182,10 +202,10 @@ Limiter → tanh soft clip → 1.2 s tail fade → exact peak normalization.
 
 ```
 peak      -6.000 dBFS      (target -6.0000)
-RMS      -15.84 dBFS
-LUFS-I   -15.28            (~-9.3 LUFS if normalized to 0 dBFS)
-crest      9.84 dB         transients intact
-L/R corr  +0.919           mono-safe
+RMS      -16.58 dBFS
+LUFS-I   -15.84            (~-9.8 LUFS if normalized to 0 dBFS)
+crest     10.58 dB         transients intact
+L/R corr  +0.951           mono-safe
 clipped samples: 0         NaN/Inf: none
 ```
 
@@ -193,33 +213,30 @@ clipped samples: 0         NaN/Inf: none
 by design:
 
 ```
-   20-60   Hz   -5.17
+   20-60   Hz   -5.05
    60-120  Hz   -2.30   <- 808 lives here
-  120-250  Hz  -13.40
-  250-500  Hz  -14.63
-  500-1000 Hz  -16.72
- 1000-2000 Hz  -21.46   <- vocal pocket
- 2000-4000 Hz  -25.21   <- vocal pocket
- 4000-8000 Hz  -27.86
- 8000-16000Hz  -32.43
+  120-250  Hz  -15.05
+  250-500  Hz  -15.26
+  500-1000 Hz  -15.43
+ 1000-2000 Hz  -19.74   <- vocal pocket
+ 2000-4000 Hz  -25.50   <- vocal pocket
+ 4000-8000 Hz  -28.28
+ 8000-16000Hz  -33.96
 ```
 
-**Section lift** — broadband RMS barely moves (the 808 dominates it), so the
-verse/chorus contrast is measured in the musical band, where it is ~2.1 dB:
-
-```
-chorus  300 Hz-6 kHz  -27.4 dBFS
-verse   300 Hz-6 kHz  -29.5 dBFS
-```
+**Section lift** — see the zone table under Phase 2.
 
 **Groove grid** — every hit is placed at a sample-exact index; onset detection
 confirms the counts and sub-millisecond jitter:
 
 ```
-kick   142 onsets (expect 142)
-snare   56 onsets (expect  56)
-hat    616 onsets (expect 616)
+kick   116 onsets (expect 116)   jitter max 0.81 ms
+snare   48 onsets (expect  48)   jitter max 0.00 ms
+hat    528 onsets (expect 528)   jitter max 1.08 ms
 ```
+
+Expected counts are derived from `arrange.LAYERS` rather than hard-coded, so the
+check stays honest when the arrangement changes.
 
 **Portamento**, measured as instantaneous frequency across a chord change:
 

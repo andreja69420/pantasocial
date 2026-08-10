@@ -71,12 +71,14 @@ def main() -> None:
     print("=" * 70)
     # Broadband RMS is dominated by the 808 and barely moves; the section lift
     # lives in the musical band, so measure there too.
-    for blk in range(7):
-        a, b = int(blk * 8 * BAR * sr), int((blk + 1) * 8 * BAR * sr)
-        kind = arrange.section_of(blk * 8)
+    for z0, z1, name in arrange.ZONES:
+        a, b = int(z0 * BAR * sr), int(z1 * BAR * sr)
         seg = mono[a:b]
-        print(f"    bars {blk*8+1:>2}-{blk*8+8:<2}  {kind:<7} "
-              f"broadband {rms_db(seg):+.2f} | 300Hz-6kHz {band_rms(seg, 300, 6000):+.2f} dBFS")
+        live = [t for t in sorted(arrange.LAYERS, key=lambda s: int(s[1:]))
+                if arrange.lg(t, z0) > 0]
+        print(f"    bars {z0+1:>2}-{z1:<2}  {name:<8} "
+              f"broadband {rms_db(seg):+.2f} | 300Hz-6kHz {band_rms(seg, 300, 6000):+.2f} dBFS"
+              f" | {len(live):>2} tracks")
 
     print("\n" + "=" * 70)
     print("  STEM BALANCE (post-DSP, pre-master)")
@@ -155,17 +157,21 @@ def main() -> None:
     print("=" * 70)
     # Smoothing must outrun the stem's own fundamental — a 46 Hz kick body has a
     # 22 ms period, so a 3 ms window "detects" every cycle of the decay.
-    for stem, label, expected, smooth, debounce in (
-            ("T6_Kick", "kick", 142, 0.030, 0.12),
-            ("T7_Snare-Rim", "snare", 56, 0.004, 0.20),
-            ("T8_Hi-Hat", "hat", 616, 0.002, 0.030)):
+    exp = _expected_counts()
+    # Hats need a lower threshold than the drums: the arrangement drops hat
+    # velocity to 0.5 in the stripped verses, which puts the quietest roll hits
+    # under an 18 % gate even though they are sequenced correctly.
+    for stem, label, expected, smooth, debounce, thr in (
+            ("T6_Kick", "kick", exp["kick"], 0.030, 0.12, 0.18),
+            ("T7_Snare-Rim", "snare", exp["snare"], 0.004, 0.20, 0.18),
+            ("T8_Hi-Hat", "hat", exp["hat"], 0.002, 0.030, 0.12)):
         s, _ = sf.read(os.path.join(HERE, "stems", stem + ".wav"), always_2d=True)
         m = np.abs(s.T.mean(axis=0))
         w = max(1, int(smooth * sr))
         e = np.convolve(m, np.ones(w) / w, mode="same")
         # Pad a leading False: with mode="same" smoothing a hit at t=0 is
         # already above threshold at sample 0 and has no rising edge to find.
-        above = np.r_[False, e > e.max() * 0.18]
+        above = np.r_[False, e > e.max() * thr]
         raw = np.flatnonzero(above[1:] & ~above[:-1]) / sr
         onsets, last = [], -1e9
         for o in raw:
@@ -235,6 +241,8 @@ def _note_onsets():
     """808 note start times (retriggers, where a duck has nothing to bite on)."""
     times = []
     for bar in range(arrange.BARS):
+        if not arrange.lg("T11", bar):
+            continue
         t0 = bar * BAR
         times.append(t0)
         if arrange.section_of(bar) == "chorus":
@@ -246,6 +254,8 @@ def _kick_grid():
     """Re-derive kick trigger times from the arrangement rules (cheap)."""
     times = []
     for bar in range(arrange.BARS):
+        if not arrange.lg("T6", bar):
+            continue
         t0 = bar * BAR
         pos = [0.0, 1.5]
         if arrange.section_of(bar) == "chorus":
@@ -254,6 +264,15 @@ def _kick_grid():
                 pos.append(3.5)
         times += [t0 + p * BEAT for p in pos]
     return sorted(times)
+
+
+def _expected_counts():
+    """Hit counts implied by the arrangement, so the grid check stays honest
+    as the layer map changes."""
+    snare = sum(1 for b in range(arrange.BARS) if arrange.lg("T7", b))
+    hat = sum(14 if (b % 4) in (1, 3) else 8
+              for b in range(arrange.BARS) if arrange.lg("T8", b))
+    return {"kick": len(_kick_grid()), "snare": snare, "hat": hat}
 
 
 if __name__ == "__main__":

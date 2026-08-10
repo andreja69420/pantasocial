@@ -10,6 +10,7 @@ from pedalboard import (Pedalboard, Chorus, Clipping, Compressor, Delay, Distort
                         Gain, HighpassFilter, HighShelfFilter, Limiter, LowpassFilter,
                         PeakFilter, Phaser, Reverb)
 
+from arrange import BEAT      # single source of tempo
 from synth import SR
 
 
@@ -89,8 +90,6 @@ TRACK_GAIN_DB = {
     "T7": -6.0, "T8": -11.5, "T9": -14.5, "T10": -9.0, "T11": -11.0, "T12": -19.0,
     "T13": -16.0,
 }
-
-BEAT = 60.0 / 104.0
 
 
 def process_tracks(tracks: dict[str, np.ndarray], kick_times) -> dict[str, np.ndarray]:
@@ -204,7 +203,7 @@ def process_tracks(tracks: dict[str, np.ndarray], kick_times) -> dict[str, np.nd
         Distortion(drive_db=3.0),
         PeakFilter(cutoff_frequency_hz=350, gain_db=-2.0, q=0.8),   # riff roots
         LowpassFilter(3800),
-        Reverb(room_size=0.45, damping=0.6, wet_level=0.13, dry_level=0.92, width=0.9),
+        Reverb(room_size=0.62, damping=0.55, wet_level=0.24, dry_level=0.88, width=0.9),
     ]), widen(np.stack([ll, lr]), 1.3))
 
     for k in out:

@@ -10,9 +10,9 @@ import numpy as np
 import synth as S
 from synth import SR, nf
 
-BPM = 104.0
-BEAT = 60.0 / BPM                 # 0.576923 s
-BAR = 4.0 * BEAT                  # 2.307692 s
+BPM = 90.0
+BEAT = 60.0 / BPM                 # 0.666667 s
+BAR = 4.0 * BEAT                  # 2.666667 s
 BARS = 56
 TAIL = 4.0                        # seconds of room for reverb/808 decay
 TOTAL = int((BARS * BAR + TAIL) * SR)
@@ -22,12 +22,49 @@ SECTIONS = [("chorus", 0, 8), ("verse", 8, 24), ("chorus", 24, 32),
             ("verse", 32, 48), ("chorus", 48, 56)]
 CHORUS_STARTS = [0, 24, 48]
 
+# Each 16-bar verse is split in half so the arrangement can drop and rebuild
+# inside it instead of holding one static texture for 43 seconds.
+ZONES = [(0, 8, "chorus1"), (8, 16, "verse1a"), (16, 24, "verse1b"),
+         (24, 32, "chorus2"), (32, 40, "verse2a"), (40, 48, "verse2b"),
+         (48, 56, "chorus3")]
+
+# Per-track presence, zone by zone. 0.0 means the track is silent there.
+# This is the arrangement: chorus 1 is one instrument alone, verse 1 builds,
+# chorus 2 is everything, verse 2 drops out and rebuilds, chorus 3 is everything.
+LAYERS = {
+    "T1":  {"verse1a": 0.90, "verse1b": 1.00, "chorus2": 1.00, "verse2a": 0.70, "verse2b": 0.95, "chorus3": 1.00},
+    "T2":  {"verse1b": 0.55, "chorus2": 1.00, "verse2b": 0.60, "chorus3": 1.00},
+    "T3":  {"verse1b": 0.70, "chorus2": 1.00, "verse2b": 0.80, "chorus3": 1.00},
+    "T5":  {"chorus2": 1.00, "chorus3": 1.00},
+    "T6":  {"verse1a": 1.00, "verse1b": 1.00, "chorus2": 1.00, "verse2a": 1.00, "verse2b": 1.00, "chorus3": 1.00},
+    "T7":  {"verse1a": 1.00, "verse1b": 1.00, "chorus2": 1.00, "verse2a": 1.00, "verse2b": 1.00, "chorus3": 1.00},
+    "T8":  {"verse1a": 0.55, "verse1b": 1.00, "chorus2": 1.00, "verse2a": 0.50, "verse2b": 1.00, "chorus3": 1.00},
+    "T9":  {"verse1b": 1.00, "chorus2": 1.00, "verse2b": 1.00, "chorus3": 1.00},
+    "T11": {"verse1a": 1.00, "verse1b": 1.00, "chorus2": 1.00, "verse2a": 1.00, "verse2b": 1.00, "chorus3": 1.00},
+    "T12": {"verse1a": 0.80, "verse1b": 1.00, "chorus2": 1.00, "verse2a": 0.80, "verse2b": 1.00, "chorus3": 1.00},
+    # chorus1 is boosted because the synth is alone there: its mix level was set
+    # to sit inside an 11-track chorus, which left the solo intro ~16 dB down.
+    "T13": {"chorus1": 3.00, "chorus2": 1.00, "chorus3": 1.00},
+}
+
 
 def section_of(bar: int) -> str:
     for kind, a, b in SECTIONS:
         if a <= bar < b:
             return kind
     return "verse"
+
+
+def zone_of(bar: int) -> tuple[str, int]:
+    for a, b, name in ZONES:
+        if a <= bar < b:
+            return name, a
+    return ZONES[-1][2], ZONES[-1][0]
+
+
+def lg(track: str, bar: int) -> float:
+    """Arrangement gain for a track in a given bar (0.0 = not playing)."""
+    return LAYERS.get(track, {}).get(zone_of(bar)[0], 0.0)
 
 
 # i - VI - III - VII in G minor, one bar each, looping.
@@ -130,28 +167,27 @@ def build() -> tuple[dict[str, np.ndarray], list[float]]:
         t0 = bar_time(bar)
         sect = section_of(bar)
 
-        # Verses pull the whole harmonic bed back so the rap sits on top of the
-        # drums; choruses open it back up. This is the main verse/chorus lift.
-        lift = 1.0 if sect == "chorus" else 0.72
-
         # T1 guitar: strum on the downbeat + a 4-note arpeggio through the bar
-        for i, n in enumerate(ch["guitar"]):
-            place(tracks["T1"], guitar[n], t0 + i * 0.011, 0.62 * lift)   # strum spread
-        for i, beat in enumerate((1.0, 2.0, 3.0, 3.5)):
-            n = ch["guitar"][(i + 1) % len(ch["guitar"])]
-            place(tracks["T1"], guitar_short[n], t0 + beat * BEAT, 0.34 * lift)
+        if (g1 := lg("T1", bar)):
+            for i, n in enumerate(ch["guitar"]):
+                place(tracks["T1"], guitar[n], t0 + i * 0.011, 0.62 * g1)  # strum spread
+            for i, beat in enumerate((1.0, 2.0, 3.0, 3.5)):
+                n = ch["guitar"][(i + 1) % len(ch["guitar"])]
+                place(tracks["T1"], guitar_short[n], t0 + beat * BEAT, 0.34 * g1)
 
         # T2 synth chord: beat 1 only
-        place(tracks["T2"], chords[bar % 4], t0, 0.50 * lift)
+        if (g2 := lg("T2", bar)):
+            place(tracks["T2"], chords[bar % 4], t0, 0.50 * g2)
 
         # T3 pad: sustained, one chord per bar
-        place(tracks["T3"], pads[bar % 4], t0, 0.58 * lift)
+        if (g3 := lg("T3", bar)):
+            place(tracks["T3"], pads[bar % 4], t0, 0.58 * g3)
 
     # ------------------------------------------------------ T4 reverse swell
+    # Chorus 1 is a bare solo instrument, so it gets no lead-in — the swells
+    # announce the two full choruses instead.
     for cs in CHORUS_STARTS:
-        if cs == 0:
-            place(tracks["T4"], swell_intro, bar_time(cs) - 2 * BAR, 0.75)
-        else:
+        if cs != 0:
             place(tracks["T4"], swell, bar_time(cs) - BAR, 0.75)
 
     # ---------------------------------------------------------- T5 high pluck
@@ -159,16 +195,13 @@ def build() -> tuple[dict[str, np.ndarray], list[float]]:
     # Chorus 1 has the lead synth carrying the melody, so the pluck stays sparse
     # there. Choruses 2 and 3 have no synth, so the pluck plays every bar and
     # becomes their melodic signature instead.
-    for kind, a, b in SECTIONS:
-        if kind != "chorus":
+    for bar in range(BARS):
+        g5 = lg("T5", bar)
+        if not g5 or (bar % 2):                                 # alternating bars
             continue
-        dense = a != 0
-        for bar in range(a, b):
-            if not dense and (bar - a) % 2:
-                continue
-            t0 = bar_time(bar)
-            for n, beat, g in (("D5", 2.5, 0.55), ("Bb4", 3.0, 0.45), ("G4", 3.5, 0.50)):
-                place(tracks["T5"], plucks[n], t0 + beat * BEAT, g * (1.1 if dense else 1.0))
+        t0 = bar_time(bar)
+        for n, beat, g in (("D5", 2.5, 0.55), ("Bb4", 3.0, 0.45), ("G4", 3.5, 0.50)):
+            place(tracks["T5"], plucks[n], t0 + beat * BEAT, g * g5)
 
     # ------------------------------------------------------------ T6/T7 drums
     for bar in range(BARS):
@@ -179,18 +212,22 @@ def build() -> tuple[dict[str, np.ndarray], list[float]]:
             pos.append(3.0)                                     # beat 4 drive
             if (bar % 4) == 3:
                 pos.append(3.5)
-        for p in pos:
-            t = t0 + p * BEAT
-            place(tracks["T6"], kick_s, t, 0.92)
-            kick_times.append(t)
+        if (g6 := lg("T6", bar)):
+            for p in pos:
+                t = t0 + p * BEAT
+                place(tracks["T6"], kick_s, t, 0.92 * g6)
+                kick_times.append(t)                            # sidechain follows real kicks only
 
-        place(tracks["T7"], rim_s, t0 + 2.0 * BEAT, 0.85)       # beat 3, every bar
+        if (g7 := lg("T7", bar)):
+            place(tracks["T7"], rim_s, t0 + 2.0 * BEAT, 0.85 * g7)   # beat 3
 
     # ---------------------------------------------------------------- T8 hats
     for bar in range(BARS):
         t0 = bar_time(bar)
         roll = (bar % 4) in (1, 3)                              # every 2nd and 4th bar
-        vel = 1.0 if section_of(bar) == "chorus" else 0.85
+        vel = (1.0 if section_of(bar) == "chorus" else 0.85) * lg("T8", bar)
+        if not vel:
+            continue
         for i in range(8):
             beat = i * 0.5
             if roll and beat >= 3.0:
@@ -204,22 +241,28 @@ def build() -> tuple[dict[str, np.ndarray], list[float]]:
 
     # ---------------------------------------------------------------- T9 perc
     for bar in range(BARS):
+        g9 = lg("T9", bar)
+        if not g9:
+            continue
         t0 = bar_time(bar)
-        place(tracks["T9"], ohat_s, t0 + 1.5 * BEAT, 0.44)      # open hat, "and" of 2
-        place(tracks["T9"], wood_s, t0 + 0.5 * BEAT, 0.30)
-        place(tracks["T9"], wood_s, t0 + 2.5 * BEAT, 0.34)
+        place(tracks["T9"], ohat_s, t0 + 1.5 * BEAT, 0.44 * g9)  # open hat, "and" of 2
+        place(tracks["T9"], wood_s, t0 + 0.5 * BEAT, 0.30 * g9)
+        place(tracks["T9"], wood_s, t0 + 2.5 * BEAT, 0.34 * g9)
         if section_of(bar) == "chorus":
-            place(tracks["T9"], wood_s, t0 + 3.5 * BEAT, 0.26)
+            place(tracks["T9"], wood_s, t0 + 3.5 * BEAT, 0.26 * g9)
 
     # -------------------------------------------------------------- T10 impact
     for cs in CHORUS_STARTS:
-        place(tracks["T10"], impact_s, bar_time(cs), 0.85)
+        if cs != 0:                                             # not the bare chorus 1
+            place(tracks["T10"], impact_s, bar_time(cs), 0.85)
 
     # ----------------------------------------------------------------- T11 808
     # One root per bar (plus a chorus retrigger), each note gliding out of the
     # previous pitch over 60 ms.
     events: list[tuple[float, float, float]] = []               # (start, dur, freq)
     for bar in range(BARS):
+        if not lg("T11", bar):
+            continue
         ch = PROGRESSION[bar % 4]
         f = nf(ch["root"])
         t0 = bar_time(bar)
@@ -243,39 +286,60 @@ def build() -> tuple[dict[str, np.ndarray], list[float]]:
     # Sparse: one long chop every 8 bars, alternating pitch.
     order = ["G4", "Bb4", "D5", "Bb4"]
     for i, bar in enumerate(range(0, BARS, 8)):
-        beat = 2.0 if section_of(bar) == "verse" else 0.0
-        place(tracks["T12"], chops[order[i % len(order)]], bar_time(bar, beat), 0.42)
+        if (g := lg("T12", bar)):
+            beat = 2.0 if section_of(bar) == "verse" else 0.0
+            place(tracks["T12"], chops[order[i % len(order)]], bar_time(bar, beat), 0.42 * g)
     for i, bar in enumerate(range(4, BARS, 8)):
-        place(tracks["T12"], chops[order[(i + 2) % len(order)]], bar_time(bar, 3.0), 0.26)
+        if (g := lg("T12", bar)):
+            place(tracks["T12"], chops[order[(i + 2) % len(order)]], bar_time(bar, 3.0), 0.26 * g)
 
     # ----------------------------------------------------------- T13 lead riff
     # Choruses only, plus a 2-beat pickup into choruses B and C. Keeping it out
     # of the verses is deliberate: this riff lives in the same range the rap
     # needs, and the whole mix is built around leaving that range empty.
-    lead: dict[tuple[str, int, int], np.ndarray] = {}
+    lead: dict[tuple[str, str], np.ndarray] = {}
 
-    def lead_note(name: str, bright: int, seed: int) -> np.ndarray:
-        key = (name, bright, 0)
+    def lead_note(name: str, mode: str) -> np.ndarray:
+        key = (name, mode)
         if key not in lead:
-            lead[key] = S.lead_pluck(name, 0.22, seed=seed,
-                                     f_lo=620.0 if bright == 0 else 1350.0,
-                                     f_hi=7000.0 if bright == 0 else 9000.0)
+            seed = 400 + abs(hash(name)) % 500
+            if mode == "soft":
+                # Solo-intro voicing. Alone at the top of a melancholic record,
+                # the aggressive patch would set entirely the wrong tone, so the
+                # same oscillator stack is run with the filter mostly shut, a
+                # slower sweep, less detune and almost no drive — haunting
+                # rather than snarling. The hard version returns in chorus 2.
+                lead[key] = S.lead_pluck(name, 0.62, seed=seed, voices=4,
+                                         detune_cents=11.0, f_hi=3000.0,
+                                         f_lo=420.0, sweep_tau=0.11, drive=1.25)
+            else:
+                lead[key] = S.lead_pluck(name, 0.22, seed=seed,
+                                         f_lo=620.0 if mode == "dark" else 1350.0,
+                                         f_hi=7000.0 if mode == "dark" else 9000.0)
         return lead[key]
 
-    for kind, a, b in SECTIONS:
-        if kind != "chorus" or a != 0:      # opening statement only
+    SOFT_SLOTS = [0, 6, 8, 14]              # sparse — lets 8 solo bars breathe
+    for bar in range(BARS):
+        g13 = lg("T13", bar)
+        if not g13:
             continue
-        for bar in range(a, b):
-            pos = bar - a
-            cell = RIFF_CELLS[PROGRESSION[bar % 4]["name"]]
-            # Filter opens in the back half, then the last two bars jump an
-            # octave: the "register shift" the original leans on for lift.
-            bright = 1 if pos >= 4 else 0
-            octv = pos >= 6
+        zname, zstart = zone_of(bar)
+        pos = bar - zstart
+        cell = RIFF_CELLS[PROGRESSION[bar % 4]["name"]]
+        # Filter opens in the back half, then the last two bars jump an octave:
+        # the "register shift" the original leans on for lift.
+        octv = pos >= 6
+        if zname == "chorus1":
+            for slot, note in zip(SOFT_SLOTS, (cell[0], cell[3], cell[4], cell[7])):
+                n = _up_octave(note) if octv else note
+                place(tracks["T13"], lead_note(n, "soft"),
+                      bar_time(bar, slot * 0.25), 0.58 * g13)
+        else:
+            mode = "bright" if pos >= 4 else "dark"
             for slot, note in zip(RIFF_SLOTS, cell):
                 n = _up_octave(note) if octv else note
                 g = 0.62 if slot in (0, 8) else 0.44
-                place(tracks["T13"], lead_note(n, bright, 400 + hash(n) % 500),
-                      bar_time(bar, slot * 0.25), g)
+                place(tracks["T13"], lead_note(n, mode),
+                      bar_time(bar, slot * 0.25), g * g13)
 
     return tracks, sorted(kick_times)
