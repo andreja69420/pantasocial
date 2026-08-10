@@ -92,7 +92,15 @@ TRACK_GAIN_DB = {
 }
 
 
-def process_tracks(tracks: dict[str, np.ndarray], kick_times) -> dict[str, np.ndarray]:
+def process_tracks(tracks: dict[str, np.ndarray], kick_times,
+                   real_stereo: dict[str, np.ndarray] | None = None) -> dict[str, np.ndarray]:
+    """`real_stereo` lets a real recorded stem (already stereo, shape (2, n))
+    stand in for a synthesized track's mono buffer, keyed by track name (e.g.
+    `{"T13": bounced_piano}`). It still goes through that track's own DSP
+    chain below — only the *source* changes, not the mix treatment — which is
+    the point: this is how a Logic Pro re-track (see midi_export.py) comes
+    back into the record."""
+    real_stereo = real_stereo or {}
     out: dict[str, np.ndarray] = {}
 
     # T1 electric guitar. The pickup resonance at 2.7 kHz is what makes it read
@@ -216,11 +224,12 @@ def process_tracks(tracks: dict[str, np.ndarray], kick_times) -> dict[str, np.nd
     # G3/Eb3 in the instrumental peaks (808 present) — 220 Hz would have
     # filtered the whole point of adding it back out. Reverb kept short so the
     # stabs stay tight rather than washing into each other.
+    t13_src = real_stereo["T13"] if "T13" in real_stereo else pan(tracks["T13"], 0.0)
     out["T13"] = run(Pedalboard([
         HighpassFilter(140),
         LowpassFilter(6500),
         Reverb(room_size=0.55, damping=0.55, wet_level=0.16, dry_level=0.92, width=0.95),
-    ]), pan(tracks["T13"], 0.0))
+    ]), t13_src)
 
     # T14 strings — wide, dark, and carved out of the vocal range. Strings are
     # the classic thing that fights a vocal, so the 1-3 kHz band is pulled down
