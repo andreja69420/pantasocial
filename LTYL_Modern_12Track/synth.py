@@ -122,6 +122,74 @@ def guitar_note(name: str, dur: float, seed: int) -> np.ndarray:
 
 # ---------------------------------------------------------------- T2  piano
 
+def steinway_note(name: str, dur: float, seed: int, velocity: float = 0.72) -> np.ndarray:
+    """Physically-modelled grand piano.
+
+    Five things separate a convincing grand from a generic additive stack, and
+    all five are here:
+
+    1. Hammer strike position. The hammer hits at ~1/8 of the string length,
+       which *nulls* every 8th partial (|sin(k*pi/8)| == 0 at k=8,16,24). That
+       comb notch is a large part of why a piano sounds like a piano.
+    2. True unison strings. Each note is 1-3 strings tuned a fraction of a cent
+       apart; the slow beating between them is the shimmer synths miss.
+    3. Two-stage decay. The two polarisations of string vibration decay at
+       different rates, so a real note drops fast and then sustains on a quiet
+       "aftersound" tail. A single exponential sounds dead by comparison.
+    4. Inharmonicity. Stiff strings stretch upper partials sharp:
+       f_k = k*f0*sqrt(1 + B*k^2). B rises toward the treble.
+    5. Velocity-dependent brightness. Harder strikes excite more high partials;
+       softer ones roll off, rather than just getting quieter.
+
+    Fundamentals stay at exact 12-TET — only the upper partials stretch, which
+    is what physically happens. Real pianos are also stretch-tuned octave to
+    octave, but that is deliberately not modelled here so the note table stays
+    verifiable against equal temperament.
+    """
+    f0 = nf(name)
+    t = t_axis(dur)
+    n = len(t)
+    rng = np.random.default_rng(seed)
+
+    n_strings = 1 if f0 < 65.0 else (2 if f0 < 130.0 else 3)
+    B = 0.00035 * (f0 / 261.63) ** 1.4 + 0.00004      # inharmonicity by register
+    strike = 0.125                                     # hammer position
+    tau0 = 6.0 * (110.0 / f0) ** 0.35                  # bass rings longer
+    brightness = 1800.0 + 5200.0 * velocity ** 1.6     # hammer hardness
+
+    out = np.zeros(n)
+    for s in range(n_strings):
+        cents = (s - (n_strings - 1) / 2.0) * 1.1      # unison detune
+        fs = f0 * 2 ** (cents / 1200.0)
+        for k in range(1, 65):
+            fk = fs * k * np.sqrt(1.0 + B * k * k)
+            if fk > SR / 2 * 0.92:
+                break
+            # The +0.035 floor is not a fudge: a real hammer contacts a finite
+            # length of string, so partial 8 is deeply notched (~-30 dB) rather
+            # than mathematically absent. A perfect null reads as synthetic.
+            amp = (abs(np.sin(np.pi * k * strike)) + 0.035) / (1.035 * k ** 1.18)
+            amp *= np.exp(-((fk / brightness) ** 2))   # hammer lowpass
+            if amp < 1e-4:
+                continue
+            tau = tau0 / (1.0 + 0.28 * k ** 1.1)
+            env = 0.78 * np.exp(-t / tau) + 0.22 * np.exp(-t / (tau * 3.2))
+            out += amp * env * np.sin(2 * np.pi * fk * t + rng.uniform(0, 2 * np.pi))
+    out /= n_strings
+
+    # hammer felt contact + key/action thump
+    hn = int(0.010 * SR)
+    thump = noise(hn, seed + 17) * exp_env(hn, 0.0028)
+    out[:hn] += bp(thump, 600, 4500, order=2) * 0.05 * velocity
+
+    out *= np.minimum(1.0, np.arange(n) / max(1.0, 0.0022 * SR))   # hammer contact time
+    for fc, g, q in ((118.0, 1.6, 1.1), (255.0, -1.4, 1.3), (1450.0, 1.2, 0.8)):
+        w = fc / (SR / 2)
+        b, a = butter(2, [max(w * 0.72, 1e-4), min(w * 1.38, 0.99)], btype="band")
+        out += lfilter(b, a, out) * (10 ** (g / 20) - 1.0) * 0.5   # soundboard body
+    return fade(norm(out, 0.9), 4.0)
+
+
 def _tri(f: float, t: np.ndarray, nharm: int, phase: float) -> np.ndarray:
     out = np.zeros(len(t))
     s = 1.0
@@ -243,7 +311,11 @@ def rimshot(dur: float = 0.115) -> np.ndarray:
     n = int(dur * SR)
     t = t_axis(dur)
     crack = bp(noise(n, 23), 1500, 7000, order=3) * exp_env(n, 0.019)
-    tone = (np.sin(2 * np.pi * 331.0 * t) * exp_env(n, 0.013) * 0.55
+    # The low body is tuned to F4 (349.23 Hz), the b7 of G minor. It was at
+    # 331 Hz, which is E4 — the one pitch in the whole kit foreign to the key.
+    # At 13 ms it reads as a transient rather than a note, but it is measurably
+    # tonal (Q~25), and F sits a semitone away for no loss of character.
+    tone = (np.sin(2 * np.pi * nf("F4") * t) * exp_env(n, 0.013) * 0.55
             + np.sin(2 * np.pi * 1740.0 * t) * exp_env(n, 0.007) * 0.35)
     out = crack * 0.85 + tone
     out = np.tanh(out * 1.5) / np.tanh(1.5)

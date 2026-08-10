@@ -42,9 +42,11 @@ LAYERS = {
     "T9":  {"verse1b": 1.00, "chorus2": 1.00, "verse2b": 1.00, "chorus3": 1.00},
     "T11": {"verse1a": 1.00, "verse1b": 1.00, "chorus2": 1.00, "verse2a": 1.00, "verse2b": 1.00, "chorus3": 1.00},
     "T12": {"verse1a": 0.80, "verse1b": 1.00, "chorus2": 1.00, "verse2a": 0.80, "verse2b": 1.00, "chorus3": 1.00},
-    # chorus1 is boosted because the synth is alone there: its mix level was set
-    # to sit inside an 11-track chorus, which left the solo intro ~16 dB down.
-    "T13": {"chorus1": 3.00, "chorus2": 1.00, "chorus3": 1.00},
+    # chorus1 is boosted because T13 is alone there and its mix level is set to
+    # sit inside an 11-track chorus. The factor is far smaller than the synth
+    # needed: a five-note piano chord is a much bigger sound than a filtered
+    # single-note pluck, and 3.0 put the intro 6.5 dB above the full choruses.
+    "T13": {"chorus1": 1.50, "chorus2": 1.00, "chorus3": 1.00},
 }
 
 
@@ -297,49 +299,47 @@ def build() -> tuple[dict[str, np.ndarray], list[float]]:
     # Choruses only, plus a 2-beat pickup into choruses B and C. Keeping it out
     # of the verses is deliberate: this riff lives in the same range the rap
     # needs, and the whole mix is built around leaving that range empty.
-    lead: dict[tuple[str, str], np.ndarray] = {}
+    keys: dict[tuple[str, str], np.ndarray] = {}
 
-    def lead_note(name: str, mode: str) -> np.ndarray:
-        key = (name, mode)
-        if key not in lead:
-            seed = 400 + abs(hash(name)) % 500
-            if mode == "soft":
-                # Solo-intro voicing. Alone at the top of a melancholic record,
-                # the aggressive patch would set entirely the wrong tone, so the
-                # same oscillator stack is run with the filter mostly shut, a
-                # slower sweep, less detune and almost no drive — haunting
-                # rather than snarling. The hard version returns in chorus 2.
-                lead[key] = S.lead_pluck(name, 0.62, seed=seed, voices=4,
-                                         detune_cents=11.0, f_hi=3000.0,
-                                         f_lo=420.0, sweep_tau=0.11, drive=1.25)
-            else:
-                lead[key] = S.lead_pluck(name, 0.22, seed=seed,
-                                         f_lo=620.0 if mode == "dark" else 1350.0,
-                                         f_hi=7000.0 if mode == "dark" else 9000.0)
-        return lead[key]
+    def key_note(name: str, touch: str) -> np.ndarray:
+        key = (name, touch)
+        if key not in keys:
+            seed = 700 + abs(hash(name)) % 900
+            # Velocity is a timbre control on a real piano, not just a level:
+            # the soft touch is darker, not merely quieter.
+            keys[key] = (S.steinway_note(name, 3.6, seed=seed, velocity=0.46)
+                         if touch == "soft"
+                         else S.steinway_note(name, 2.2, seed=seed, velocity=0.86))
+        return keys[key]
 
-    SOFT_SLOTS = [0, 6, 8, 14]              # sparse — lets 8 solo bars breathe
+    MELODY_SLOTS = [6, 8, 14]               # RH answers the chord on beat 1
     for bar in range(BARS):
         g13 = lg("T13", bar)
         if not g13:
             continue
         zname, zstart = zone_of(bar)
         pos = bar - zstart
-        cell = RIFF_CELLS[PROGRESSION[bar % 4]["name"]]
-        # Filter opens in the back half, then the last two bars jump an octave:
-        # the "register shift" the original leans on for lift.
-        octv = pos >= 6
+        ch = PROGRESSION[bar % 4]
+        cell = RIFF_CELLS[ch["name"]]
+        octv = pos >= 6                     # register shift for the last 2 bars
         if zname == "chorus1":
-            for slot, note in zip(SOFT_SLOTS, (cell[0], cell[3], cell[4], cell[7])):
+            # Solo piano: rolled two-hand chord on the downbeat, then a right-
+            # hand answer. A bare single-note line would sound thin with the
+            # whole arrangement stripped away.
+            for i, n in enumerate(ch["piano"]):
+                place(tracks["T13"], key_note(n, "soft"), bar_time(bar) + i * 0.014,
+                      0.50 * g13)
+            for slot, note in zip(MELODY_SLOTS, (cell[3], cell[4], cell[7])):
                 n = _up_octave(note) if octv else note
-                place(tracks["T13"], lead_note(n, "soft"),
-                      bar_time(bar, slot * 0.25), 0.58 * g13)
+                place(tracks["T13"], key_note(n, "soft"),
+                      bar_time(bar, slot * 0.25), 0.42 * g13)
         else:
-            mode = "bright" if pos >= 4 else "dark"
+            for n in ch["piano"][:2]:       # left-hand root + fifth
+                place(tracks["T13"], key_note(n, "hard"), bar_time(bar), 0.55 * g13)
             for slot, note in zip(RIFF_SLOTS, cell):
                 n = _up_octave(note) if octv else note
-                g = 0.62 if slot in (0, 8) else 0.44
-                place(tracks["T13"], lead_note(n, mode),
+                g = 0.60 if slot in (0, 8) else 0.42
+                place(tracks["T13"], key_note(n, "hard"),
                       bar_time(bar, slot * 0.25), g * g13)
 
     return tracks, sorted(kick_times)

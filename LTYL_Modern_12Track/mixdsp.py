@@ -88,7 +88,7 @@ def lufs_integrated(stereo: np.ndarray) -> float:
 TRACK_GAIN_DB = {
     "T1": -7.0, "T2": -3.0, "T3": -13.0, "T4": -12.0, "T5": -12.0, "T6": -5.5,
     "T7": -6.0, "T8": -11.5, "T9": -14.5, "T10": -9.0, "T11": -11.0, "T12": -19.0,
-    "T13": -16.0,
+    "T13": -18.0,
 }
 
 
@@ -190,21 +190,15 @@ def process_tracks(tracks: dict[str, np.ndarray], kick_times) -> dict[str, np.nd
     ]), pan(tracks["T12"], -0.05))
     out["T12"] = wet
 
-    # T13 lead synth — aggression up top, capped at 3.8 kHz. Width has to come
-    # from per-channel decorrelation: the riff is mono, so M/S widening alone
-    # would only amplify a pan difference, not create real stereo.
-    lm = tracks["T13"]
-    ll = run(Pedalboard([Chorus(rate_hz=0.70, depth=0.18, centre_delay_ms=5.0, mix=0.35)]),
-             np.stack([lm, lm]))[0]
-    lr = run(Pedalboard([Chorus(rate_hz=1.10, depth=0.15, centre_delay_ms=8.0, mix=0.35)]),
-             np.stack([lm, lm]))[1]
+    # T13 grand piano — no distortion and no chorus. Chorus on a piano detunes
+    # the unisons and turns a Steinway into a honky-tonk; the width comes from
+    # the hall instead, with the dry signal centred.
     out["T13"] = run(Pedalboard([
-        HighpassFilter(180),
-        Distortion(drive_db=3.0),
-        PeakFilter(cutoff_frequency_hz=350, gain_db=-2.0, q=0.8),   # riff roots
-        LowpassFilter(3800),
-        Reverb(room_size=0.62, damping=0.55, wet_level=0.24, dry_level=0.88, width=0.9),
-    ]), widen(np.stack([ll, lr]), 1.3))
+        HighpassFilter(55),
+        PeakFilter(cutoff_frequency_hz=350, gain_db=-1.5, q=0.8),
+        LowpassFilter(7500),
+        Reverb(room_size=0.72, damping=0.42, wet_level=0.26, dry_level=0.85, width=1.0),
+    ]), pan(tracks["T13"], 0.0))
 
     for k in out:
         out[k] = out[k] * db(TRACK_GAIN_DB[k])
