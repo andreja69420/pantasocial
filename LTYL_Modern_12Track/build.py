@@ -1,4 +1,4 @@
-"""Build the full 12-track, 56-bar instrumental end to end.
+"""Build the full 15-track, 64-bar instrumental end to end.
 
     python build.py
 
@@ -25,7 +25,7 @@ TRACK_NAMES = {
     "T4": "Reverse Swell", "T5": "High Pluck", "T6": "Kick",
     "T7": "Snare/Rim", "T8": "Hi-Hat", "T9": "Perc/Open Hat",
     "T10": "Crash/Impact", "T11": "808 Sub", "T12": "Vocal Textures",
-    "T13": "Grand Piano", "T14": "Strings",
+    "T13": "Grand Piano", "T14": "Strings", "T15": "Solo Violin",
 }
 
 
@@ -87,15 +87,15 @@ def main() -> int:
     t_start = time.time()
     print("=" * 72)
     print("  LOVE THE WAY YOU LIE — modern dark trap/drill rework")
-    print(f"  {arrange.BPM:.0f} BPM | G minor | 56 bars | {arrange.BARS * arrange.BAR:.1f}s | {SR} Hz")
+    print(f"  {arrange.BPM:.0f} BPM | G minor | {arrange.BARS} bars | {arrange.BARS * arrange.BAR:.1f}s | {SR} Hz")
     print("=" * 72)
 
     print("\n[1/5] Asset acquisition")
     got = try_cc0_assets(os.path.join(HERE, "assets"))
-    print(f"    {len(got)} CC0 file(s) retrieved; all 12 tracks synthesized in-key "
+    print(f"    {len(got)} CC0 file(s) retrieved; all {len(TRACK_NAMES)} tracks synthesized in-key "
           f"(G minor) for tuning accuracy.")
 
-    print("\n[2/5] Sequencing the 56-bar grid")
+    print(f"\n[2/5] Sequencing the {arrange.BARS}-bar grid")
     tracks, kick_times = arrange.build()
     for k in sorted(tracks, key=lambda s: int(s[1:])):
         pk = 20 * np.log10(np.max(np.abs(tracks[k])) + 1e-12)

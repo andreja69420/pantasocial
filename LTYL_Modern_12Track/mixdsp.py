@@ -88,7 +88,7 @@ def lufs_integrated(stereo: np.ndarray) -> float:
 TRACK_GAIN_DB = {
     "T1": -11.0, "T2": -3.0, "T3": -13.0, "T4": -12.0, "T5": -12.0, "T6": -5.5,
     "T7": -6.0, "T8": -10.0, "T9": -14.5, "T10": -9.0, "T11": -8.5, "T12": -19.0,
-    "T13": -18.0, "T14": -14.0,
+    "T13": -18.0, "T14": -14.0, "T15": -10.0,
 }
 
 
@@ -208,13 +208,16 @@ def process_tracks(tracks: dict[str, np.ndarray], kick_times) -> dict[str, np.nd
     ]), pan(tracks["T12"], -0.05))
     out["T12"] = wet
 
-    # T13 grand piano stabs — no distortion and no chorus (chorus detunes the
-    # unisons and turns a Steinway into a honky-tonk). Highpassed hard at 220 Hz
-    # twice: the voicings already sit at F4 and above, and this guarantees no
-    # low-end weight or sustain creeps under the 808. Reverb kept short so the
+    # T13 grand piano — no distortion and no chorus (chorus detunes the
+    # unisons and turns a Steinway into a honky-tonk). Highpass dropped from a
+    # double 220 Hz stage to a single 140 Hz stage: the right-hand stabs still
+    # sit at F4 and above so they're untouched either way, but a two-hand left
+    # hand now lives as low as G2/Eb2 in chorus 1 (silent 808 there) and
+    # G3/Eb3 in the instrumental peaks (808 present) — 220 Hz would have
+    # filtered the whole point of adding it back out. Reverb kept short so the
     # stabs stay tight rather than washing into each other.
     out["T13"] = run(Pedalboard([
-        HighpassFilter(220), HighpassFilter(220),
+        HighpassFilter(140),
         LowpassFilter(6500),
         Reverb(room_size=0.55, damping=0.55, wet_level=0.16, dry_level=0.92, width=0.95),
     ]), pan(tracks["T13"], 0.0))
@@ -233,6 +236,18 @@ def process_tracks(tracks: dict[str, np.ndarray], kick_times) -> dict[str, np.nd
         Reverb(room_size=0.88, damping=0.40, wet_level=0.34, dry_level=0.72, width=1.0),
     ]), widen(np.stack([sl, sr_]), 1.55))
 
+    # T15 solo violin — the melodic voice, distinct from the T14 ensemble pad:
+    # forward and comparatively dry so the line reads as one performer rather
+    # than washing into the strings sitting behind it. A short slap-delay
+    # (3/4 beat) adds movement without smearing the pitch the way more reverb
+    # would. Only present in the two instrumental peak zones.
+    out["T15"] = run(Pedalboard([
+        HighpassFilter(260), LowpassFilter(9000),
+        PeakFilter(cutoff_frequency_hz=3200, gain_db=1.5, q=1.0),
+        Delay(delay_seconds=BEAT * 0.75, feedback=0.18, mix=0.16),
+        Reverb(room_size=0.65, damping=0.35, wet_level=0.28, dry_level=0.82, width=0.85),
+    ]), pan(tracks["T15"], 0.18))
+
     for k in out:
         out[k] = out[k] * db(TRACK_GAIN_DB[k])
     return out
@@ -240,7 +255,7 @@ def process_tracks(tracks: dict[str, np.ndarray], kick_times) -> dict[str, np.nd
 
 # ------------------------------------------------------------- bus + master
 
-BED = ("T1", "T2", "T3", "T4", "T5", "T12", "T13", "T14")
+BED = ("T1", "T2", "T3", "T4", "T5", "T12", "T13", "T14", "T15")
 DRUMS = ("T6", "T7", "T8", "T9", "T10")
 
 

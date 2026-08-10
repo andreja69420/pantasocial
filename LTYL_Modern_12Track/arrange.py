@@ -1,7 +1,8 @@
-"""56-bar arrangement grid at 90 BPM in G minor.
+"""64-bar arrangement grid at 90 BPM in G minor.
 
-Produces 13 mono buffers (one per track) plus the kick trigger times that the
-mix stage needs to build the 808 sidechain envelope.
+Produces 15 mono buffers (one per track) plus the kick trigger times that the
+mix stage needs to build the 808 sidechain envelope, and `schedule_events()`,
+a symbolic (no audio) mirror of the same timing math for MIDI export.
 """
 from __future__ import annotations
 
@@ -13,44 +14,78 @@ from synth import SR, nf
 BPM = 90.0
 BEAT = 60.0 / BPM                 # 0.666667 s
 BAR = 4.0 * BEAT                  # 2.666667 s
-BARS = 56
-TAIL = 4.0                        # seconds of room for reverb/808 decay
+BARS = 64
+FINAL_BAR = BARS - 1              # the closing hold: drums drop out, everything pitched rings
+TAIL = 5.0                        # seconds of room for reverb/808/violin decay
 TOTAL = int((BARS * BAR + TAIL) * SR)
 
-# Chorus(8) -> Verse(16) -> Chorus(8) -> Verse(16) -> Chorus(8)
-SECTIONS = [("chorus", 0, 8), ("verse", 8, 24), ("chorus", 24, 32),
-            ("verse", 32, 48), ("chorus", 48, 56)]
-CHORUS_STARTS = [0, 24, 48]
+# Chorus(8) -> Verse(16) -> Chorus(12) -> Verse(16) -> Chorus(12)
+# Choruses 2 and 3 were extended from 8 to 12 bars each: the extra 4 bars are
+# an instrumental-only "peak" zone (chorus2_peak, chorus3_peak below) rather
+# than more of the same loop -- the whole point of the extension is to buy
+# room for a bigger arrangement moment (two-hand piano, then a violin solo)
+# without crowding the vocal pocket anywhere a verse actually needs it.
+SECTIONS = [("chorus", 0, 8), ("verse", 8, 24), ("chorus", 24, 36),
+            ("verse", 36, 52), ("chorus", 52, 64)]
+CHORUS_STARTS = [0, 24, 52]
 
-# Each 16-bar verse is split in half so the arrangement can drop and rebuild
-# inside it instead of holding one static texture for 43 seconds.
+# Each verse is split in half so the arrangement can drop and rebuild inside
+# it instead of holding one static texture for 43 seconds. Each extended
+# chorus is split into its original 8-bar loop plus a 4-bar "_peak" tail.
 ZONES = [(0, 8, "chorus1"), (8, 16, "verse1a"), (16, 24, "verse1b"),
-         (24, 32, "chorus2"), (32, 40, "verse2a"), (40, 48, "verse2b"),
-         (48, 56, "chorus3")]
+         (24, 32, "chorus2"), (32, 36, "chorus2_peak"),
+         (36, 44, "verse2a"), (44, 52, "verse2b"),
+         (52, 60, "chorus3"), (60, 64, "chorus3_peak")]
+
+# Instrumental-only zones: no rap/vocal is expected here (chorus1 is the bare
+# solo intro; the two peak zones are new post-chorus instrumental breaks), so
+# the arrangement is free to fill the 1-5 kHz vocal pocket the rest of the mix
+# deliberately avoids. Two-hand piano and the solo violin both live here.
+TWO_HAND_ZONES = {"chorus1", "chorus2_peak", "chorus3_peak"}
 
 # Per-track presence, zone by zone. 0.0 means the track is silent there.
 # This is the arrangement: chorus 1 is one instrument alone, verse 1 builds,
-# chorus 2 is everything, verse 2 drops out and rebuilds, chorus 3 is everything.
+# chorus 2 is everything (then peaks), verse 2 drops out and rebuilds bigger
+# than verse 1, chorus 3 is everything again and its peak is the record's
+# loudest, densest moment -- each section is deliberately a little more than
+# the one before it, so the emotional curve climbs rather than plateaus after
+# chorus 2. T2/T3/T13/T14 all step up again from chorus2 to chorus3, and
+# again into chorus3_peak.
 LAYERS = {
-    "T1":  {"verse1a": 0.90, "verse1b": 1.00, "chorus2": 1.00, "verse2a": 0.70, "verse2b": 0.95, "chorus3": 1.00},
-    "T2":  {"verse1b": 0.55, "chorus2": 1.00, "verse2b": 0.60, "chorus3": 1.00},
-    "T3":  {"verse1b": 0.70, "chorus2": 1.00, "verse2b": 0.80, "chorus3": 1.00},
-    "T5":  {"chorus2": 1.00, "chorus3": 1.00},
-    "T6":  {"verse1a": 1.00, "verse1b": 1.00, "chorus2": 1.00, "verse2a": 1.00, "verse2b": 1.00, "chorus3": 1.00},
-    "T7":  {"verse1a": 1.00, "verse1b": 1.00, "chorus2": 1.00, "verse2a": 1.00, "verse2b": 1.00, "chorus3": 1.00},
-    "T8":  {"verse1a": 0.55, "verse1b": 1.00, "chorus2": 1.00, "verse2a": 0.50, "verse2b": 1.00, "chorus3": 1.00},
-    "T9":  {"verse1b": 1.00, "chorus2": 1.00, "verse2b": 1.00, "chorus3": 1.00},
-    "T11": {"verse1a": 1.00, "verse1b": 1.00, "chorus2": 1.00, "verse2a": 1.00, "verse2b": 1.00, "chorus3": 1.00},
-    "T12": {"verse1a": 0.80, "verse1b": 1.00, "chorus2": 1.00, "verse2a": 0.80, "verse2b": 1.00, "chorus3": 1.00},
+    "T1":  {"verse1a": 0.90, "verse1b": 1.00, "chorus2": 1.00, "chorus2_peak": 1.00,
+            "verse2a": 0.70, "verse2b": 0.95, "chorus3": 1.00, "chorus3_peak": 0.85},
+    "T2":  {"verse1b": 0.55, "chorus2": 1.00, "chorus2_peak": 1.05,
+            "verse2b": 0.60, "chorus3": 1.08, "chorus3_peak": 1.20},
+    "T3":  {"verse1b": 0.70, "chorus2": 1.00, "chorus2_peak": 1.00,
+            "verse2b": 0.80, "chorus3": 1.06, "chorus3_peak": 1.15},
+    "T5":  {"chorus2": 1.00, "chorus2_peak": 1.00, "chorus3": 1.00, "chorus3_peak": 1.15},
+    "T6":  {"verse1a": 1.00, "verse1b": 1.00, "chorus2": 1.00, "chorus2_peak": 1.00,
+            "verse2a": 1.00, "verse2b": 1.00, "chorus3": 1.00, "chorus3_peak": 1.00},
+    "T7":  {"verse1a": 1.00, "verse1b": 1.00, "chorus2": 1.00, "chorus2_peak": 1.00,
+            "verse2a": 1.00, "verse2b": 1.00, "chorus3": 1.00, "chorus3_peak": 1.00},
+    "T8":  {"verse1a": 0.55, "verse1b": 1.00, "chorus2": 1.00, "chorus2_peak": 1.00,
+            "verse2a": 0.50, "verse2b": 1.00, "chorus3": 1.00, "chorus3_peak": 1.00},
+    "T9":  {"verse1b": 1.00, "chorus2": 1.00, "chorus2_peak": 1.00,
+            "verse2b": 1.00, "chorus3": 1.00, "chorus3_peak": 1.00},
+    "T11": {"verse1a": 1.00, "verse1b": 1.00, "chorus2": 1.00, "chorus2_peak": 1.00,
+            "verse2a": 1.00, "verse2b": 1.00, "chorus3": 1.00, "chorus3_peak": 1.00},
+    "T12": {"verse1a": 0.80, "verse1b": 1.00, "chorus2": 1.00, "chorus2_peak": 1.00,
+            "verse2a": 0.80, "verse2b": 1.00, "chorus3": 1.00, "chorus3_peak": 1.00},
     # chorus1 is boosted because T13 is alone there and its mix level is set to
     # sit inside an 11-track chorus. The factor is far smaller than the synth
     # needed: a five-note piano chord is a much bigger sound than a filtered
     # single-note pluck, and 3.0 put the intro 6.5 dB above the full choruses.
     # Strings enter with the build and carry the full sections, the way the
     # 2010 record uses them. Never in the bare chorus 1.
-    "T14": {"verse1b": 0.55, "chorus2": 1.00, "verse2b": 0.65, "chorus3": 1.00},
+    "T14": {"verse1b": 0.55, "chorus2": 1.00, "chorus2_peak": 1.10,
+            "verse2b": 0.65, "chorus3": 1.15, "chorus3_peak": 1.30},
     "T13": {"chorus1": 2.20, "verse1a": 0.62, "verse1b": 0.70, "chorus2": 1.00,
-            "verse2a": 0.52, "verse2b": 0.66, "chorus3": 1.00},
+            "chorus2_peak": 1.05, "verse2a": 0.52, "verse2b": 0.66,
+            "chorus3": 1.05, "chorus3_peak": 1.15},
+    # T15 solo violin: silent everywhere except the two instrumental peaks.
+    # chorus2_peak gets a single quiet held note -- a motif foreshadowed once,
+    # quietly, before it returns transformed and full-voiced for the ending.
+    "T15": {"chorus2_peak": 0.35, "chorus3_peak": 1.00},
 }
 
 
@@ -61,11 +96,11 @@ def section_of(bar: int) -> str:
     return "verse"
 
 
-def zone_of(bar: int) -> tuple[str, int]:
+def zone_of(bar: int) -> tuple[str, int, int]:
     for a, b, name in ZONES:
         if a <= bar < b:
-            return name, a
-    return ZONES[-1][2], ZONES[-1][0]
+            return name, a, b
+    return ZONES[-1][2], ZONES[-1][0], ZONES[-1][1]
 
 
 def lg(track: str, bar: int) -> float:
@@ -98,7 +133,11 @@ def chord_index(bar: int) -> int:
     written around 2-bar chord sections ("3 hits per chord, 1 chord per 2
     bars"), and harmonic rhythm has to be global — if only the piano slowed
     down it would sit on Gm while the guitar and 808 had already moved to Eb.
-    All section boundaries (bars 0, 8, 24, 32, 48) land on Gm under this.
+    Every 8-bar-aligned boundary lands on Gm under this; chorus 2 and 3's
+    4-bar peak extensions do not (24, 32, 36 and 52, 60 all still land on Gm,
+    but the +4-bar tails do not re-align to it) — that's an accepted
+    consequence of extending in 4-bar rather than 8-bar increments, and
+    nothing downstream assumes zone boundaries sit on the tonic.
     """
     return (bar // 2) % 4
 
@@ -162,9 +201,9 @@ def place(buf: np.ndarray, x: np.ndarray, at: float, gain: float = 1.0) -> None:
     buf[i:i + n] += x[:n] * gain
 
 
-# T13 piano stabs. Three-note close voicings — one hand — deliberately kept in
-# the F4-Eb5 register: no low keys held down, nothing to muddy the 808 or crowd
-# the low mids. Voice-led so the top line moves by step and common tones hold:
+# T13 piano stabs, right hand. Three-note close voicings kept in the F4-Eb5
+# register: no low keys held down, nothing to muddy the 808 or crowd the low
+# mids. Voice-led so the top line moves by step and common tones hold:
 #   Gm(G4 Bb4 D5) -> Eb(G4 Bb4 Eb5) -> Bb(F4 Bb4 D5) -> F(F4 A4 C5)
 STAB_VOICINGS = {
     "Gm": ["G4", "Bb4", "D5"],
@@ -180,9 +219,33 @@ STAB_VOICINGS = {
 # a somber tone; hits packed into four beats read as busy rather than somber.
 STAB_HITS = [0.0, 2.5, 5.0]
 
+# T13 piano, LEFT hand. Two-hand piano only plays in the instrumental-only
+# zones (TWO_HAND_ZONES) — everywhere else the right hand alone is deliberate,
+# to leave the low-mids clear for a vocal. Two registers, chosen per bar by
+# whether the 808 is actually sounding:
+#   - chorus1 has no bass at all (T11 is silent there), so the left hand can
+#     go all the way down and get real weight under the solo.
+#   - the peak zones have the 808 playing, so the left hand sits an octave
+#     higher (root+5th around G3-C4) rather than fighting it for the same
+#     40-100 Hz the mix is built around protecting.
+LH_LOW = {"Gm": ["G2", "D3"], "Eb": ["Eb2", "Bb2"], "Bb": ["Bb1", "F2"], "F": ["F2", "C3"]}
+LH_MID = {"Gm": ["G3", "D4"], "Eb": ["Eb3", "Bb3"], "Bb": ["Bb2", "F3"], "F": ["F3", "C4"]}
+
+# T15 solo violin. A single written phrase, not a generative pattern — a
+# melody needs to be composed, not derived. `_FORESHADOW` is one quiet held
+# note that plants the motif; `_FINALE` is the same idea answered in full,
+# rising to the highest note in the record on the very last bar so the
+# melodic register climbs in step with the arrangement's dynamics — the
+# emotional curve and the pitch curve peak together.
+VIOLIN_FORESHADOW = [("D5", 4 * BEAT)]
+VIOLIN_FINALE = [
+    ("D5", 2 * BEAT), ("F5", 2 * BEAT), ("Bb5", 2 * BEAT), ("G5", 2 * BEAT),
+    ("A5", 2 * BEAT), ("C6", 2 * BEAT), ("Bb5", 2 * BEAT), ("D6", 4 * BEAT),
+]
+
 
 def build() -> tuple[dict[str, np.ndarray], list[float]]:
-    tracks = {f"T{i}": np.zeros(TOTAL) for i in range(1, 15)}
+    tracks = {f"T{i}": np.zeros(TOTAL) for i in range(1, 16)}
     kick_times: list[float] = []
 
     # ---------------------------------------------------------- asset cache
@@ -206,6 +269,11 @@ def build() -> tuple[dict[str, np.ndarray], list[float]]:
     # A 2-bar swell placed 2 bars early leaves exactly the final bar audible,
     # still cresting precisely on the downbeat.
     swell_intro = S.reverse_swell(BAR * 2, seed=7)
+    # Modern transition riser, chorus1 -> verse1 (bar 8). This is not a chorus
+    # arrival, so the reverse-swell (which announces a downbeat drop) is the
+    # wrong texture; a rising noise/pitch riser is the genre-standard way to
+    # bridge a bare solo section into the full band entering.
+    riser = S.transition_riser(BAR * 1.5, seed=811)
     plucks = {n: S.pluck(n, 1.1, seed=200 + i) for i, n in enumerate(("D5", "Bb4", "G4"))}
     kick_s = S.kick()
     rim_s = S.snare_layered()
@@ -218,6 +286,8 @@ def build() -> tuple[dict[str, np.ndarray], list[float]]:
     chops = {n: S.vocal_chop(n, 2.6, seed=300 + i) for i, n in enumerate(("G4", "Bb4", "D5"))}
     strings = [S.strings_chord(ch["strings"], BAR * 2.15, seed=600 + i)
                for i, ch in enumerate(PROGRESSION)]
+    violin_fore = S.solo_violin_phrase(VIOLIN_FORESHADOW, seed=910)
+    violin_final = S.solo_violin_phrase(VIOLIN_FINALE, seed=911)
 
     # ------------------------------------------------- T1/T2/T3 harmonic bed
     for bar in range(BARS):
@@ -247,19 +317,25 @@ def build() -> tuple[dict[str, np.ndarray], list[float]]:
 
     # ------------------------------------------------------ T4 reverse swell
     # Chorus 1 is a bare solo instrument, so it gets no lead-in — the swells
-    # announce the two full choruses instead.
+    # announce the two full choruses instead. The transition riser covers the
+    # one other big texture change, chorus1 -> verse1.
     for cs in CHORUS_STARTS:
         if cs != 0:
             place(tracks["T4"], swell, bar_time(cs) - BAR, 0.75)
+    place(tracks["T4"], riser, bar_time(8) - BAR * 1.5, 0.85)
 
     # ---------------------------------------------------------- T5 high pluck
     # Dark 3-note counter-melody, choruses only, sitting in the offbeat gaps.
-    # Chorus 1 has the lead synth carrying the melody, so the pluck stays sparse
-    # there. Choruses 2 and 3 have no synth, so the pluck plays every bar and
-    # becomes their melodic signature instead.
+    # Chorus 1 has no pluck at all — the piano carries chorus 1 alone. In the
+    # two peak zones the pluck drops the alternating-bar rule and plays every
+    # bar instead, a denser shimmer that's part of what makes the peaks read
+    # as bigger than the choruses they extend.
     for bar in range(BARS):
         g5 = lg("T5", bar)
-        if not g5 or (bar % 2):                                 # alternating bars
+        if not g5:
+            continue
+        peak = zone_of(bar)[0] in ("chorus2_peak", "chorus3_peak")
+        if not peak and (bar % 2):                             # alternating bars elsewhere
             continue
         t0 = bar_time(bar)
         for n, beat, g in (("D5", 2.5, 0.55), ("Bb4", 3.0, 0.45), ("G4", 3.5, 0.50)):
@@ -267,6 +343,8 @@ def build() -> tuple[dict[str, np.ndarray], list[float]]:
 
     # ------------------------------------------------------------ T6/T7 drums
     for bar in range(BARS):
+        if bar == FINAL_BAR:            # the closing hold: no kick, no snare
+            continue
         t0 = bar_time(bar)
         sect = section_of(bar)
         pos = [0.0, 1.5]                                        # beat 1 + "and" of 2
@@ -286,13 +364,15 @@ def build() -> tuple[dict[str, np.ndarray], list[float]]:
 
     # ---------------------------------------------------------------- T8 hats
     for bar in range(BARS):
+        if bar == FINAL_BAR:            # the closing hold
+            continue
         t0 = bar_time(bar)
         base = (1.0 if section_of(bar) == "chorus" else 0.85) * lg("T8", bar)
         if not base:
             continue
-        zname, zstart = zone_of(bar)
+        zname, zstart, zend = zone_of(bar)
         roll32 = (bar % 4) in (1, 3)                            # every 2nd and 4th bar
-        trip = (bar - zstart) == 7                              # triplet fill closes each zone
+        trip = bar == zend - 1                                  # triplet fill closes each zone
 
         for i in range(8):                                      # straight 8ths, swung
             beat = swing(i * 0.5)
@@ -317,6 +397,8 @@ def build() -> tuple[dict[str, np.ndarray], list[float]]:
 
     # ---------------------------------------------------------------- T9 perc
     for bar in range(BARS):
+        if bar == FINAL_BAR:            # the closing hold
+            continue
         g9 = lg("T9", bar)
         if not g9:
             continue
@@ -337,7 +419,10 @@ def build() -> tuple[dict[str, np.ndarray], list[float]]:
 
     # ----------------------------------------------------------------- T11 808
     # One root per bar (plus a chorus retrigger), each note gliding out of the
-    # previous pitch over 60 ms.
+    # previous pitch over 60 ms. The very last bar breaks the pattern: instead
+    # of retriggering, it holds one long note that rings into the tail — the
+    # drums have already dropped out (see T6/T7/T8/T9 above), so this is the
+    # only low end left, and it's meant to ring, not chop.
     events: list[tuple[float, float, float]] = []               # (start, dur, freq)
     for bar in range(BARS):
         if not lg("T11", bar):
@@ -345,7 +430,9 @@ def build() -> tuple[dict[str, np.ndarray], list[float]]:
         ch = PROGRESSION[chord_index(bar)]
         f = nf(ch["root"])
         t0 = bar_time(bar)
-        if section_of(bar) == "chorus":
+        if bar == FINAL_BAR:
+            events.append((t0, 4.0 * BEAT + 2.5, f))
+        elif section_of(bar) == "chorus":
             events.append((t0, 2.5 * BEAT + 0.06, f))
             events.append((t0 + 2.5 * BEAT, 1.5 * BEAT + 0.06, f))
         else:
@@ -372,10 +459,7 @@ def build() -> tuple[dict[str, np.ndarray], list[float]]:
         if (g := lg("T12", bar)):
             place(tracks["T12"], chops[order[(i + 2) % len(order)]], bar_time(bar, 3.0), 0.26 * g)
 
-    # ----------------------------------------------------------- T13 lead riff
-    # Choruses only, plus a 2-beat pickup into choruses B and C. Keeping it out
-    # of the verses is deliberate: this riff lives in the same range the rap
-    # needs, and the whole mix is built around leaving that range empty.
+    # ------------------------------------------------------- T13 piano, right hand
     keys: dict[tuple[str, str], np.ndarray] = {}
 
     def key_note(name: str, touch: str, ring: str) -> np.ndarray:
@@ -411,9 +495,134 @@ def build() -> tuple[dict[str, np.ndarray], list[float]]:
                 place(tracks["T13"], key_note(n, touch, ring),
                       bar_time(bar, beat) + i * 0.006, accent * g13)
 
+    # T13 left hand — two-hand piano, instrumental-only zones only (see
+    # TWO_HAND_ZONES). One sustained low voicing per 2-bar chord section
+    # rather than restruck on every stab: the right hand supplies the rhythm,
+    # the left hand supplies the harmonic floor underneath it.
+    lh_keys: dict[str, np.ndarray] = {}
+
+    def lh_note(name: str) -> np.ndarray:
+        if name not in lh_keys:
+            lh_keys[name] = S.steinway_note(name, 3.6, seed=800 + seed_of(name, 900),
+                                            release=0.95, velocity=0.66)
+        return lh_keys[name]
+
+    for bar in range(BARS):
+        g13 = lg("T13", bar)
+        if not g13 or bar % 2 or zone_of(bar)[0] not in TWO_HAND_ZONES:
+            continue
+        ch = PROGRESSION[chord_index(bar)]
+        table = LH_MID if lg("T11", bar) else LH_LOW
+        for i, n in enumerate(table[ch["name"]]):
+            place(tracks["T13"], lh_note(n), bar_time(bar) + i * 0.008, 0.60 * g13)
+
     # ------------------------------------------------------------ T14 strings
     for bar in range(0, BARS, 2):                               # one chord per 2 bars
         if (g14 := lg("T14", bar)):
             place(tracks["T14"], strings[chord_index(bar)], bar_time(bar), 0.52 * g14)
 
+    # ------------------------------------------------------- T15 solo violin
+    if (g15 := lg("T15", 32)):
+        place(tracks["T15"], violin_fore, bar_time(32), g15)
+    if (g15b := lg("T15", 60)):
+        place(tracks["T15"], violin_final, bar_time(60), g15b)
+
     return tracks, sorted(kick_times)
+
+
+def schedule_events() -> dict[str, list[tuple[float, float, str, float]]]:
+    """Symbolic note events for the instruments worth re-performing on a real
+    instrument in a DAW: `(start_seconds, duration_seconds, note_name,
+    velocity 0-1)`, one list per instrument.
+
+    Mirrors `build()`'s scheduling math exactly — same `lg`/`chord_index`/
+    `bar_time` calls, same conditions — but never touches `synth.py`, so it
+    runs in milliseconds instead of the minutes a full audio render takes.
+    Durations here are *musical* note lengths for a MIDI note-off (how long a
+    key would be held), not the audio layer's decay length — a struck piano
+    note still rings after the key is released, same as a real instrument, so
+    a short MIDI duration is correct even though the rendered audio note is
+    much longer.
+    """
+    ev: dict[str, list[tuple[float, float, str, float]]] = {
+        "piano_RH": [], "piano_LH": [], "guitar": [], "pad": [],
+        "strings": [], "violin": [], "bass808": [],
+    }
+
+    for bar in range(BARS):
+        g1 = lg("T1", bar)
+        if not g1:
+            continue
+        ch = PROGRESSION[chord_index(bar)]
+        t0 = bar_time(bar)
+        sect = section_of(bar)
+        for i, n in enumerate(ch["guitar"]):
+            ev["guitar"].append((t0 + i * 0.011, 2.2, n, 0.62 * g1))
+        arp = (1.0, 2.0, 3.0, 3.5) if sect == "chorus" else (2.0, 3.5)
+        for i, beat in enumerate(arp):
+            n = ch["guitar"][(i + 1) % len(ch["guitar"])]
+            ev["guitar"].append((t0 + beat * BEAT, 0.55, n, 0.34 * g1))
+
+    for bar in range(BARS):
+        g3 = lg("T3", bar)
+        if not g3:
+            continue
+        ch = PROGRESSION[chord_index(bar)]
+        t0 = bar_time(bar)
+        for n in ch["pad"]:
+            ev["pad"].append((t0, BAR * 0.98, n, 0.58 * g3))
+
+    for bar in range(BARS):
+        if not lg("T11", bar):
+            continue
+        ch = PROGRESSION[chord_index(bar)]
+        t0 = bar_time(bar)
+        if bar == FINAL_BAR:
+            ev["bass808"].append((t0, 4.0 * BEAT + 2.5, ch["root"], 0.95))
+        elif section_of(bar) == "chorus":
+            ev["bass808"].append((t0, 2.5 * BEAT, ch["root"], 0.95))
+            ev["bass808"].append((t0 + 2.5 * BEAT, 1.5 * BEAT, ch["root"], 0.90))
+        else:
+            ev["bass808"].append((t0, 4.0 * BEAT, ch["root"], 0.80))
+
+    for bar in range(BARS):
+        g13 = lg("T13", bar)
+        if not g13 or bar % 2:
+            continue
+        ch = PROGRESSION[chord_index(bar)]
+        voicing = STAB_VOICINGS[ch["name"]]
+        for hit, beat in enumerate(STAB_HITS):
+            dur = 1.6 if hit == 2 else 0.4      # the 3rd stab rings; the rest are struck
+            accent = (0.62, 0.50, 0.56)[hit]
+            for n in voicing:
+                ev["piano_RH"].append((bar_time(bar, beat), dur, n, accent * g13))
+
+    for bar in range(BARS):
+        g13 = lg("T13", bar)
+        if not g13 or bar % 2 or zone_of(bar)[0] not in TWO_HAND_ZONES:
+            continue
+        ch = PROGRESSION[chord_index(bar)]
+        table = LH_MID if lg("T11", bar) else LH_LOW
+        for n in table[ch["name"]]:
+            ev["piano_LH"].append((bar_time(bar), 2 * BAR - 0.1, n, 0.60 * g13))
+
+    for bar in range(0, BARS, 2):
+        g14 = lg("T14", bar)
+        if not g14:
+            continue
+        ch = PROGRESSION[chord_index(bar)]
+        for n in ch["strings"]:
+            ev["strings"].append((bar_time(bar), BAR * 2.0, n, 0.52 * g14))
+
+    if lg("T15", 32):
+        t0 = bar_time(32)
+        for n, d in VIOLIN_FORESHADOW:
+            ev["violin"].append((t0, d, n, 0.35))
+            t0 += d
+    if lg("T15", 60):
+        t0 = bar_time(60)
+        for n, d in VIOLIN_FINALE:
+            ev["violin"].append((t0, d, n, 1.0))
+            t0 += d
+
+    return ev

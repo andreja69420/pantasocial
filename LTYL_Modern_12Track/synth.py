@@ -1,4 +1,4 @@
-"""Sound-design layer for the 12-track LTYL rework.
+"""Sound-design layer for the 15-track LTYL rework.
 
 Every asset is synthesized from first principles rather than sampled, so the
 whole kit is tuned to G minor by construction instead of being pitch-shifted
@@ -16,13 +16,18 @@ _PC = {"C": 0, "C#": 1, "Db": 1, "D": 2, "D#": 3, "Eb": 3, "E": 4, "F": 5,
        "Bb": 10, "B": 11}
 
 
-def nf(name: str) -> float:
-    """'Bb3' -> 233.08 Hz."""
+def midi_number(name: str) -> int:
+    """'Bb3' -> 58 (MIDI note number). Shared by nf() and the MIDI exporter
+    so the two never drift apart on what a note name means."""
     k = len(name)
     while name[k - 1].isdigit() or name[k - 1] == "-":
         k -= 1
-    midi = 12 * (int(name[k:]) + 1) + _PC[name[:k]]
-    return 440.0 * 2.0 ** ((midi - 69) / 12.0)
+    return 12 * (int(name[k:]) + 1) + _PC[name[:k]]
+
+
+def nf(name: str) -> float:
+    """'Bb3' -> 233.08 Hz."""
+    return 440.0 * 2.0 ** ((midi_number(name) - 69) / 12.0)
 
 
 # ---------------------------------------------------------------- primitives
@@ -308,6 +313,71 @@ def strings_chord(names: list[str], dur: float, seed: int,
     return fade(norm(out, 0.9), 25.0)
 
 
+# ------------------------------------------------------------ T15 solo violin
+
+def solo_violin_phrase(notes: list[tuple[str, float]], seed: int,
+                       glide_ms: float = 90.0, vibrato_rate: float = 5.2,
+                       vibrato_depth: float = 0.006, release: float = 1.4) -> np.ndarray:
+    """A single expressive violin voice playing a written phrase, notes tied
+    by portamento rather than retriggered cleanly.
+
+    `strings_chord` is an ensemble — many detuned bowed voices that smear
+    into a pad, exactly wrong for a melodic line that needs to read as one
+    performer. This is the opposite instrument: one voice, a real melody
+    (`notes` is `[(name, dur_seconds), ...]`), and the glide a fingered
+    string makes sliding between positions instead of a synth's clean
+    retrigger. Each note after the first gets a soft re-bow accent rather
+    than a hard onset, so the phrase reads as legato bowing, not staccato
+    hits stitched together.
+    """
+    rng = np.random.default_rng(seed)
+    total_n = int(round(sum(d for _, d in notes) * SR))
+    freqs = np.zeros(total_n)
+    bounds: list[tuple[int, int]] = []
+    i = 0
+    prev_f = None
+    for name, dur in notes:
+        n = int(round(dur * SR))
+        n = min(n, total_n - i)
+        f = nf(name)
+        if prev_f is not None and glide_ms > 0:
+            g = min(int(glide_ms / 1000 * SR), n)
+            freqs[i:i + g] = np.exp(np.linspace(np.log(prev_f), np.log(f), g))
+            freqs[i + g:i + n] = f
+        else:
+            freqs[i:i + n] = f
+        bounds.append((i, i + n))
+        i += n
+        prev_f = f
+    if i < total_n:
+        freqs[i:] = prev_f if prev_f is not None else 440.0
+
+    t = np.arange(total_n) / SR
+    vib = 1.0 + vibrato_depth * np.sin(2 * np.pi * vibrato_rate * t + rng.uniform(0, 2 * np.pi))
+    phase = 2 * np.pi * np.cumsum(freqs * vib) / SR
+
+    voice = np.zeros(total_n)
+    fmax = float(np.max(freqs))
+    for k in range(1, 20):                             # bowed ~ sawtooth
+        if fmax * k > SR / 2 * 0.85:
+            break
+        voice += np.sin(k * phase + rng.uniform(0, 2 * np.pi)) / k
+    voice *= (2 / np.pi)
+
+    env = np.ones(total_n)
+    for idx, (i0, i1) in enumerate(bounds):
+        if idx == 0:
+            continue                                    # phrase-level swell-in covers the first note
+        a = min(int(0.06 * SR), (i1 - i0) // 2)
+        env[i0:i0 + a] *= np.linspace(0.35, 1.0, a)      # gentle re-bow accent
+    voice *= env
+
+    voice = lp(voice, 4200, order=2)
+    voice += bp(noise(total_n, seed + 3), 2000, 6000, order=2) * 0.018   # bow noise
+    voice *= np.minimum(1.0, np.arange(total_n) / max(1.0, 0.12 * SR))    # phrase entrance swell
+    return release_tail(fade(norm(voice, 0.92), 20.0), release)
+
+
 def _tri(f: float, t: np.ndarray, nharm: int, phase: float) -> np.ndarray:
     out = np.zeros(len(t))
     s = 1.0
@@ -394,6 +464,49 @@ def reverse_swell(dur: float, seed: int) -> np.ndarray:
 
     cym *= exp_env(n, dur * 0.38)
     return fade(norm(cym[::-1], 0.9), 8.0)
+
+
+# ---------------------------------------------------- T4  transition riser
+
+def transition_riser(dur: float, seed: int) -> np.ndarray:
+    """Modern EDM/trap-style uplifter: a noise sweep whose highpass cutoff
+    rises exponentially through the duration, layered under a synth "lift"
+    that glides upward two-and-a-bit octaves, both crescendoing into a bright
+    snap at the very end. This is the genre-standard way to bridge a bare
+    solo section into the full arrangement — distinct in character from
+    `reverse_swell`, which announces a chorus *downbeat* rather than a
+    texture change, so the two are not interchangeable.
+    """
+    n = int(dur * SR)
+    t = t_axis(dur)
+    rng = np.random.default_rng(seed)
+
+    x = noise(n, seed)
+    f_lo, f_hi = 200.0, 9500.0
+    block = 512
+    swept = np.zeros(n)
+    zi = None
+    for i in range(0, n, block):
+        j = min(i + block, n)
+        frac = i / max(1, n - 1)
+        fc = min(f_lo * (f_hi / f_lo) ** frac, SR / 2 * 0.95)
+        sos = butter(2, fc / (SR / 2), btype="high", output="sos")
+        if zi is None:
+            zi = np.zeros((sos.shape[0], 2))
+        swept[i:j], zi = sosfilt(sos, x[i:j], zi=zi)
+
+    f_start, f_end = 90.0, 380.0                      # ~2.1 octave synth lift
+    freq = f_start * (f_end / f_start) ** (np.arange(n) / max(1, n - 1))
+    phase = 2 * np.pi * np.cumsum(freq) / SR
+    lift = 0.55 * np.sin(phase) + 0.28 * np.sin(2 * phase) + rng.uniform(0, 0.1) * np.sin(3 * phase)
+
+    out = swept * np.linspace(0.05, 1.0, n) ** 1.4 + lift * np.linspace(0.02, 0.7, n) ** 1.8
+    out = hp(out, 120, order=2)
+
+    sn = int(0.02 * SR)                                # the bright hit the riser lands on
+    snap = hp(noise(sn, seed + 5), 4000, order=2) * exp_env(sn, 0.004)
+    out[-sn:] += snap * 1.2
+    return fade(norm(out, 0.95), 4.0)
 
 
 # ------------------------------------------------------------ T5  high pluck

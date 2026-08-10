@@ -238,14 +238,15 @@ def _note_onsets():
             continue
         t0 = bar * BAR
         times.append(t0)
-        if arrange.section_of(bar) == "chorus":
+        if bar != arrange.FINAL_BAR and arrange.section_of(bar) == "chorus":
             times.append(t0 + 2.5 * BEAT)
     return times
 
 
 def _snare_grid():
     return [b * BAR + 2.0 * BEAT + arrange.humanize("T7", b, 2.0)
-            for b in range(arrange.BARS) if arrange.lg("T7", b)]
+            for b in range(arrange.BARS)
+            if b != arrange.FINAL_BAR and arrange.lg("T7", b)]
 
 
 def _hat_grid():
@@ -253,11 +254,11 @@ def _hat_grid():
     fill on beat 4 depending on the bar."""
     out = []
     for b in range(arrange.BARS):
-        if not arrange.lg("T8", b):
+        if b == arrange.FINAL_BAR or not arrange.lg("T8", b):
             continue
         t0 = b * BAR
-        zstart = arrange.zone_of(b)[1]
-        trip = (b - zstart) == 7
+        zend = arrange.zone_of(b)[2]
+        trip = b == zend - 1
         roll32 = (b % 4) in (1, 3)
         for i in range(8):
             beat = arrange.swing(i * 0.5)
@@ -279,7 +280,7 @@ def _kick_grid():
     """Re-derive kick trigger times from the arrangement rules (cheap)."""
     times = []
     for bar in range(arrange.BARS):
-        if not arrange.lg("T6", bar):
+        if bar == arrange.FINAL_BAR or not arrange.lg("T6", bar):
             continue
         t0 = bar * BAR
         pos = [0.0, 1.5]
@@ -294,12 +295,13 @@ def _kick_grid():
 def _expected_counts():
     """Hit counts implied by the arrangement, so the grid check stays honest
     as the layer map changes."""
-    snare = sum(1 for b in range(arrange.BARS) if arrange.lg("T7", b))
+    snare = sum(1 for b in range(arrange.BARS)
+                if b != arrange.FINAL_BAR and arrange.lg("T7", b))
     hat = 0
     for b in range(arrange.BARS):
-        if not arrange.lg("T8", b):
+        if b == arrange.FINAL_BAR or not arrange.lg("T8", b):
             continue
-        if b - arrange.zone_of(b)[1] == 7:
+        if b == arrange.zone_of(b)[2] - 1:
             hat += 6 + 6            # 6 straight 8ths + triplet fill on beat 4
         elif (b % 4) in (1, 3):
             hat += 6 + 8            # 6 straight 8ths + 1/32 roll on beat 4

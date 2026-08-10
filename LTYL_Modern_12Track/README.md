@@ -1,16 +1,18 @@
-# Love The Way You Lie — Modern Rework (13 tracks)
+# Love The Way You Lie — Modern Rework (15 tracks)
 
-A fully synthesized, mixed and mastered 56-bar dark trap/drill instrumental.
-Started as 12 tracks; T13 (lead synth) was added later. Output filenames keep
-the original `12Track` name so existing links stay valid.
+A fully synthesized, mixed and mastered 64-bar dark trap/drill instrumental.
+Started as 12 tracks; T13 (lead synth, later rebuilt as piano) was added, then
+T15 (solo violin) joined in the emotional-arc pass documented below. Output
+filenames keep the original `12Track` name so existing links stay valid.
 90 BPM, G minor, 48 kHz / 24-bit stereo, peaks at exactly **−6.00 dBFS** so
 there is headroom to record raw vocals on top.
 
 ```
 cd LTYL_Modern_12Track
-python3 -m venv venv && ./venv/bin/pip install pydub numpy scipy pedalboard requests librosa
-./venv/bin/python build.py      # renders LoveTheWayYouLie_Modern12Track.wav + stems/
-./venv/bin/python analyze.py    # QA pass + analysis.png
+python3 -m venv venv && ./venv/bin/pip install pydub numpy scipy pedalboard requests librosa mido
+./venv/bin/python build.py       # renders LoveTheWayYouLie_Modern12Track.wav + stems/
+./venv/bin/python analyze.py     # QA pass + analysis.png
+./venv/bin/python midi_export.py # writes midi/*.mid for Logic Pro re-tracking
 ```
 
 ---
@@ -48,7 +50,7 @@ unprocessed, aggressive vocal can sit in the middle without fighting anything.
 
 ---
 
-## The 12 tracks
+## The 15 tracks
 
 Everything is synthesized from first principles rather than sampled, so the whole
 kit is tuned to G minor by construction instead of pitch-shifted into key after
@@ -71,7 +73,8 @@ the run log reports what was fetched).
 | T11 | 808 Sub | Pure sine driven by a per-sample frequency curve | Distortion +5 dB, +100 Hz bell, **sidechain duck** |
 | T12 | Vocal Textures | Formant-synthesized vowel, resampled 2:1 (−12 semitones) | 100 % wet reverb, LP 2 kHz ×2 |
 | T14 | Strings | Bowed ensemble: 3 players per part, independent detune/vibrato rate/vibrato depth/attack, bow noise | HP 180 Hz, LP 3.4 kHz, 1.9 kHz notch, big hall, widened |
-| T13 | Grand Piano | Physically-modelled Steinway: hammer strike at 1/8 (nulls every 8th partial), 1–3 true unison strings, two-stage decay, register-dependent inharmonicity, velocity-as-timbre | HP 220 Hz ×2, LP 6.5 kHz, short hall (no chorus) |
+| T13 | Grand Piano (2-hand) | Physically-modelled Steinway: hammer strike at 1/8 (nulls every 8th partial), 1–3 true unison strings, two-stage decay, register-dependent inharmonicity, velocity-as-timbre. Right hand as before; a left hand joins in the instrumental-only zones (see below) | HP 140 Hz, LP 6.5 kHz, short hall (no chorus) |
+| T15 | Solo Violin | Single bowed voice (not the T14 ensemble): written melodic phrase, portamento between notes, per-note re-bow accent, vibrato | HP 260 Hz, LP 9 kHz, slap delay (¾ beat), medium hall |
 
 ---
 
@@ -103,13 +106,44 @@ with a 0.25 s damper (3.2 s / 0.60 s for the ringing third hit), and the electri
 guitar got the same treatment (0.80/0.22 arp, 2.4/0.55 strum). All four now end
 below −52 dB relative to their own peak instead of −15 to −21 dB.
 
-Verified: **84 of 84** scheduled stabs land with a clear attack (energy ratio
-2.15–4.15× across the hit). A naive envelope detector reports ~180 onsets on
-this stem — those extra points measure at most 1.18×, i.e. unison-string decay
-ripple, not notes.
+Verified: **96 of 96** scheduled stabs land with a measurable attack (energy
+ratio above 1.5× across the hit; most land at 20-75×). A naive envelope
+detector reports far more onsets on this stem — those extra points are
+unison-string decay ripple, not notes.
 
-Register check on the mixed stem: **−59.1 dBFS below 220 Hz** against
-−31.7 dBFS in 220 Hz–1 kHz. Nothing muddies the 808.
+Register check on the mixed stem (right hand only): **−59.1 dBFS below
+220 Hz** against −31.7 dBFS in 220 Hz–1 kHz. The left hand below
+deliberately reopens some of that headroom, on purpose, only where nothing
+else needs it.
+
+## Two-hand piano — the left hand
+
+The right hand above is a deliberately thin sound: three notes, high
+register, nothing below F4. That was correct while the piano had to share
+space with a rap vocal, but it leaves real weight on the table anywhere the
+vocal isn't going to be — the bare solo intro, and the two new instrumental
+peaks the extended choruses buy (see "Growing the emotional arc" below). In
+those three zones only (`arrange.TWO_HAND_ZONES`), a left hand joins: one
+sustained root+5th voicing per 2-bar chord, struck once and left to ring
+under the right hand's stabs, the way a real pianist would actually play a
+dramatic passage rather than repeating the right hand's rhythm an octave
+down.
+
+The register is chosen per bar, not fixed, because the 808 changes what's
+safe to sit under:
+
+- **Chorus 1** has no bass at all (T11 is silent there — it's the bare solo
+  intro), so the left hand goes all the way down: `G2/D3`, `Eb2/Bb2`,
+  `Bb1/F2`, `F2/C3`. This is the only place in the record the piano is
+  allowed real bass weight.
+- **The two peak zones** have the 808 playing, so the left hand sits an
+  octave higher — `G3/D4`, `Eb3/Bb3`, `Bb2/F3`, `F3/C4` — clear of the root
+  the 808 owns, still well below the right hand.
+
+This is also why T13's mix chain highpass moved from a double 220 Hz stage
+down to a single 140 Hz stage: 220 Hz would have filtered the left hand
+right back out, defeating the point of adding it. The right-hand stabs sit
+at F4 (349 Hz) and above regardless, so nothing about their sound changes.
 
 ## Superseded — the lead synth (Godzilla-informed sound design)
 
@@ -157,51 +191,69 @@ deliberate rather than as a quiet fade-in.
 
 ---
 
-## Phase 2 — the 56-bar grid
+## Phase 2 — the 64-bar grid
 
 ```
-bars  1–8    CHORUS 1   solo lead synth — nothing else at all
-bars  9–16   VERSE 1a   drums + 808 + guitar enter
-bars 17–24   VERSE 1b   + pad, FM chord, perc, hats up
-bars 25–32   CHORUS 2   full — every track
-bars 33–40   VERSE 2a   stripped back hardest
-bars 41–48   VERSE 2b   rebuild
-bars 49–56   CHORUS 3   full again
+bars  1–8    CHORUS 1        solo piano — nothing else at all
+bars  9–16   VERSE 1a        drums + 808 + guitar enter
+bars 17–24   VERSE 1b        + pad, FM chord, perc, hats up
+bars 25–32   CHORUS 2        full — every track
+bars 33–36   CHORUS 2 PEAK   + left-hand piano, denser pluck, quiet violin foreshadow
+bars 37–44   VERSE 2a        stripped back hardest (the drop)
+bars 45–52   VERSE 2b        rebuild, bigger than verse 1b
+bars 53–60   CHORUS 3        full again, hotter than chorus 2
+bars 61–64   CHORUS 3 PEAK   full violin solo + two-hand piano — the record's peak
 ```
+
+Choruses 2 and 3 were extended from 8 to 12 bars each. The extra 4 bars are not
+more of the same loop — they're a new instrumental-only "peak" zone
+(`chorus2_peak`, `chorus3_peak`), free of the vocal-pocket constraint every
+other zone respects, used to push two-hand piano and a solo violin in without
+crowding anywhere a vocal actually needs the space. See "Growing the emotional
+arc" below.
 
 Track presence is a table (`arrange.LAYERS`), not scattered conditionals: each
-of the seven zones maps every track to a gain, where 0.0 means silent. Measured
+of the nine zones maps every track to a gain, where 0.0 means silent. Measured
 result — the 300 Hz–6 kHz column is where the arrangement actually moves, since
 broadband RMS just tracks the 808:
 
 ```
-zone       tracks   broadband   300 Hz-6 kHz
-chorus1       1      -25.4        -26.2      solo synth, no low end at all
-verse1a       6      -16.4        -30.5
-verse1b       9      -16.3        -29.2
-chorus2      11      -15.3        -27.6
-verse2a       6      -16.5        -32.5      the drop
-verse2b       9      -16.3        -29.3
-chorus3      11      -15.3        -27.6
+zone           tracks   broadband   300 Hz-6 kHz
+chorus1           1      -22.1        -22.9      solo piano, no low end at all
+verse1a           7      -15.6        -28.2
+verse1b          11      -15.5        -26.9
+chorus2          12      -14.7        -25.5
+chorus2_peak     13      -14.7        -24.5      left hand + denser pluck + quiet violin
+verse2a           7      -15.6        -29.9      the drop
+verse2b          11      -15.5        -27.0
+chorus3          12      -14.7        -25.2      hotter than chorus 2 by design
+chorus3_peak     13      -14.4        -20.3      the record's loudest, densest moment
 ```
 
 Chord loop, **two bars each**: **Gm → Eb → Bb → F** (i–VI–III–VII), so the full
 progression spans 8 bars. Harmonic rhythm is global (`arrange.chord_index`) —
 the piano brief is written around 2-bar chord sections, and if only the piano
-slowed down it would sit on Gm while the guitar and 808 had moved to Eb. Every
-section boundary (bars 1, 9, 25, 33, 49) lands on Gm.
+slowed down it would sit on Gm while the guitar and 808 had moved to Eb. The
+8-bar-aligned section starts (bars 1, 9, 25, 37, 53) land on Gm; the 4-bar peak
+extensions (33, 61) do not, since they add half an 8-bar loop rather than a
+whole one. Nothing downstream assumes zone boundaries sit on the tonic, so this
+is a cosmetic consequence of the extension, not a bug.
 
 - **T4** crests exactly on each chorus downbeat. Chorus 1 sits at bar 1, so its
   lead-in falls off the front of the grid — a double-length swell placed two bars
   early leaves precisely the final bar audible, still peaking on the downbeat.
+  The one other big texture change in the record, chorus 1 into verse 1, gets
+  its own transition instead (see "A modern transition" below).
 - **T5** plays D5→Bb4→G4 on the "and of 3 / 4 / and of 4" of alternating bars in
   the two full choruses, threading between the kick and snare rather than over
-  them.
+  them. In the two peak zones it drops the alternating-bar rule and plays every
+  bar — a denser shimmer that's part of what makes the peaks read as bigger.
 - **T6** hits beat 1 and the "and" of 2, plus beat 4 in choruses (and the "and"
-  of 4 every fourth bar). 116 triggers — chorus 1 has no drums at all.
-- **T7** lands on beat 3 of all 48 bars that have drums.
+  of 4 every fourth bar). 138 triggers — chorus 1 has no drums at all, and the
+  very last bar drops the kick entirely (see "The ending" below).
+- **T7** lands on beat 3 of every bar that has drums — 55 of them.
 - **T8** runs steady 1/8ths with 1/32 rolls filling beat 4 of every 2nd and 4th
-  bar, at reduced velocity in the stripped verses. 528 hits.
+  bar, at reduced velocity in the stripped verses. 588 hits.
 - **T11** follows the roots with a 60 ms portamento between overlapping notes,
   and drops 2 dB through the verses.
 
@@ -212,6 +264,86 @@ The roots are octave-placed to **G1 (49 Hz) → Eb2 (78 Hz) → Bb1 (58 Hz) → 
 38.9 Hz, below what a phone or laptop reproduces at all, and the octave jumps
 give the portamento something audible to slide across — which is the point of a
 drill bassline. Root motion is unchanged.
+
+---
+
+## A modern transition — chorus 1 into verse 1
+
+Every other big texture change in the record (verse into chorus) already had a
+transition: `T4`'s reverse swell, cresting on the downbeat. The one gap was the
+very first one, chorus 1's bare piano dropping into the full band at bar 9 — and
+a reverse swell is the wrong tool there, because it announces a *chorus*
+arrival specifically, not a texture change in general.
+
+`synth.transition_riser()` is the genre-standard fix: a white-noise sweep whose
+highpass cutoff rises exponentially through the duration, layered under a synth
+"lift" gliding up about two octaves (90 → 380 Hz), both crescendoing into a
+bright noise snap at the moment verse 1 lands. It runs 1.5 bars into bar 9 and
+is mixed into the T4 bus, so it inherits the same big hall reverb the swells
+use without needing a new track.
+
+## Growing the emotional arc
+
+The brief was to make the arrangement's emotional curve climb continuously
+rather than plateau after chorus 2 — every section a little bigger than its
+counterpart before it, the final chorus the maximum. Four things do this
+together, and the "ARRANGEMENT DYNAMICS" table above is the measured proof it
+worked (chorus2_peak > chorus2, chorus3 > chorus2, chorus3_peak is the loudest
+zone in the record by nearly 5 dB in the 300 Hz–6 kHz band):
+
+1. **Choruses 2 and 3 grew**, chorus 3 gained a further step over chorus 2
+   (`T2`, `T3`, `T13`, `T14` all tick up a little further at `chorus3` than
+   `chorus2` in `arrange.LAYERS`), and the two new peak zones step up again on
+   top of that — a staircase, not a single jump.
+2. **Two-hand piano** (above) adds real low-register weight exactly where
+   there's room for it — chorus 1's bare intro and the two peak zones — rather
+   than everywhere, which would just be louder, not bigger.
+3. **A solo violin** (`T15`) plants a single quiet motif in `chorus2_peak`
+   (one held note, `arrange.VIOLIN_FORESHADOW`) and answers it in full in
+   `chorus3_peak` (`arrange.VIOLIN_FINALE`, an 8-note phrase). `strings_chord`
+   is an ensemble — many detuned bowed voices smeared into a pad — which is
+   the wrong instrument for a melody that needs to read as one performer, so
+   the violin is a separate synthesis (`synth.solo_violin_phrase`): a single
+   voice, notes tied by portamento the way a fingered string glides between
+   positions, a soft re-bow accent on each new note rather than a clean synth
+   retrigger. The phrase's register climbs across its 4 bars — D5 up to D6, the
+   highest note anywhere in the record — so the melodic shape and the
+   arrangement's dynamics peak at the same instant.
+4. **The ending** (next) removes everything except what's ringing, so the
+   final chord actually gets heard instead of being buried under a full kit
+   still going at full velocity.
+
+## The ending
+
+The last bar (`arrange.FINAL_BAR`) breaks from the loop on purpose: `T6`/`T7`/
+`T8`/`T9` are all silenced — no kick, no snare, no hats, no perc — while `T11`
+holds one long root note instead of retriggering, and the piano/strings/violin
+notes already sounding (all of them longer than a bar) simply ring out through
+the tail. This is the standard way a produced record ends a climax: pull the
+rhythm section out from under the pitched instruments so the last chord is
+actually audible as an ending, not just where the loop happens to stop.
+
+## MIDI export for Logic Pro
+
+`midi_export.py` writes one standard MIDI file per melodic/harmonic instrument
+to `midi/`: `piano_RH`, `piano_LH`, `guitar`, `pad`, `strings`, `violin`,
+`bass808`. It calls `arrange.schedule_events()`, a symbolic pass that mirrors
+`build()`'s exact scheduling math (same `lg`/`chord_index`/`bar_time` calls)
+but never touches `synth.py`, so it runs in under a second instead of the
+couple of minutes a full audio render takes — it only needs to know *when* and
+*what*, not *how it sounds*.
+
+Note durations are musical (how long a key would be held), not the audio
+layer's decay length: a struck piano note keeps ringing after the MIDI
+note-off, same as a real instrument, so short note-offs are correct even
+though the rendered audio note is much longer. Drums aren't exported — they
+already sound the way they're meant to, and re-tracking a groove this specific
+in a DAW would just be re-deriving `arrange.py` by ear.
+
+Workflow: import each `.mid` into its own Logic track, assign a real
+instrument or a better VST than this project's own synthesis, bounce, and send
+the rendered audio back — `mixdsp.py`'s mix/master stage is happy to take real
+stems in place of (or alongside) the synthesized ones.
 
 ---
 
@@ -230,7 +362,7 @@ Verified by `analyze.py`:
 envelope depth       -5.00 dB   (spec -5.0)
 attack to floor       2.00 ms   (spec 2.0)
 release to -0.5 dB   73.8 ms
-measured on stem     -4.59 dB median  (envelope predicts -4.48 dB)
+measured on stem     -3.96 dB median  (envelope predicts -4.48 dB)
 ```
 
 The stem probe only samples kicks that land *between* 808 note onsets — a kick
@@ -245,10 +377,11 @@ Limiter → tanh soft clip → 1.2 s tail fade → exact peak normalization.
 
 ```
 peak      -6.000 dBFS      (target -6.0000)
-RMS      -16.58 dBFS
-LUFS-I   -15.84            (~-9.8 LUFS if normalized to 0 dBFS)
-crest     10.58 dB         transients intact
-L/R corr  +0.951           mono-safe
+RMS      -15.52 dBFS
+LUFS-I   -14.98            (~-9.0 LUFS if normalized to 0 dBFS)
+crest      9.52 dB         transients intact
+L/R corr  +0.954           mono-safe
+DC offset +2.4e-05
 clipped samples: 0         NaN/Inf: none
 ```
 
@@ -256,36 +389,43 @@ clipped samples: 0         NaN/Inf: none
 by design:
 
 ```
-   20-60   Hz   -5.05
-   60-120  Hz   -2.30   <- 808 lives here
-  120-250  Hz  -15.05
-  250-500  Hz  -15.26
-  500-1000 Hz  -15.43
- 1000-2000 Hz  -19.74   <- vocal pocket
- 2000-4000 Hz  -25.50   <- vocal pocket
- 4000-8000 Hz  -28.28
- 8000-16000Hz  -33.96
+    20-60   Hz   -4.70
+    60-120  Hz   -2.90   <- 808 lives here
+   120-250  Hz  -14.96
+   250-500  Hz  -13.31
+   500-1000 Hz  -12.72
+  1000-2000 Hz  -18.04   <- vocal pocket
+  2000-4000 Hz  -23.65   <- vocal pocket
+  4000-8000 Hz  -29.39
+  8000-16000Hz  -33.32
 ```
 
-**Section lift** — see the zone table under Phase 2.
+**Section lift** — see the zone table under Phase 2. Chorus 3's peak zone is
+now the loudest section in the record, by design — see "Growing the emotional
+arc".
 
-**Groove grid** — every hit is placed at a sample-exact index; onset detection
-confirms the counts and sub-millisecond jitter:
+**Groove grid** — every scheduled hit is checked for a real energy jump at its
+sample-exact index (edge-counting on layered drums is unreliable — see "2026
+standards pass" below for why this moved from jitter-measurement to
+schedule verification):
 
 ```
-kick   116 onsets (expect 116)   jitter max 0.81 ms
-snare   48 onsets (expect  48)   jitter max 0.00 ms
-hat    528 onsets (expect 528)   jitter max 1.08 ms
+kick   138/138 scheduled hits confirmed
+snare   55/55  scheduled hits confirmed
+hat    588/588 scheduled hits confirmed
 ```
 
 Expected counts are derived from `arrange.LAYERS` rather than hard-coded, so the
-check stays honest when the arrangement changes.
+check stays honest when the arrangement changes — it picked up all 22 extra
+kicks, 7 extra snares and 60 extra hats from the two 4-bar extensions
+automatically.
 
 **Portamento**, measured as instantaneous frequency across a chord change:
 
 ```
-bar 34  G1->Eb2   before 49.3 Hz | +30ms 59.3 | +60ms 75.6 | +120ms 77.8
-bar 35  Eb2->Bb1  before 77.9 Hz | +30ms 69.5 | +60ms 58.0 | +120ms 56.7
+bar 34  G1->Eb2   before 48.4 Hz | t=0 48.1 | +30ms 45.7 | +60ms 44.1 | +120ms 42.1
+bar 35  Eb2->Bb1  before 48.3 Hz | t=0 50.0 | +30ms 62.7 | +60ms 76.0 | +120ms 77.0
+bar 36  Bb1->F2   before 77.8 Hz | t=0 85.1 | +30ms 78.6 | +60ms 79.1 | +120ms 77.6
 ```
 
 ---
@@ -293,11 +433,13 @@ bar 35  Eb2->Bb1  before 77.9 Hz | +30ms 69.5 | +60ms 58.0 | +120ms 56.7
 ## Files
 
 ```
-synth.py     DSP primitives + the 12 asset generators
-arrange.py   56-bar sequencer, chord/root tables, sidechain trigger capture
-mixdsp.py    per-track Pedalboard chains, sidechain, bus summing, master
-build.py     end-to-end render -> LoveTheWayYouLie_Modern12Track.wav + stems/
-analyze.py   automated QA: levels, tilt, dynamics, grid, glide -> analysis.png
+synth.py       DSP primitives + the 15 asset generators
+arrange.py     64-bar sequencer, chord/root tables, sidechain trigger capture,
+               schedule_events() for MIDI export
+mixdsp.py      per-track Pedalboard chains, sidechain, bus summing, master
+build.py       end-to-end render -> LoveTheWayYouLie_Modern12Track.wav + stems/
+analyze.py     automated QA: levels, tilt, dynamics, grid, glide -> analysis.png
+midi_export.py writes midi/*.mid (piano RH/LH, guitar, pad, strings, violin, 808)
 ```
 
 
@@ -318,6 +460,11 @@ code, plus a symbolic pass over the note tables. Findings:
 | T12 Vocal Textures | PASS | 0.12 cents; octave drop exact to +0.05 cents |
 | T13 Grand Piano | PASS | 2.96 cents (unison detune) |
 | T6/T7/T9/T10 drums | PASS | within spec; kick verified not to beat against the 808 |
+
+T14 (strings) and T15 (solo violin) were added after this multi-agent pass and
+haven't been run through it — both use `nf()` for every pitch like everything
+else here, so there's no reason to expect a different result, but that's an
+expectation, not a verified claim, until someone actually runs it.
 
 Symbolic check: 90 sequenced notes, **zero out of key**; every voicing spells its
 triad; chord progression correct in **112 of 112** bars.
@@ -393,22 +540,28 @@ render was **not reproducible between runs**. Replaced with FNV-1a.
 ### Measured result
 
 ```
-true peak       -5.88 dBTP           spec <= -1.0        PASS
-integrated      -15.10 LUFS  (-10.22 normalised to -1 dBTP)
-max short-term  -13.37 LUFS  ( -8.48 normalised)         in the -7..-9 window
-crest            9.71 dB
-L/R correlation +0.960                                   mono-safe
-clipped samples  0
+true peak        -5.84 dBTP          spec <= -1.0        PASS
+integrated       -14.98 LUFS  (-9.98 normalised to -1 dBTP)
+max short-term   -12.44 LUFS  (-7.44 normalised)         in the -7..-9 window
+crest              9.52 dB
+L/R correlation   +0.954                                 mono-safe
+clipped samples    0
 ```
 
-Integrated sits ~1 LU under the genre norm because the bare solo intro drags the
-average down — a deliberate arrangement choice. Short-term through the choruses
-is in range. The −6 dBFS ceiling is intentional headroom for vocal tracking, not
-a finished master; mastered to −1 dBTP with a vocal, this lands in spec.
+Integrated sits under the genre norm because the bare solo intro drags the
+average down — a deliberate arrangement choice. Short-term through the peak
+zones now sits at the loud edge of the -7..-9 window rather than comfortably
+inside it, which is the point: chorus3_peak is meant to be the loudest moment
+in the record. The −6 dBFS ceiling is intentional headroom for vocal tracking,
+not a finished master; mastered to −1 dBTP with a vocal, this still lands in
+spec.
 
-Groove verification is now schedule-based rather than edge-counting (a two-hump
+Groove verification is schedule-based rather than edge-counting (a two-hump
 layered kick envelope reads as two onsets to a naive detector):
-**116/116 kick, 48/48 snare, 516/516 hat** scheduled hits confirmed.
+**138/138 kick, 55/55 snare, 588/588 hat** scheduled hits confirmed — up from
+116/48/516 before the two choruses were extended, and the check picked up the
+new counts automatically because they're derived from `arrange.LAYERS`, not
+hard-coded.
 
 
 ---
@@ -416,31 +569,41 @@ layered kick envelope reads as two onsets to a naive detector):
 ## Leaving room for the rap
 
 Verses have to be measurably more open than choruses, or a vocal has nowhere to
-sit. Measured as *how much of the time the 1–5 kHz band is occupied*:
+sit. Measured as *the percentage of 50 ms windows where the mastered mix's
+1-5 kHz band is above a fixed -38 dBFS gate*, over all nine zones:
 
 ```
-             before   after
-chorus1       78.5%   89.9%
-verse1a       68.3%   52.4%
-verse1b       76.9%   64.7%
-chorus2       79.6%   84.7%
-verse2a       48.4%   35.4%
-verse2b       78.9%   66.6%
-chorus3       82.1%   90.1%
+chorus1         90.7%
+verse1a         55.8%
+verse1b         71.0%
+chorus2         89.3%
+chorus2_peak    91.7%
+verse2a         37.5%   the drop
+verse2b         67.6%
+chorus3         92.0%
+chorus3_peak   100.0%   instrumental-only — see below
 
-verses avg    68.1%   54.8%
-choruses avg  80.1%   88.2%
-gap           12.0    33.5 points
+verses avg (4)  58.0%
+choruses avg (3, core zones only)  90.7%
+gap             32.7 points
 ```
 
-Before, verses were nearly as dense as choruses — 77–79% against 80–82%. Two
-changes fixed it: the guitar arpeggio drops from four notes per bar to two under
-the verses (at 8 events/bar it was the densest melodic source), and the piano
+The verse/chorus split that mattered before the extension is still intact:
+verse2a (the drop) is the most open moment in the record at 37.5%, and every
+verse sits well below every chorus. The two peak zones sit *above* even the
+main choruses, and that's intentional rather than a regression — they're
+zones a rap vocal was never routed through in the first place (see
+"Growing the emotional arc"), so there's nothing to protect there. Two
+earlier changes are what keep the verse/chorus gap this wide in the first
+place: the guitar arpeggio drops from four notes per bar to two under the
+verses (at 8 events/bar it was the densest melodic source), and the piano
 sits 3–5 dB further back there.
 
-**Known cosmetic detail:** 82 of 84 piano stabs show a measurable attack. The
-two that don't are the downbeats of bars 9 and 33 — zone boundaries where the
-piano level drops ~11 dB into a verse while the previous chorus note is still
-ringing, so the new stab is masked by its own predecessor's tail. The note is
+**Known cosmetic detail:** all 96 piano stabs clear the 1.5× attack-detection
+threshold, but two are far weaker than the rest — the downbeats of bars 9 and
+37 (1.7-1.8× against a typical 20-75× everywhere else). Both are zone
+boundaries (chorus1 → verse1a, chorus2_peak → verse2a) where the piano level
+drops sharply into a verse while the previous zone's note is still ringing, so
+the new stab is partly masked by its own predecessor's tail. The note is
 sequenced and written; it is simply quieter than what is already decaying. The
 full band enters at both points, so it is inaudible either way.
