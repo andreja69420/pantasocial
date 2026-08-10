@@ -1,6 +1,6 @@
-"""56-bar arrangement grid at 104 BPM in G minor.
+"""56-bar arrangement grid at 90 BPM in G minor.
 
-Produces 12 mono buffers (one per track) plus the kick trigger times that the
+Produces 13 mono buffers (one per track) plus the kick trigger times that the
 mix stage needs to build the 808 sidechain envelope.
 """
 from __future__ import annotations
@@ -46,7 +46,8 @@ LAYERS = {
     # sit inside an 11-track chorus. The factor is far smaller than the synth
     # needed: a five-note piano chord is a much bigger sound than a filtered
     # single-note pluck, and 3.0 put the intro 6.5 dB above the full choruses.
-    "T13": {"chorus1": 1.50, "chorus2": 1.00, "chorus3": 1.00},
+    "T13": {"chorus1": 2.20, "verse1a": 0.85, "verse1b": 0.95, "chorus2": 1.00,
+            "verse2a": 0.70, "verse2b": 0.90, "chorus3": 1.00},
 }
 
 
@@ -87,6 +88,18 @@ PROGRESSION = [
 ]
 
 
+def chord_index(bar: int) -> int:
+    """Which chord is sounding in this bar.
+
+    The progression moves every TWO bars, not every bar. The piano brief is
+    written around 2-bar chord sections ("3 hits per chord, 1 chord per 2
+    bars"), and harmonic rhythm has to be global — if only the piano slowed
+    down it would sit on Gm while the guitar and 808 had already moved to Eb.
+    All section boundaries (bars 0, 8, 24, 32, 48) land on Gm under this.
+    """
+    return (bar // 2) % 4
+
+
 def bar_time(bar: int, beat: float = 0.0) -> float:
     """Absolute seconds for a 0-indexed bar and 0-indexed beat offset."""
     return bar * BAR + beat * BEAT
@@ -107,27 +120,21 @@ def place(buf: np.ndarray, x: np.ndarray, at: float, gain: float = 1.0) -> None:
     buf[i:i + n] += x[:n] * gain
 
 
-# T13 lead riff. Original melodic content written for this track — the synth
-# *design* is modelled on the Godzilla intro (detuned saw growl, hard filter-
-# swept pluck), but the line itself outlines our own Gm-Eb-Bb-F loop rather
-# than transcribing anyone's hook.
-#
-# Eight staccato 16ths per bar, syncopated so the figure pushes against the
-# kick instead of doubling it.
-RIFF_SLOTS = [0, 2, 3, 6, 8, 10, 11, 14]          # in 16ths
-RIFF_CELLS = {
-    "Gm": ["G4", "G4", "Bb4", "D5", "G4", "Bb4", "D5", "C5"],
-    "Eb": ["Eb4", "Eb4", "G4", "Bb4", "Eb4", "G4", "Bb4", "D5"],
-    "Bb": ["Bb3", "Bb3", "D4", "F4", "Bb3", "D4", "F4", "Eb4"],
-    "F":  ["F4", "F4", "A4", "C5", "F4", "A4", "C5", "Bb4"],
+# T13 piano stabs. Three-note close voicings — one hand — deliberately kept in
+# the F4-Eb5 register: no low keys held down, nothing to muddy the 808 or crowd
+# the low mids. Voice-led so the top line moves by step and common tones hold:
+#   Gm(G4 Bb4 D5) -> Eb(G4 Bb4 Eb5) -> Bb(F4 Bb4 D5) -> F(F4 A4 C5)
+STAB_VOICINGS = {
+    "Gm": ["G4", "Bb4", "D5"],
+    "Eb": ["G4", "Bb4", "Eb5"],
+    "Bb": ["F4", "Bb4", "D5"],
+    "F":  ["F4", "A4", "C5"],
 }
 
-
-def _up_octave(name: str) -> str:
-    k = len(name)
-    while name[k - 1].isdigit():
-        k -= 1
-    return f"{name[:k]}{int(name[k:]) + 1}"
+# Three hits inside the first bar of each 2-bar chord section, then the whole
+# second bar is left empty to breathe before the chord switches. Beat offsets
+# are 0-indexed: downbeat, the "and" of 2, and beat 4.
+STAB_HITS = [0.0, 1.5, 3.0]
 
 
 def build() -> tuple[dict[str, np.ndarray], list[float]]:
@@ -167,7 +174,7 @@ def build() -> tuple[dict[str, np.ndarray], list[float]]:
 
     # ------------------------------------------------- T1/T2/T3 harmonic bed
     for bar in range(BARS):
-        ch = PROGRESSION[bar % 4]
+        ch = PROGRESSION[chord_index(bar)]
         t0 = bar_time(bar)
         sect = section_of(bar)
 
@@ -181,11 +188,11 @@ def build() -> tuple[dict[str, np.ndarray], list[float]]:
 
         # T2 synth chord: beat 1 only
         if (g2 := lg("T2", bar)):
-            place(tracks["T2"], chords[bar % 4], t0, 0.50 * g2)
+            place(tracks["T2"], chords[chord_index(bar)], t0, 0.50 * g2)
 
         # T3 pad: sustained, one chord per bar
         if (g3 := lg("T3", bar)):
-            place(tracks["T3"], pads[bar % 4], t0, 0.58 * g3)
+            place(tracks["T3"], pads[chord_index(bar)], t0, 0.58 * g3)
 
     # ------------------------------------------------------ T4 reverse swell
     # Chorus 1 is a bare solo instrument, so it gets no lead-in — the swells
@@ -267,7 +274,7 @@ def build() -> tuple[dict[str, np.ndarray], list[float]]:
     for bar in range(BARS):
         if not lg("T11", bar):
             continue
-        ch = PROGRESSION[bar % 4]
+        ch = PROGRESSION[chord_index(bar)]
         f = nf(ch["root"])
         t0 = bar_time(bar)
         if section_of(bar) == "chorus":
@@ -303,45 +310,35 @@ def build() -> tuple[dict[str, np.ndarray], list[float]]:
     # needs, and the whole mix is built around leaving that range empty.
     keys: dict[tuple[str, str], np.ndarray] = {}
 
-    def key_note(name: str, touch: str) -> np.ndarray:
-        key = (name, touch)
+    def key_note(name: str, touch: str, ring: str) -> np.ndarray:
+        key = (name, touch, ring)
         if key not in keys:
             seed = 700 + abs(hash(name)) % 900
             # Velocity is a timbre control on a real piano, not just a level:
-            # the soft touch is darker, not merely quieter.
-            keys[key] = (S.steinway_note(name, 3.6, seed=seed, velocity=0.46)
-                         if touch == "soft"
-                         else S.steinway_note(name, 2.2, seed=seed, velocity=0.86))
+            # the soft touch is darker, not merely quieter. `ring` sets how long
+            # the note is allowed to sound before the damper lands.
+            dur = 2.9 if ring == "long" else 0.95
+            keys[key] = S.steinway_note(name, dur, seed=seed,
+                                        velocity=0.50 if touch == "soft" else 0.82)
         return keys[key]
 
-    MELODY_SLOTS = [6, 8, 14]               # RH answers the chord on beat 1
+    # Chord stabs: three hits in the first bar of each 2-bar chord section,
+    # then the second bar breathes. Over an 8-bar chorus that is 4 chords x 3
+    # hits = 12 stabs, which is exactly the brief.
     for bar in range(BARS):
         g13 = lg("T13", bar)
-        if not g13:
+        if not g13 or bar % 2:              # stabs live in the first bar only
             continue
-        zname, zstart = zone_of(bar)
-        pos = bar - zstart
-        ch = PROGRESSION[bar % 4]
-        cell = RIFF_CELLS[ch["name"]]
-        octv = pos >= 6                     # register shift for the last 2 bars
-        if zname == "chorus1":
-            # Solo piano: rolled two-hand chord on the downbeat, then a right-
-            # hand answer. A bare single-note line would sound thin with the
-            # whole arrangement stripped away.
-            for i, n in enumerate(ch["piano"]):
-                place(tracks["T13"], key_note(n, "soft"), bar_time(bar) + i * 0.014,
-                      0.50 * g13)
-            for slot, note in zip(MELODY_SLOTS, (cell[3], cell[4], cell[7])):
-                n = _up_octave(note) if octv else note
-                place(tracks["T13"], key_note(n, "soft"),
-                      bar_time(bar, slot * 0.25), 0.42 * g13)
-        else:
-            for n in ch["piano"][:2]:       # left-hand root + fifth
-                place(tracks["T13"], key_note(n, "hard"), bar_time(bar), 0.55 * g13)
-            for slot, note in zip(RIFF_SLOTS, cell):
-                n = _up_octave(note) if octv else note
-                g = 0.60 if slot in (0, 8) else 0.42
-                place(tracks["T13"], key_note(n, "hard"),
-                      bar_time(bar, slot * 0.25), g * g13)
+        ch = PROGRESSION[chord_index(bar)]
+        voicing = STAB_VOICINGS[ch["name"]]
+        touch = "soft" if zone_of(bar)[0] == "chorus1" else "hard"
+        for hit, beat in enumerate(STAB_HITS):
+            # The third stab is the one that rings through the empty bar; the
+            # first two are choked short so they read as stabs, not chords.
+            ring = "long" if hit == 2 else "short"
+            accent = (0.62, 0.50, 0.56)[hit]
+            for i, n in enumerate(voicing):
+                place(tracks["T13"], key_note(n, touch, ring),
+                      bar_time(bar, beat) + i * 0.006, accent * g13)
 
     return tracks, sorted(kick_times)

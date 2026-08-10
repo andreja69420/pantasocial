@@ -70,11 +70,36 @@ the run log reports what was fetched).
 | T10 | Crash / Impact | 33 Hz sub boom + dark inharmonic crash | HP 24 Hz, very long tail (room 0.97) |
 | T11 | 808 Sub | Pure sine driven by a per-sample frequency curve | Distortion +5 dB, +100 Hz bell, **sidechain duck** |
 | T12 | Vocal Textures | Formant-synthesized vowel, resampled 2:1 (−12 semitones) | 100 % wet reverb, LP 2 kHz ×2 |
-| T13 | Grand Piano | Physically-modelled Steinway: hammer strike at 1/8 (nulls every 8th partial), 1–3 true unison strings, two-stage decay, register-dependent inharmonicity, velocity-as-timbre | HP 55 Hz, 350 Hz dip, LP 7.5 kHz, hall (no chorus) |
+| T13 | Grand Piano | Physically-modelled Steinway: hammer strike at 1/8 (nulls every 8th partial), 1–3 true unison strings, two-stage decay, register-dependent inharmonicity, velocity-as-timbre | HP 220 Hz ×2, LP 6.5 kHz, short hall (no chorus) |
 
 ---
 
-## T13 — the lead synth (Godzilla-informed sound design)
+## T13 — the piano stab pattern
+
+Three-note close voicings, one hand, in the **F4–Eb5 register only** — no low
+keys held down. Voice-led so common tones hold and the top moves by step:
+
+```
+Gm  G4 Bb4 D5   ->  Eb  G4 Bb4 Eb5   ->  Bb  F4 Bb4 D5   ->  F  F4 A4 C5
+```
+
+Each chord lasts **2 bars** and is struck **3 times** — on the downbeat, the
+"and" of 2, and beat 4 — after which the whole second bar is left empty to
+breathe before the chord switches. The first two hits are choked to 0.95 s so
+they read as stabs; the third rings 2.9 s through the empty bar. Over an 8-bar
+chorus that is 4 chords × 3 hits = **12 stabs**.
+
+Verified: **84 of 84** scheduled stabs land with a clear attack (energy ratio
+2.15–4.15× across the hit). A naive envelope detector reports ~180 onsets on
+this stem — those extra points measure at most 1.18×, i.e. unison-string decay
+ripple, not notes.
+
+Register check on the mixed stem: **−59.1 dBFS below 220 Hz** against
+−31.7 dBFS in 220 Hz–1 kHz. Nothing muddies the 808.
+
+## Superseded — the lead synth (Godzilla-informed sound design)
+
+*Kept for reference; T13 is now the piano above.*
 
 **Research.** *Godzilla* (Eminem ft. Juice WRLD, 2020, prod. D.A. Got That Dope)
 is **E♭ minor at 166 BPM** (83 half-time), progression **E♭m–G♭**. Its synth is
@@ -146,7 +171,11 @@ verse2b       9      -16.3        -29.3
 chorus3      11      -15.3        -27.6
 ```
 
-Chord loop, one bar each: **Gm → Eb → Bb → F** (i–VI–III–VII).
+Chord loop, **two bars each**: **Gm → Eb → Bb → F** (i–VI–III–VII), so the full
+progression spans 8 bars. Harmonic rhythm is global (`arrange.chord_index`) —
+the piano brief is written around 2-bar chord sections, and if only the piano
+slowed down it would sit on Gm while the guitar and 808 had moved to Eb. Every
+section boundary (bars 1, 9, 25, 33, 49) lands on Gm.
 
 - **T4** crests exactly on each chorus downbeat. Chorus 1 sits at bar 1, so its
   lead-in falls off the front of the grid — a double-length swell placed two bars

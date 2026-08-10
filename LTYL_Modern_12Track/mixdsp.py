@@ -196,14 +196,15 @@ def process_tracks(tracks: dict[str, np.ndarray], kick_times) -> dict[str, np.nd
     ]), pan(tracks["T12"], -0.05))
     out["T12"] = wet
 
-    # T13 grand piano — no distortion and no chorus. Chorus on a piano detunes
-    # the unisons and turns a Steinway into a honky-tonk; the width comes from
-    # the hall instead, with the dry signal centred.
+    # T13 grand piano stabs — no distortion and no chorus (chorus detunes the
+    # unisons and turns a Steinway into a honky-tonk). Highpassed hard at 220 Hz
+    # twice: the voicings already sit at F4 and above, and this guarantees no
+    # low-end weight or sustain creeps under the 808. Reverb kept short so the
+    # stabs stay tight rather than washing into each other.
     out["T13"] = run(Pedalboard([
-        HighpassFilter(55),
-        PeakFilter(cutoff_frequency_hz=350, gain_db=-1.5, q=0.8),
-        LowpassFilter(7500),
-        Reverb(room_size=0.72, damping=0.42, wet_level=0.26, dry_level=0.85, width=1.0),
+        HighpassFilter(220), HighpassFilter(220),
+        LowpassFilter(6500),
+        Reverb(room_size=0.55, damping=0.55, wet_level=0.16, dry_level=0.92, width=0.95),
     ]), pan(tracks["T13"], 0.0))
 
     for k in out:
