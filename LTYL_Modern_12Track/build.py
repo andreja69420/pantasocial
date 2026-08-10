@@ -122,6 +122,15 @@ def main() -> int:
         sf.write(os.path.join(stem_dir, f"{k}_{TRACK_NAMES[k].replace('/', '-')}.wav"),
                  a.T, SR, subtype="PCM_24")
 
+    # Raw pre-DSP stems, mono. Pitch verification wants these: the mix chains
+    # add filtering, distortion and reverb that obscure fundamentals, none of
+    # which changes what note was actually sequenced.
+    raw_dir = os.path.join(HERE, "stems_raw")
+    os.makedirs(raw_dir, exist_ok=True)
+    for k, a in tracks.items():
+        sf.write(os.path.join(raw_dir, f"{k}_{TRACK_NAMES[k].replace('/', '-')}.wav"),
+                 a, SR, subtype="PCM_24")
+
     for path in (os.path.join(HERE, OUT_NAME), os.path.join(HERE, "..", OUT_NAME)):
         sf.write(path, final.T.astype(np.float32), SR, subtype="PCM_24")
         print(f"    wrote {os.path.normpath(path)}")
