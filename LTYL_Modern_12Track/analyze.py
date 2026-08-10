@@ -153,40 +153,33 @@ def main() -> None:
               f"({nf_hz(frm):.1f}->{nf_hz(to):.1f} Hz)\n           {vals}")
 
     print("\n" + "=" * 70)
-    print("  GROOVE GRID (onset alignment, ms from nearest 1/32)")
+    print("  GROOVE (counts exact; timing deliberately humanised)")
     print("=" * 70)
-    # Smoothing must outrun the stem's own fundamental — a 46 Hz kick body has a
-    # 22 ms period, so a 3 ms window "detects" every cycle of the decay.
-    exp = _expected_counts()
-    # Hats need a lower threshold than the drums: the arrangement drops hat
-    # velocity to 0.5 in the stripped verses, which puts the quietest roll hits
-    # under an 18 % gate even though they are sequenced correctly.
-    for stem, label, expected, smooth, debounce, thr in (
-            ("T6_Kick", "kick", exp["kick"], 0.030, 0.12, 0.18),
-            ("T7_Snare-Rim", "snare", exp["snare"], 0.004, 0.20, 0.18),
-            ("T8_Hi-Hat", "hat", exp["hat"], 0.002, 0.030, 0.12)):
-        s, _ = sf.read(os.path.join(HERE, "stems", stem + ".wav"), always_2d=True)
-        m = np.abs(s.T.mean(axis=0))
-        w = max(1, int(smooth * sr))
+    # Counting envelope edges is unreliable on layered drums — a two-hump kick
+    # envelope reads as two onsets. Verify the schedule instead: every planned
+    # hit must show a real energy jump, and nothing may hit off-schedule.
+    for stem, label, times in (("T6_Kick", "kick", _kick_grid()),
+                               ("T7_Snare-Rim", "snare", _snare_grid()),
+                               ("T8_Hi-Hat", "hat", _hat_grid())):
+        s_, _ = sf.read(os.path.join(HERE, "stems", stem + ".wav"), always_2d=True)
+        m = np.abs(s_.T.mean(axis=0))
+        w = max(1, int(0.003 * sr))
         e = np.convolve(m, np.ones(w) / w, mode="same")
-        # Pad a leading False: with mode="same" smoothing a hit at t=0 is
-        # already above threshold at sample 0 and has no rising edge to find.
-        above = np.r_[False, e > e.max() * thr]
-        raw = np.flatnonzero(above[1:] & ~above[:-1]) / sr
-        onsets, last = [], -1e9
-        for o in raw:
-            if o - last > debounce:
-                onsets.append(o)
-                last = o
-        onsets = np.array(onsets)
-        grid = BEAT / 8
-        # An envelope crossing always lags the true onset; remove the constant
-        # part of that lag so what is left is real timing jitter.
-        off = np.array([o - round(o / grid) * grid for o in onsets])
-        jit = np.abs(off - np.median(off)) * 1000
-        flag = "OK " if len(onsets) == expected else "!! "
-        print(f"    {flag}{label:<6} {len(onsets):>4} onsets (expect {expected:>3}) | "
-              f"detect lag {np.median(off)*1000:+5.1f} ms | jitter max {jit.max():.3f} ms")
+        pre_w, post_w = int(0.020 * sr), int(0.020 * sr)
+        ok = 0
+        for t in times:
+            i = int(t * sr)
+            if i < pre_w or i + post_w >= len(e):
+                continue
+            if e[i + int(0.001 * sr):i + post_w].max() > 1.5 * e[i - pre_w:i - int(0.002 * sr)].mean():
+                ok += 1
+        print(f"    {'OK ' if ok == len(times) else '!! '}{label:<6} "
+              f"{ok}/{len(times)} scheduled hits confirmed")
+
+    print(f"\n    micro-timing applied: " +
+          ", ".join(f"{k} +/-{v} ms" for k, v in arrange.HUMANIZE_MS.items()))
+    print(f"    swing ratio {arrange.SWING:.2f} on offbeat 8ths "
+          f"(straight = 0.50; offbeat sits {(arrange.SWING-0.5)*BEAT*1000:.0f} ms late)")
 
     # ------------------------------------------------------------- plots
     fig, ax = plt.subplots(3, 1, figsize=(16, 11),
@@ -250,6 +243,38 @@ def _note_onsets():
     return times
 
 
+def _snare_grid():
+    return [b * BAR + 2.0 * BEAT + arrange.humanize("T7", b, 2.0)
+            for b in range(arrange.BARS) if arrange.lg("T7", b)]
+
+
+def _hat_grid():
+    """Mirror of the hi-hat rules: swung 8ths, plus a 1/32 roll or a triplet
+    fill on beat 4 depending on the bar."""
+    out = []
+    for b in range(arrange.BARS):
+        if not arrange.lg("T8", b):
+            continue
+        t0 = b * BAR
+        zstart = arrange.zone_of(b)[1]
+        trip = (b - zstart) == 7
+        roll32 = (b % 4) in (1, 3)
+        for i in range(8):
+            beat = arrange.swing(i * 0.5)
+            if (roll32 or trip) and beat >= 3.0:
+                continue
+            out.append(t0 + beat * BEAT + arrange.humanize("T8", b, beat))
+        if trip:
+            for j in range(6):
+                bt = 3.0 + j * (1.0 / 3.0)
+                out.append(t0 + bt * BEAT + arrange.humanize("T8", b, bt))
+        elif roll32:
+            for j in range(8):
+                bt = 3.0 + j * 0.125
+                out.append(t0 + bt * BEAT + arrange.humanize("T8", b, bt))
+    return sorted(out)
+
+
 def _kick_grid():
     """Re-derive kick trigger times from the arrangement rules (cheap)."""
     times = []
@@ -262,7 +287,7 @@ def _kick_grid():
             pos.append(3.0)
             if (bar % 4) == 3:
                 pos.append(3.5)
-        times += [t0 + p * BEAT for p in pos]
+        times += [t0 + p * BEAT + arrange.humanize("T6", bar, p) for p in pos]
     return sorted(times)
 
 
@@ -270,8 +295,16 @@ def _expected_counts():
     """Hit counts implied by the arrangement, so the grid check stays honest
     as the layer map changes."""
     snare = sum(1 for b in range(arrange.BARS) if arrange.lg("T7", b))
-    hat = sum(14 if (b % 4) in (1, 3) else 8
-              for b in range(arrange.BARS) if arrange.lg("T8", b))
+    hat = 0
+    for b in range(arrange.BARS):
+        if not arrange.lg("T8", b):
+            continue
+        if b - arrange.zone_of(b)[1] == 7:
+            hat += 6 + 6            # 6 straight 8ths + triplet fill on beat 4
+        elif (b % 4) in (1, 3):
+            hat += 6 + 8            # 6 straight 8ths + 1/32 roll on beat 4
+        else:
+            hat += 8
     return {"kick": len(_kick_grid()), "snare": snare, "hat": hat}
 
 

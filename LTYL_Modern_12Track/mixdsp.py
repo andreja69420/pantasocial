@@ -87,8 +87,8 @@ def lufs_integrated(stereo: np.ndarray) -> float:
 
 TRACK_GAIN_DB = {
     "T1": -11.0, "T2": -3.0, "T3": -13.0, "T4": -12.0, "T5": -12.0, "T6": -5.5,
-    "T7": -6.0, "T8": -11.5, "T9": -14.5, "T10": -9.0, "T11": -11.0, "T12": -19.0,
-    "T13": -18.0,
+    "T7": -6.0, "T8": -10.0, "T9": -14.5, "T10": -9.0, "T11": -8.5, "T12": -19.0,
+    "T13": -18.0, "T14": -14.0,
 }
 
 
@@ -180,12 +180,24 @@ def process_tracks(tracks: dict[str, np.ndarray], kick_times) -> dict[str, np.nd
     # Q is deliberately broad (0.45): the roots span 49-87 Hz, and a tight bell
     # at 100 Hz would lift only the Eb2/F2 bars, making the bassline swing ~3 dB
     # between chords.
-    sub = run(Pedalboard([
-        Distortion(drive_db=5.0),
+    # Two parallel layers, which is how a modern 808 survives both earbuds and
+    # a club rig: a clean sub carries the weight, and a hard-driven mid layer
+    # supplies the harmonic ladder that makes a 49 Hz root audible on a phone.
+    # One band doing both jobs always compromises one of them.
+    mono808 = pan(tracks["T11"], 0.0)
+    sub_low = run(Pedalboard([
+        Distortion(drive_db=4.0),
         PeakFilter(cutoff_frequency_hz=100, gain_db=3.5, q=0.45),
-        LowpassFilter(700),
+        LowpassFilter(200), LowpassFilter(200),
         HighpassFilter(26), HighpassFilter(26),
-    ]), pan(tracks["T11"], 0.0))
+    ]), mono808)
+    sub_mid = run(Pedalboard([
+        Distortion(drive_db=13.0),
+        HighpassFilter(90), HighpassFilter(90),
+        LowpassFilter(1400),
+        PeakFilter(cutoff_frequency_hz=260, gain_db=2.0, q=0.7),
+    ]), mono808)
+    sub = sub_low + sub_mid * db(-5.0)
     out["T11"] = sub * sidechain_env(sub.shape[1], kick_times,
                                      duck_db=-5.0, attack_ms=2.0, release_ms=80.0)
 
@@ -207,6 +219,20 @@ def process_tracks(tracks: dict[str, np.ndarray], kick_times) -> dict[str, np.nd
         Reverb(room_size=0.55, damping=0.55, wet_level=0.16, dry_level=0.92, width=0.95),
     ]), pan(tracks["T13"], 0.0))
 
+    # T14 strings — wide, dark, and carved out of the vocal range. Strings are
+    # the classic thing that fights a vocal, so the 1-3 kHz band is pulled down
+    # before they ever reach the bed bus.
+    sm = tracks["T14"]
+    sl = run(Pedalboard([Chorus(rate_hz=0.23, depth=0.28, centre_delay_ms=11.0, mix=0.4)]),
+             np.stack([sm, sm]))[0]
+    sr_ = run(Pedalboard([Chorus(rate_hz=0.37, depth=0.24, centre_delay_ms=17.0, mix=0.4)]),
+              np.stack([sm, sm]))[1]
+    out["T14"] = run(Pedalboard([
+        HighpassFilter(180), LowpassFilter(3400),
+        PeakFilter(cutoff_frequency_hz=1900, gain_db=-3.0, q=0.8),
+        Reverb(room_size=0.88, damping=0.40, wet_level=0.34, dry_level=0.72, width=1.0),
+    ]), widen(np.stack([sl, sr_]), 1.55))
+
     for k in out:
         out[k] = out[k] * db(TRACK_GAIN_DB[k])
     return out
@@ -214,7 +240,7 @@ def process_tracks(tracks: dict[str, np.ndarray], kick_times) -> dict[str, np.nd
 
 # ------------------------------------------------------------- bus + master
 
-BED = ("T1", "T2", "T3", "T4", "T5", "T12", "T13")
+BED = ("T1", "T2", "T3", "T4", "T5", "T12", "T13", "T14")
 DRUMS = ("T6", "T7", "T8", "T9", "T10")
 
 

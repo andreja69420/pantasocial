@@ -25,7 +25,7 @@ TRACK_NAMES = {
     "T4": "Reverse Swell", "T5": "High Pluck", "T6": "Kick",
     "T7": "Snare/Rim", "T8": "Hi-Hat", "T9": "Perc/Open Hat",
     "T10": "Crash/Impact", "T11": "808 Sub", "T12": "Vocal Textures",
-    "T13": "Grand Piano",
+    "T13": "Grand Piano", "T14": "Strings",
 }
 
 

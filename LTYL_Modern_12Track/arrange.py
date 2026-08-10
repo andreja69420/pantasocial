@@ -46,6 +46,9 @@ LAYERS = {
     # sit inside an 11-track chorus. The factor is far smaller than the synth
     # needed: a five-note piano chord is a much bigger sound than a filtered
     # single-note pluck, and 3.0 put the intro 6.5 dB above the full choruses.
+    # Strings enter with the build and carry the full sections, the way the
+    # 2010 record uses them. Never in the bare chorus 1.
+    "T14": {"verse1b": 0.55, "chorus2": 1.00, "verse2b": 0.65, "chorus3": 1.00},
     "T13": {"chorus1": 2.20, "verse1a": 0.85, "verse1b": 0.95, "chorus2": 1.00,
             "verse2a": 0.70, "verse2b": 0.90, "chorus3": 1.00},
 }
@@ -78,13 +81,13 @@ def lg(track: str, bar: int) -> float:
 # the 60 ms portamento something audible to slide across.
 PROGRESSION = [
     {"name": "Gm", "guitar": ["G3", "Bb3", "D4", "G4"], "piano": ["G2", "D3", "G3", "Bb3", "D4"],
-     "pad": ["G3", "Bb3", "D4"], "root": "G1"},     # 49.0 Hz
+     "pad": ["G3", "Bb3", "D4"], "strings": ["D4", "G4", "Bb4", "D5"], "root": "G1"},
     {"name": "Eb", "guitar": ["Eb3", "G3", "Bb3", "Eb4"], "piano": ["Eb2", "Bb2", "Eb3", "G3", "Bb3"],
-     "pad": ["Eb3", "G3", "Bb3"], "root": "Eb2"},   # 77.8 Hz
+     "pad": ["Eb3", "G3", "Bb3"], "strings": ["Eb4", "G4", "Bb4", "Eb5"], "root": "Eb2"},
     {"name": "Bb", "guitar": ["Bb2", "D3", "F3", "Bb3"], "piano": ["Bb1", "F2", "Bb2", "D3", "F3"],
-     "pad": ["Bb2", "D3", "F3"], "root": "Bb1"},    # 58.3 Hz
+     "pad": ["Bb2", "D3", "F3"], "strings": ["D4", "F4", "Bb4", "D5"], "root": "Bb1"},
     {"name": "F",  "guitar": ["F3", "A3", "C4", "F4"], "piano": ["F2", "C3", "F3", "A3", "C4"],
-     "pad": ["F3", "A3", "C4"], "root": "F2"},      # 87.3 Hz
+     "pad": ["F3", "A3", "C4"], "strings": ["C4", "F4", "A4", "C5"], "root": "F2"},
 ]
 
 
@@ -98,6 +101,45 @@ def chord_index(bar: int) -> int:
     All section boundaries (bars 0, 8, 24, 32, 48) land on Gm under this.
     """
     return (bar // 2) % 4
+
+
+def _fnv(key: str) -> float:
+    """Deterministic [-1, 1] from a string.
+
+    Python's built-in hash() is salted per process, so seeds derived from it
+    changed on every run and the render was not byte-reproducible. FNV-1a is
+    stable across processes and machines.
+    """
+    h = 2166136261
+    for c in key:
+        h = ((h ^ ord(c)) * 16777619) & 0xFFFFFFFF
+    return (h / 0xFFFFFFFF) * 2.0 - 1.0
+
+
+def seed_of(key: str, span: int) -> int:
+    return int((_fnv(key) + 1.0) * 0.5 * span)
+
+
+# Micro-timing. Real drums are never dead on the grid; 100% quantisation is a
+# large part of what makes programmed drums read as programmed. Offsets are
+# deterministic per (track, bar, position), so the render stays reproducible.
+HUMANIZE_MS = {"T6": 2.5, "T7": 2.0, "T8": 4.5, "T9": 5.5, "T13": 4.0}
+SWING = 0.56          # offbeat 8ths pushed 6% of a beat late
+
+
+def humanize(track: str, bar: int, pos: float) -> float:
+    ms = HUMANIZE_MS.get(track, 0.0)
+    return _fnv(f"{track}|{bar}|{pos}") * ms / 1000.0 if ms else 0.0
+
+
+def vel(track: str, bar: int, pos: float, depth: float = 0.16) -> float:
+    """Deterministic velocity jitter around 1.0."""
+    return 1.0 + _fnv(f"v{track}|{bar}|{pos}") * depth
+
+
+def swing(beat: float, ratio: float = SWING) -> float:
+    """Push offbeat 8ths later. Straight 8ths sit at .5; swung sit at `ratio`."""
+    return beat + (ratio - 0.5) if round(beat * 2) % 2 else beat
 
 
 def bar_time(bar: int, beat: float = 0.0) -> float:
@@ -138,7 +180,7 @@ STAB_HITS = [0.0, 1.5, 3.0]
 
 
 def build() -> tuple[dict[str, np.ndarray], list[float]]:
-    tracks = {f"T{i}": np.zeros(TOTAL) for i in range(1, 14)}
+    tracks = {f"T{i}": np.zeros(TOTAL) for i in range(1, 15)}
     kick_times: list[float] = []
 
     # ---------------------------------------------------------- asset cache
@@ -150,7 +192,7 @@ def build() -> tuple[dict[str, np.ndarray], list[float]]:
     for ch in PROGRESSION:
         for n in ch["guitar"]:
             if n not in guitar:
-                sd = abs(hash(n)) % 10_000
+                sd = seed_of(n, 10_000)
                 guitar[n] = S.electric_note(n, 2.4, seed=sd, release=0.55)
                 guitar_short[n] = S.electric_note(n, 0.80, seed=sd, release=0.22)
     chords = [S.synth_chord(ch["piano"], 3.0, seed=500 + i)
@@ -164,13 +206,16 @@ def build() -> tuple[dict[str, np.ndarray], list[float]]:
     swell_intro = S.reverse_swell(BAR * 2, seed=7)
     plucks = {n: S.pluck(n, 1.1, seed=200 + i) for i, n in enumerate(("D5", "Bb4", "G4"))}
     kick_s = S.kick()
-    rim_s = S.rimshot()
-    hat_s = S.hihat()
-    hat_soft = S.hihat(0.042, seed=33)
+    rim_s = S.snare_layered()
+    hats = [S.hihat(0.055, seed=31, pitch=1.00),
+            S.hihat(0.047, seed=33, pitch=1.09),
+            S.hihat(0.062, seed=37, pitch=0.93)]
     ohat_s = S.open_hat()
     wood_s = S.woodblock()
     impact_s = S.impact()
     chops = {n: S.vocal_chop(n, 2.6, seed=300 + i) for i, n in enumerate(("G4", "Bb4", "D5"))}
+    strings = [S.strings_chord(ch["strings"], BAR * 2.15, seed=600 + i)
+               for i, ch in enumerate(PROGRESSION)]
 
     # ------------------------------------------------- T1/T2/T3 harmonic bed
     for bar in range(BARS):
@@ -225,30 +270,44 @@ def build() -> tuple[dict[str, np.ndarray], list[float]]:
                 pos.append(3.5)
         if (g6 := lg("T6", bar)):
             for p in pos:
-                t = t0 + p * BEAT
-                place(tracks["T6"], kick_s, t, 0.92 * g6)
+                t = t0 + p * BEAT + humanize("T6", bar, p)
+                place(tracks["T6"], kick_s, t, 0.92 * g6 * vel("T6", bar, p, 0.10))
                 kick_times.append(t)                            # sidechain follows real kicks only
 
         if (g7 := lg("T7", bar)):
-            place(tracks["T7"], rim_s, t0 + 2.0 * BEAT, 0.85 * g7)   # beat 3
+            t = t0 + 2.0 * BEAT + humanize("T7", bar, 2.0)      # beat 3
+            place(tracks["T7"], rim_s, t, 0.85 * g7 * vel("T7", bar, 2.0, 0.08))
 
     # ---------------------------------------------------------------- T8 hats
     for bar in range(BARS):
         t0 = bar_time(bar)
-        roll = (bar % 4) in (1, 3)                              # every 2nd and 4th bar
-        vel = (1.0 if section_of(bar) == "chorus" else 0.85) * lg("T8", bar)
-        if not vel:
+        base = (1.0 if section_of(bar) == "chorus" else 0.85) * lg("T8", bar)
+        if not base:
             continue
-        for i in range(8):
-            beat = i * 0.5
-            if roll and beat >= 3.0:
+        zname, zstart = zone_of(bar)
+        roll32 = (bar % 4) in (1, 3)                            # every 2nd and 4th bar
+        trip = (bar - zstart) == 7                              # triplet fill closes each zone
+
+        for i in range(8):                                      # straight 8ths, swung
+            beat = swing(i * 0.5)
+            if (roll32 or trip) and beat >= 3.0:
                 continue
-            g = 0.62 if i % 2 == 0 else 0.42
-            place(tracks["T8"], hat_s if i % 2 == 0 else hat_soft, t0 + beat * BEAT, g * vel)
-        if roll:
-            for j in range(8):                                  # 1/32 roll on beat 4
-                beat = 3.0 + j * 0.125
-                place(tracks["T8"], hat_soft, t0 + beat * BEAT, (0.30 + 0.045 * j) * vel)
+            # accent the downbeats, duck the offbeats, then jitter both
+            accent = 0.62 if i % 2 == 0 else 0.40
+            pitch = i % 3                                       # rotate hat timbre
+            place(tracks["T8"], hats[pitch], t0 + beat * BEAT + humanize("T8", bar, beat),
+                  accent * base * vel("T8", bar, beat))
+
+        if trip:                                                # 1/8 triplets on beat 4
+            for j in range(6):
+                b = 3.0 + j * (1.0 / 3.0)
+                place(tracks["T8"], hats[(j + 1) % 3], t0 + b * BEAT + humanize("T8", bar, b),
+                      (0.34 + 0.05 * j) * base * vel("T8", bar, b))
+        elif roll32:                                            # 1/32 roll on beat 4
+            for j in range(8):
+                b = 3.0 + j * 0.125
+                place(tracks["T8"], hats[j % 3], t0 + b * BEAT + humanize("T8", bar, b),
+                      (0.30 + 0.045 * j) * base * vel("T8", bar, b, 0.10))
 
     # ---------------------------------------------------------------- T9 perc
     for bar in range(BARS):
@@ -256,11 +315,14 @@ def build() -> tuple[dict[str, np.ndarray], list[float]]:
         if not g9:
             continue
         t0 = bar_time(bar)
-        place(tracks["T9"], ohat_s, t0 + 1.5 * BEAT, 0.44 * g9)  # open hat, "and" of 2
-        place(tracks["T9"], wood_s, t0 + 0.5 * BEAT, 0.30 * g9)
-        place(tracks["T9"], wood_s, t0 + 2.5 * BEAT, 0.34 * g9)
+        for src, b, g in ((ohat_s, 1.5, 0.44), (wood_s, 0.5, 0.30), (wood_s, 2.5, 0.34)):
+            sb = swing(b)
+            place(tracks["T9"], src, t0 + sb * BEAT + humanize("T9", bar, b),
+                  g * g9 * vel("T9", bar, b))
         if section_of(bar) == "chorus":
-            place(tracks["T9"], wood_s, t0 + 3.5 * BEAT, 0.26 * g9)
+            sb = swing(3.5)
+            place(tracks["T9"], wood_s, t0 + sb * BEAT + humanize("T9", bar, 3.5),
+                  0.26 * g9 * vel("T9", bar, 3.5))
 
     # -------------------------------------------------------------- T10 impact
     for cs in CHORUS_STARTS:
@@ -313,7 +375,7 @@ def build() -> tuple[dict[str, np.ndarray], list[float]]:
     def key_note(name: str, touch: str, ring: str) -> np.ndarray:
         key = (name, touch, ring)
         if key not in keys:
-            seed = 700 + abs(hash(name)) % 900
+            seed = 700 + seed_of(name, 900)
             # Velocity is a timbre control on a real piano, not just a level:
             # the soft touch is darker, not merely quieter. `ring` sets how long
             # the note is allowed to sound before the damper lands.
@@ -342,5 +404,10 @@ def build() -> tuple[dict[str, np.ndarray], list[float]]:
             for i, n in enumerate(voicing):
                 place(tracks["T13"], key_note(n, touch, ring),
                       bar_time(bar, beat) + i * 0.006, accent * g13)
+
+    # ------------------------------------------------------------ T14 strings
+    for bar in range(0, BARS, 2):                               # one chord per 2 bars
+        if (g14 := lg("T14", bar)):
+            place(tracks["T14"], strings[chord_index(bar)], bar_time(bar), 0.52 * g14)
 
     return tracks, sorted(kick_times)

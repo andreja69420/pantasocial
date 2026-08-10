@@ -272,6 +272,42 @@ def steinway_note(name: str, dur: float, seed: int, velocity: float = 0.72,
     return release_tail(fade(norm(out, 0.9), 4.0), release)
 
 
+def strings_chord(names: list[str], dur: float, seed: int,
+                  players: int = 3) -> np.ndarray:
+    """Bowed string ensemble — the layer the original has and this rework
+    lacked (the 2010 record is backed by guitar, piano *and* violin).
+
+    An ensemble is not one loud violin. Each player gets an independent
+    detune, vibrato rate, vibrato depth and attack time, so the section
+    smears into a chorus rather than phase-locking. Bow noise and a dark
+    filter keep it from reading as a saw pad.
+    """
+    t = t_axis(dur)
+    rng = np.random.default_rng(seed)
+    out = np.zeros(len(t))
+    for name in names:
+        f0 = nf(name)
+        for _ in range(players):
+            cents = rng.normal(0.0, 4.5)
+            vib_r = rng.uniform(4.2, 5.9)
+            vib_d = rng.uniform(0.0035, 0.0085)
+            attack = rng.uniform(0.10, 0.24)                 # ragged bow entry
+            vib = 1.0 + vib_d * np.sin(2 * np.pi * vib_r * t + rng.uniform(0, 2 * np.pi))
+            ph = 2 * np.pi * np.cumsum(f0 * 2 ** (cents / 1200) * vib) / SR
+            voice = np.zeros(len(t))
+            for k in range(1, 26):                           # bowed ~ sawtooth
+                if f0 * k > SR / 2 * 0.8:
+                    break
+                voice += np.sin(k * ph + rng.uniform(0, 2 * np.pi)) / k
+            out += voice * np.minimum(1.0, np.arange(len(t)) / max(1.0, attack * SR))
+    out /= len(names) * players
+
+    out = lp(out, 3400, order=2)
+    out += bp(noise(len(t), seed + 9), 1600, 5200, order=2) * 0.013   # bow noise
+    out *= adsr(len(out), 0.20, 0.28, 0.84, 0.55)
+    return fade(norm(out, 0.9), 25.0)
+
+
 def _tri(f: float, t: np.ndarray, nharm: int, phase: float) -> np.ndarray:
     out = np.zeros(len(t))
     s = 1.0
@@ -376,14 +412,57 @@ def pluck(name: str, dur: float, seed: int) -> np.ndarray:
 # ------------------------------------------------------------------ T6  kick
 
 def kick(dur: float = 0.42) -> np.ndarray:
+    """Three-layer trap kick.
+
+    A single pitch-swept sine is thin next to a commercial kick. Current
+    practice layers a deep sub for weight, a faster mid "punch" that gives the
+    hit its body on small speakers, and a separate transient top that survives
+    heavy limiting. Each layer gets its own pitch envelope and decay.
+    """
     n = int(dur * SR)
     t = t_axis(dur)
-    f = 46.0 + (135.0 - 46.0) * np.exp(-t / 0.028)          # pitch drop
-    body = np.sin(2 * np.pi * np.cumsum(f) / SR) * exp_env(n, 0.085)
-    click = noise(int(0.005 * SR), 11) * exp_env(int(0.005 * SR), 0.0013)
-    body[:len(click)] += hp(click, 2500, order=2) * 0.5
-    body = np.tanh(body * 1.9) / np.tanh(1.9)               # soft clip in the box
-    return fade(norm(body, 0.95), 3.0)
+
+    f_sub = 42.0 + (95.0 - 42.0) * np.exp(-t / 0.032)       # weight
+    sub = np.sin(2 * np.pi * np.cumsum(f_sub) / SR) * exp_env(n, 0.105)
+
+    f_pun = 105.0 + (255.0 - 105.0) * np.exp(-t / 0.013)    # punch / body
+    pun = bp(np.sin(2 * np.pi * np.cumsum(f_pun) / SR) * exp_env(n, 0.034),
+             55, 420, order=2)
+
+    cn = int(0.011 * SR)                                     # transient top
+    top = hp(noise(cn, 11) * exp_env(cn, 0.0019), 2800, order=2)
+
+    out = sub + pun * 0.58
+    out[:cn] += top * 0.45
+    out = np.tanh(out * 1.9) / np.tanh(1.9)                 # soft clip in the box
+    return fade(norm(out, 0.95), 3.0)
+
+
+def clap(dur: float = 0.34, seed: int = 71) -> np.ndarray:
+    """A clap is four transients smeared over ~25 ms, not one noise burst —
+    that stagger is the whole sound, and a single hit reads as a snare."""
+    n = int(dur * SR)
+    out = np.zeros(n)
+    for i, off in enumerate((0.0, 0.0085, 0.0163, 0.0235)):
+        i0 = int(off * SR)
+        ln = min(int(0.30 * SR), n - i0)
+        tail = 0.055 if i == 3 else 0.0055                   # last one rings
+        b = bp(noise(ln, seed + i), 1050, 3700, order=3) * exp_env(ln, tail)
+        out[i0:i0 + ln] += b * (1.0 if i == 3 else 0.68)
+    return fade(norm(out, 0.9), 2.0)
+
+
+def snare_layered(dur: float = 0.34, seed: int = 23) -> np.ndarray:
+    """Body + clap + bright top — the standard three-layer trap snare."""
+    n = int(dur * SR)
+    out = np.zeros(n)
+    body = rimshot()
+    out[:min(n, len(body))] += body[:n] * 0.90
+    cl = clap(dur, seed + 40)
+    out[:min(n, len(cl))] += cl[:n] * 0.62
+    tn = int(0.022 * SR)                                     # top / air
+    out[:tn] += hp(noise(tn, seed + 5), 6500, order=2) * exp_env(tn, 0.0045) * 0.38
+    return fade(norm(out, 0.95), 2.0)
 
 
 # ------------------------------------------------------------ T7  snare/rim
@@ -406,18 +485,20 @@ def rimshot(dur: float = 0.115) -> np.ndarray:
 
 # ---------------------------------------------------------------- T8/T9  hats
 
-def _metal(n: int, seed: int) -> np.ndarray:
+def _metal(n: int, seed: int, pitch: float = 1.0) -> np.ndarray:
     t = np.arange(n) / SR
     sq = np.zeros(n)
     for f in (2434.0, 3116.0, 3671.0, 4218.0, 5049.0, 5926.0):
-        sq += np.sign(np.sin(2 * np.pi * f * t + seed * 0.11))
+        sq += np.sign(np.sin(2 * np.pi * f * pitch * t + seed * 0.11))
     return sq / 6.0
 
 
-def hihat(dur: float = 0.055, seed: int = 31) -> np.ndarray:
+def hihat(dur: float = 0.055, seed: int = 31, pitch: float = 1.0) -> np.ndarray:
+    """`pitch` shifts the metallic partials so a pattern can cycle through
+    several hat timbres instead of repeating one identical sample."""
     n = int(dur * SR)
-    x = _metal(n, seed) * 0.55 + noise(n, seed) * 0.45
-    x = hp(x, 7200, order=4) * exp_env(n, dur * 0.22)
+    x = _metal(n, seed, pitch) * 0.55 + noise(n, seed) * 0.45
+    x = hp(x, 7200 * pitch, order=4) * exp_env(n, dur * 0.22)
     return fade(norm(x, 0.9), 1.5)
 
 

@@ -70,6 +70,7 @@ the run log reports what was fetched).
 | T10 | Crash / Impact | 33 Hz sub boom + dark inharmonic crash | HP 24 Hz, very long tail (room 0.97) |
 | T11 | 808 Sub | Pure sine driven by a per-sample frequency curve | Distortion +5 dB, +100 Hz bell, **sidechain duck** |
 | T12 | Vocal Textures | Formant-synthesized vowel, resampled 2:1 (−12 semitones) | 100 % wet reverb, LP 2 kHz ×2 |
+| T14 | Strings | Bowed ensemble: 3 players per part, independent detune/vibrato rate/vibrato depth/attack, bow noise | HP 180 Hz, LP 3.4 kHz, 1.9 kHz notch, big hall, widened |
 | T13 | Grand Piano | Physically-modelled Steinway: hammer strike at 1/8 (nulls every 8th partial), 1–3 true unison strings, two-stage decay, register-dependent inharmonicity, velocity-as-timbre | HP 220 Hz ×2, LP 6.5 kHz, short hall (no chorus) |
 
 ---
@@ -338,3 +339,70 @@ Two agent observations that were *not* defects, worth recording so they are not
 - **T12 carries ±10–17 cents of vibrato** at 2.7–10 Hz. Deliberate. A per-window
   ±15 cent gate will produce false failures on that track; its amplitude-weighted
   centre is exact to 0.4 cents.
+
+
+---
+
+## 2026 standards pass
+
+Researched against current delivery specs and production practice, then closed
+the gaps that were real.
+
+**Confirmed first:** Gm–E♭–B♭–F *is* the original's progression, and the record
+sits in B♭ major / G minor relative — so the harmony was already right. Alex da
+Kid's method (loops and electronic drums first, live instrumentation second)
+matches this build's order.
+
+### What was fixed
+
+**1. Drum layering.** Single-layer synthesized drums were the biggest gap.
+
+- **Kick** → three layers: a 42 Hz sub for weight, a faster 105→255 Hz punch
+  band for body on small speakers, and a separate transient top that survives
+  limiting. Each has its own pitch envelope and decay.
+- **Snare** → body + clap + air. The clap is four transients staggered over
+  ~25 ms, which is what separates a clap from a single noise burst.
+- **808** → two parallel layers: a clean sub carrying weight, and a hard-driven
+  (+13 dB) mid layer for the harmonic ladder that makes a 49 Hz root audible on
+  a phone. One band cannot do both jobs.
+- **Hats** → three timbres at different pitches, rotated through the pattern.
+
+**2. Micro-timing.** The track was 100 % quantised, which is a large part of
+what makes programmed drums read as programmed. Offsets are now applied per hit,
+deterministically per (track, bar, position): kick ±2.5 ms, snare ±2.0 ms, hats
+±4.5 ms, perc ±5.5 ms, piano ±4.0 ms. Swing of 0.56 pushes offbeat 8ths 40 ms
+late. Velocity is jittered per hit as well.
+
+**3. Hi-hat programming.** Straight swung 8ths with accent patterning, plus a
+1/32 roll on beat 4 of every 2nd and 4th bar *and* a 1/8-triplet fill closing
+each 8-bar zone.
+
+**4. Strings.** The layer the original has and this lacked. Bowed ensemble with
+three players per part, each with independent detune, vibrato rate, vibrato
+depth and attack time. Notched at 1.9 kHz before the bed bus, since strings are
+the classic thing that fights a vocal.
+
+### Also fixed along the way
+
+Seeds were derived from Python's `hash()`, which is salted per process — so the
+render was **not reproducible between runs**. Replaced with FNV-1a.
+
+### Measured result
+
+```
+true peak       -5.88 dBTP           spec <= -1.0        PASS
+integrated      -15.10 LUFS  (-10.22 normalised to -1 dBTP)
+max short-term  -13.37 LUFS  ( -8.48 normalised)         in the -7..-9 window
+crest            9.71 dB
+L/R correlation +0.960                                   mono-safe
+clipped samples  0
+```
+
+Integrated sits ~1 LU under the genre norm because the bare solo intro drags the
+average down — a deliberate arrangement choice. Short-term through the choruses
+is in range. The −6 dBFS ceiling is intentional headroom for vocal tracking, not
+a finished master; mastered to −1 dBTP with a vocal, this lands in spec.
+
+Groove verification is now schedule-based rather than edge-counting (a two-hump
+layered kick envelope reads as two onsets to a naive detector):
+**116/116 kick, 48/48 snare, 516/516 hat** scheduled hits confirmed.
