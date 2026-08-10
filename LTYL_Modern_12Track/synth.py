@@ -1,0 +1,759 @@
+"""Sound-design layer for the 15-track LTYL rework.
+
+Every asset is synthesized from first principles rather than sampled, so the
+whole kit is tuned to G minor by construction instead of being pitch-shifted
+into key after the fact. All generators return mono float64 at SR.
+"""
+from __future__ import annotations
+
+import numpy as np
+from scipy.signal import butter, sosfilt, lfilter, resample_poly
+
+SR = 48000
+
+_PC = {"C": 0, "C#": 1, "Db": 1, "D": 2, "D#": 3, "Eb": 3, "E": 4, "F": 5,
+       "F#": 6, "Gb": 6, "G": 7, "G#": 8, "Ab": 8, "A": 9, "A#": 10,
+       "Bb": 10, "B": 11}
+
+
+def midi_number(name: str) -> int:
+    """'Bb3' -> 58 (MIDI note number). Shared by nf() and the MIDI exporter
+    so the two never drift apart on what a note name means."""
+    k = len(name)
+    while name[k - 1].isdigit() or name[k - 1] == "-":
+        k -= 1
+    return 12 * (int(name[k:]) + 1) + _PC[name[:k]]
+
+
+def nf(name: str) -> float:
+    """'Bb3' -> 233.08 Hz."""
+    return 440.0 * 2.0 ** ((midi_number(name) - 69) / 12.0)
+
+
+# ---------------------------------------------------------------- primitives
+
+def t_axis(dur: float) -> np.ndarray:
+    return np.arange(int(dur * SR)) / SR
+
+
+def exp_env(n: int, tau: float) -> np.ndarray:
+    return np.exp(-np.arange(n) / (tau * SR))
+
+
+def adsr(n: int, a: float, d: float, s: float, r: float) -> np.ndarray:
+    a_n, d_n, r_n = int(a * SR), int(d * SR), int(r * SR)
+    s_n = max(0, n - a_n - d_n - r_n)
+    return np.concatenate([
+        np.linspace(0.0, 1.0, a_n, endpoint=False),
+        np.linspace(1.0, s, d_n, endpoint=False),
+        np.full(s_n, s),
+        np.linspace(s, 0.0, n - a_n - d_n - s_n),
+    ])[:n]
+
+
+def _sos(kind: str, f, order=4):
+    if kind == "band":
+        return butter(order, [f[0] / (SR / 2), f[1] / (SR / 2)], btype="band", output="sos")
+    return butter(order, f / (SR / 2), btype=kind, output="sos")
+
+
+def lp(x, f, order=4):
+    return sosfilt(_sos("low", min(f, SR / 2 * 0.98), order), x)
+
+
+def hp(x, f, order=4):
+    return sosfilt(_sos("high", f, order), x)
+
+
+def bp(x, lo, hi, order=4):
+    return sosfilt(_sos("band", (lo, min(hi, SR / 2 * 0.98)), order), x)
+
+
+def norm(x, peak=1.0):
+    m = np.max(np.abs(x))
+    return x * (peak / m) if m > 0 else x
+
+
+def fade(x, ms=6.0):
+    """Kill DC clicks at both ends of a one-shot."""
+    n = min(int(ms / 1000 * SR), len(x) // 2)
+    if n < 2:
+        return x
+    w = np.linspace(0.0, 1.0, n)
+    x = x.copy()
+    x[:n] *= w
+    x[-n:] *= w[::-1]
+    return x
+
+
+def release_tail(x: np.ndarray, seconds: float, shape: float = 5.0) -> np.ndarray:
+    """Damper release over the last `seconds`.
+
+    A struck or plucked note does not stop dead — it stops because felt lands
+    on the string, which is fast but finite (~80-150 ms on a mid-register
+    piano). Rendering a fixed-length note and ending it with a few-millisecond
+    fade truncates it while it is still 15-20 dB from silence, and that reads
+    as an unnatural cut between hits rather than as a note ending.
+    """
+    r = min(int(seconds * SR), len(x))
+    if r < 2:
+        return x
+    x = x.copy()
+    x[-r:] *= np.exp(-np.arange(r) / (r / shape))
+    return x
+
+
+def noise(n: int, seed: int) -> np.ndarray:
+    return np.random.default_rng(seed).standard_normal(n)
+
+
+# ------------------------------------------------------- T1  acoustic guitar
+
+def karplus(freq: float, dur: float, seed: int, decay: float = 0.9965,
+            brightness: float = 0.55) -> np.ndarray:
+    """Extended Karplus-Strong. The pick burst is pre-filtered so the attack
+    reads as a fingered steel string rather than a noise splat."""
+    n = int(dur * SR)
+    delay = max(2, int(round(SR / freq)))
+    rng = np.random.default_rng(seed)
+    buf = rng.uniform(-1.0, 1.0, delay)
+    buf = lfilter([brightness], [1.0, -(1.0 - brightness)], buf)
+    buf /= np.max(np.abs(buf)) + 1e-12
+
+    out = np.empty(n)
+    idx = 0
+    prev = 0.0
+    for i in range(n):
+        cur = buf[idx]
+        out[i] = cur
+        buf[idx] = decay * 0.5 * (cur + prev)
+        prev = cur
+        idx += 1
+        if idx == delay:
+            idx = 0
+
+    body = bp(out, 90, 5200, order=2)          # guitar body resonance
+    pick = noise(int(0.008 * SR), seed + 991) * exp_env(int(0.008 * SR), 0.0022)
+    body[:len(pick)] += bp(pick, 1800, 6500, order=2) * 0.35
+    return fade(norm(body, 0.9), 4.0)
+
+
+def guitar_note(name: str, dur: float, seed: int) -> np.ndarray:
+    return karplus(nf(name), dur, seed)
+
+
+def peaking(x: np.ndarray, f0: float, q: float, gain_db: float) -> np.ndarray:
+    """RBJ peaking EQ biquad."""
+    A = 10 ** (gain_db / 40.0)
+    w0 = 2 * np.pi * f0 / SR
+    alpha = np.sin(w0) / (2 * q)
+    b = np.array([1 + alpha * A, -2 * np.cos(w0), 1 - alpha * A])
+    a = np.array([1 + alpha / A, -2 * np.cos(w0), 1 - alpha / A])
+    return lfilter(b / a[0], a / a[0], x)
+
+
+def electric_note(name: str, dur: float, seed: int, pickup: float = 0.22,
+                  drive: float = 1.7, release: float = 0.22) -> np.ndarray:
+    """Solid-body electric guitar.
+
+    The differences from the acoustic model are physical, not cosmetic:
+
+    - **Sustain.** A solid body does not pump energy into a soundboard, so the
+      string loses far less per cycle. The loop decay goes 0.9965 -> 0.9993.
+    - **No body resonance.** There is no air cavity, so the acoustic model's
+      90-5200 Hz body bandpass is gone entirely.
+    - **Magnetic pickup position.** A pickup reads string displacement at one
+      point, so mode k is scaled by |sin(k*pi*p)| — mathematically a comb
+      filter with a delay of p * (SR/f0) samples. At p = 0.22 that notches
+      roughly every 4th-5th harmonic, which is most of what makes a pickup
+      sound like a pickup rather than a microphone.
+    - **Passive pickup resonance.** A magnetic pickup is an LC circuit with a
+      resonant peak around 2-3 kHz followed by a steep inductive rolloff.
+    - **Speaker cabinet.** A guitar speaker rolls off hard above ~5 kHz; that
+      ceiling is why electrics sit under vocals so easily.
+    """
+    f0 = nf(name)
+    n = int(dur * SR)
+    delay = max(2, int(round(SR / f0)))
+    rng = np.random.default_rng(seed)
+    buf = rng.uniform(-1.0, 1.0, delay)
+    buf = lfilter([0.72], [1.0, -0.28], buf)          # brighter pick than a finger
+    buf /= np.max(np.abs(buf)) + 1e-12
+
+    out = np.empty(n)
+    idx, prev = 0, 0.0
+    for i in range(n):
+        cur = buf[idx]
+        out[i] = cur
+        buf[idx] = 0.9993 * 0.5 * (cur + prev)
+        prev = cur
+        idx += 1
+        if idx == delay:
+            idx = 0
+
+    d = max(1, int(round(pickup * SR / f0)))          # pickup comb
+    combed = out.copy()
+    combed[d:] -= out[:-d]
+    out = combed * 0.6
+
+    out = peaking(out, 2700.0, q=1.6, gain_db=5.0)    # pickup LC resonance
+    out = lp(out, 5200, order=4)                      # cabinet
+    out = np.tanh(out * drive) / np.tanh(drive)       # amp breakup
+    out = hp(out, 85, order=2)
+
+    pick = noise(int(0.006 * SR), seed + 313) * exp_env(int(0.006 * SR), 0.0018)
+    out[:len(pick)] += bp(pick, 2000, 5000, order=2) * 0.22
+    return release_tail(fade(norm(out, 0.9), 4.0), release)
+
+
+# ---------------------------------------------------------------- T2  piano
+
+def steinway_note(name: str, dur: float, seed: int, velocity: float = 0.72,
+                  release: float = 0.20) -> np.ndarray:
+    """Physically-modelled grand piano.
+
+    Five things separate a convincing grand from a generic additive stack, and
+    all five are here:
+
+    1. Hammer strike position. The hammer hits at ~1/8 of the string length,
+       which *nulls* every 8th partial (|sin(k*pi/8)| == 0 at k=8,16,24). That
+       comb notch is a large part of why a piano sounds like a piano.
+    2. True unison strings. Each note is 1-3 strings tuned a fraction of a cent
+       apart; the slow beating between them is the shimmer synths miss.
+    3. Two-stage decay. The two polarisations of string vibration decay at
+       different rates, so a real note drops fast and then sustains on a quiet
+       "aftersound" tail. A single exponential sounds dead by comparison.
+    4. Inharmonicity. Stiff strings stretch upper partials sharp:
+       f_k = k*f0*sqrt(1 + B*k^2). B rises toward the treble.
+    5. Velocity-dependent brightness. Harder strikes excite more high partials;
+       softer ones roll off, rather than just getting quieter.
+
+    Fundamentals stay at exact 12-TET — only the upper partials stretch, which
+    is what physically happens. Real pianos are also stretch-tuned octave to
+    octave, but that is deliberately not modelled here so the note table stays
+    verifiable against equal temperament.
+    """
+    f0 = nf(name)
+    t = t_axis(dur)
+    n = len(t)
+    rng = np.random.default_rng(seed)
+
+    n_strings = 1 if f0 < 65.0 else (2 if f0 < 130.0 else 3)
+    B = 0.00035 * (f0 / 261.63) ** 1.4 + 0.00004      # inharmonicity by register
+    strike = 0.125                                     # hammer position
+    tau0 = 6.0 * (110.0 / f0) ** 0.35                  # bass rings longer
+    brightness = 1800.0 + 5200.0 * velocity ** 1.6     # hammer hardness
+
+    out = np.zeros(n)
+    for s in range(n_strings):
+        cents = (s - (n_strings - 1) / 2.0) * 1.1      # unison detune
+        fs = f0 * 2 ** (cents / 1200.0)
+        for k in range(1, 65):
+            fk = fs * k * np.sqrt(1.0 + B * k * k)
+            if fk > SR / 2 * 0.92:
+                break
+            # The +0.035 floor is not a fudge: a real hammer contacts a finite
+            # length of string, so partial 8 is deeply notched (~-30 dB) rather
+            # than mathematically absent. A perfect null reads as synthetic.
+            amp = (abs(np.sin(np.pi * k * strike)) + 0.035) / (1.035 * k ** 1.18)
+            amp *= np.exp(-((fk / brightness) ** 2))   # hammer lowpass
+            if amp < 1e-4:
+                continue
+            tau = tau0 / (1.0 + 0.28 * k ** 1.1)
+            env = 0.78 * np.exp(-t / tau) + 0.22 * np.exp(-t / (tau * 3.2))
+            out += amp * env * np.sin(2 * np.pi * fk * t + rng.uniform(0, 2 * np.pi))
+    out /= n_strings
+
+    # hammer felt contact + key/action thump
+    hn = int(0.010 * SR)
+    thump = noise(hn, seed + 17) * exp_env(hn, 0.0028)
+    out[:hn] += bp(thump, 600, 4500, order=2) * 0.05 * velocity
+
+    out *= np.minimum(1.0, np.arange(n) / max(1.0, 0.0022 * SR))   # hammer contact time
+    for fc, g, q in ((118.0, 1.6, 1.1), (255.0, -1.4, 1.3), (1450.0, 1.2, 0.8)):
+        w = fc / (SR / 2)
+        b, a = butter(2, [max(w * 0.72, 1e-4), min(w * 1.38, 0.99)], btype="band")
+        out += lfilter(b, a, out) * (10 ** (g / 20) - 1.0) * 0.5   # soundboard body
+    return release_tail(fade(norm(out, 0.9), 4.0), release)
+
+
+def strings_chord(names: list[str], dur: float, seed: int,
+                  players: int = 3) -> np.ndarray:
+    """Bowed string ensemble — the layer the original has and this rework
+    lacked (the 2010 record is backed by guitar, piano *and* violin).
+
+    An ensemble is not one loud violin. Each player gets an independent
+    detune, vibrato rate, vibrato depth and attack time, so the section
+    smears into a chorus rather than phase-locking. Bow noise and a dark
+    filter keep it from reading as a saw pad.
+    """
+    t = t_axis(dur)
+    rng = np.random.default_rng(seed)
+    out = np.zeros(len(t))
+    for name in names:
+        f0 = nf(name)
+        for _ in range(players):
+            cents = rng.normal(0.0, 4.5)
+            vib_r = rng.uniform(4.2, 5.9)
+            vib_d = rng.uniform(0.0035, 0.0085)
+            attack = rng.uniform(0.10, 0.24)                 # ragged bow entry
+            vib = 1.0 + vib_d * np.sin(2 * np.pi * vib_r * t + rng.uniform(0, 2 * np.pi))
+            ph = 2 * np.pi * np.cumsum(f0 * 2 ** (cents / 1200) * vib) / SR
+            voice = np.zeros(len(t))
+            for k in range(1, 26):                           # bowed ~ sawtooth
+                if f0 * k > SR / 2 * 0.8:
+                    break
+                voice += np.sin(k * ph + rng.uniform(0, 2 * np.pi)) / k
+            out += voice * np.minimum(1.0, np.arange(len(t)) / max(1.0, attack * SR))
+    out /= len(names) * players
+
+    out = lp(out, 3400, order=2)
+    out += bp(noise(len(t), seed + 9), 1600, 5200, order=2) * 0.013   # bow noise
+    out *= adsr(len(out), 0.20, 0.28, 0.84, 0.55)
+    return fade(norm(out, 0.9), 25.0)
+
+
+# ------------------------------------------------------------ T15 solo violin
+
+def solo_violin_phrase(notes: list[tuple[str, float]], seed: int,
+                       glide_ms: float = 90.0, vibrato_rate: float = 5.2,
+                       vibrato_depth: float = 0.006, release: float = 1.4) -> np.ndarray:
+    """A single expressive violin voice playing a written phrase, notes tied
+    by portamento rather than retriggered cleanly.
+
+    `strings_chord` is an ensemble — many detuned bowed voices that smear
+    into a pad, exactly wrong for a melodic line that needs to read as one
+    performer. This is the opposite instrument: one voice, a real melody
+    (`notes` is `[(name, dur_seconds), ...]`), and the glide a fingered
+    string makes sliding between positions instead of a synth's clean
+    retrigger. Each note after the first gets a soft re-bow accent rather
+    than a hard onset, so the phrase reads as legato bowing, not staccato
+    hits stitched together.
+    """
+    rng = np.random.default_rng(seed)
+    total_n = int(round(sum(d for _, d in notes) * SR))
+    freqs = np.zeros(total_n)
+    bounds: list[tuple[int, int]] = []
+    i = 0
+    prev_f = None
+    for name, dur in notes:
+        n = int(round(dur * SR))
+        n = min(n, total_n - i)
+        f = nf(name)
+        if prev_f is not None and glide_ms > 0:
+            g = min(int(glide_ms / 1000 * SR), n)
+            freqs[i:i + g] = np.exp(np.linspace(np.log(prev_f), np.log(f), g))
+            freqs[i + g:i + n] = f
+        else:
+            freqs[i:i + n] = f
+        bounds.append((i, i + n))
+        i += n
+        prev_f = f
+    if i < total_n:
+        freqs[i:] = prev_f if prev_f is not None else 440.0
+
+    t = np.arange(total_n) / SR
+    vib = 1.0 + vibrato_depth * np.sin(2 * np.pi * vibrato_rate * t + rng.uniform(0, 2 * np.pi))
+    phase = 2 * np.pi * np.cumsum(freqs * vib) / SR
+
+    voice = np.zeros(total_n)
+    fmax = float(np.max(freqs))
+    for k in range(1, 20):                             # bowed ~ sawtooth
+        if fmax * k > SR / 2 * 0.85:
+            break
+        voice += np.sin(k * phase + rng.uniform(0, 2 * np.pi)) / k
+    voice *= (2 / np.pi)
+
+    env = np.ones(total_n)
+    for idx, (i0, i1) in enumerate(bounds):
+        if idx == 0:
+            continue                                    # phrase-level swell-in covers the first note
+        a = min(int(0.06 * SR), (i1 - i0) // 2)
+        env[i0:i0 + a] *= np.linspace(0.35, 1.0, a)      # gentle re-bow accent
+    voice *= env
+
+    voice = lp(voice, 4200, order=2)
+    voice += bp(noise(total_n, seed + 3), 2000, 6000, order=2) * 0.018   # bow noise
+    voice *= np.minimum(1.0, np.arange(total_n) / max(1.0, 0.12 * SR))    # phrase entrance swell
+    return release_tail(fade(norm(voice, 0.92), 20.0), release)
+
+
+def _tri(f: float, t: np.ndarray, nharm: int, phase: float) -> np.ndarray:
+    out = np.zeros(len(t))
+    s = 1.0
+    for k in range(1, nharm + 1, 2):
+        if f * k > SR / 2 * 0.85:
+            break
+        out += s * np.sin(2 * np.pi * f * k * t + phase) / (k * k)
+        s = -s
+    return out * (8 / np.pi ** 2)
+
+
+def synth_chord(names: list[str], dur: float, seed: int) -> np.ndarray:
+    """Dark FM-bell chord — the harmonic anchor on beat 1.
+
+    Replaces the acoustic piano this slot used to hold. A fast-decaying FM
+    index gives a struck attack for definition, while a detuned triangle body
+    carries the sustain; the whole thing is filtered dark so it reads as
+    atmosphere rather than as a keyboard part.
+    """
+    t = t_axis(dur)
+    rng = np.random.default_rng(seed)
+    out = np.zeros(len(t))
+    for name in names:
+        f = nf(name)
+        idx = 3.2 * np.exp(-t / 0.09)                     # struck attack
+        mod = np.sin(2 * np.pi * f * 2.0 * t + rng.uniform(0, 2 * np.pi))
+        voice = np.sin(2 * np.pi * f * t + idx * mod)
+        for cents in (-5.0, 5.0):
+            voice += 0.45 * _tri(f * 2 ** (cents / 1200), t, 16,
+                                 rng.uniform(0, 2 * np.pi))
+        out += voice * exp_env(len(t), dur * 0.30)
+    out /= len(names)
+    out = lp(out, 2200, order=2)
+    out *= adsr(len(out), 0.012, 0.10, 0.75, 0.40)
+    return fade(norm(out, 0.9), 6.0)
+
+
+# ------------------------------------------------------------------ T3  pad
+
+def _saw(f: float, t: np.ndarray, nharm: int, phase: float) -> np.ndarray:
+    out = np.zeros(len(t))
+    for k in range(1, nharm + 1):
+        if f * k > SR / 2 * 0.85:
+            break
+        out += np.sin(2 * np.pi * f * k * t + phase * k) / k
+    return out * (2 / np.pi)
+
+
+def pad_chord(names: list[str], dur: float, seed: int) -> np.ndarray:
+    """Detuned saw stack, slow bow-like attack, filtered dark."""
+    t = t_axis(dur)
+    rng = np.random.default_rng(seed)
+    out = np.zeros(len(t))
+    for name in names:
+        f = nf(name)
+        for cents in (-7.0, 0.0, 7.0):
+            out += _saw(f * 2 ** (cents / 1200), t, 40, rng.uniform(0, 2 * np.pi))
+    out /= len(names) * 3
+
+    # slow filter bloom
+    out = lp(out, 2600, order=2)
+    out *= adsr(len(out), 0.55, 0.30, 0.80, 0.60)
+    return fade(norm(out, 0.85), 20.0)
+
+
+# -------------------------------------------------------- T4  reverse swell
+
+def reverse_swell(dur: float, seed: int) -> np.ndarray:
+    """A decaying cymbal/guitar hybrid, then flipped so it blooms into the hit."""
+    n = int(dur * SR)
+    t = t_axis(dur)
+    cym = np.zeros(n)
+    rng = np.random.default_rng(seed)
+    for f in (317.0, 461.0, 613.0, 797.0, 1013.0, 1319.0):
+        for m in (1.0, 1.63, 2.41, 3.17):
+            cym += np.sin(2 * np.pi * f * m * t + rng.uniform(0, 2 * np.pi))
+    cym = bp(cym, 900, 9000, order=2) / 24.0
+    cym += bp(noise(n, seed + 3), 1200, 11000, order=2) * 0.55
+
+    chord = np.zeros(n)
+    for i, name in enumerate(("G3", "Bb3", "D4")):
+        chord[:n] += karplus(nf(name), dur, seed + 40 + i)[:n]
+    cym += chord * 0.45
+
+    cym *= exp_env(n, dur * 0.38)
+    return fade(norm(cym[::-1], 0.9), 8.0)
+
+
+# ---------------------------------------------------- T4  transition riser
+
+def transition_riser(dur: float, seed: int) -> np.ndarray:
+    """Modern EDM/trap-style uplifter: a noise sweep whose highpass cutoff
+    rises exponentially through the duration, layered under a synth "lift"
+    that glides upward two-and-a-bit octaves, both crescendoing into a bright
+    snap at the very end. This is the genre-standard way to bridge a bare
+    solo section into the full arrangement — distinct in character from
+    `reverse_swell`, which announces a chorus *downbeat* rather than a
+    texture change, so the two are not interchangeable.
+    """
+    n = int(dur * SR)
+    t = t_axis(dur)
+    rng = np.random.default_rng(seed)
+
+    x = noise(n, seed)
+    f_lo, f_hi = 200.0, 9500.0
+    block = 512
+    swept = np.zeros(n)
+    zi = None
+    for i in range(0, n, block):
+        j = min(i + block, n)
+        frac = i / max(1, n - 1)
+        fc = min(f_lo * (f_hi / f_lo) ** frac, SR / 2 * 0.95)
+        sos = butter(2, fc / (SR / 2), btype="high", output="sos")
+        if zi is None:
+            zi = np.zeros((sos.shape[0], 2))
+        swept[i:j], zi = sosfilt(sos, x[i:j], zi=zi)
+
+    f_start, f_end = 90.0, 380.0                      # ~2.1 octave synth lift
+    freq = f_start * (f_end / f_start) ** (np.arange(n) / max(1, n - 1))
+    phase = 2 * np.pi * np.cumsum(freq) / SR
+    lift = 0.55 * np.sin(phase) + 0.28 * np.sin(2 * phase) + rng.uniform(0, 0.1) * np.sin(3 * phase)
+
+    out = swept * np.linspace(0.05, 1.0, n) ** 1.4 + lift * np.linspace(0.02, 0.7, n) ** 1.8
+    out = hp(out, 120, order=2)
+
+    sn = int(0.02 * SR)                                # the bright hit the riser lands on
+    snap = hp(noise(sn, seed + 5), 4000, order=2) * exp_env(sn, 0.004)
+    out[-sn:] += snap * 1.2
+    return fade(norm(out, 0.95), 4.0)
+
+
+# ------------------------------------------------------------ T5  high pluck
+
+def pluck(name: str, dur: float, seed: int) -> np.ndarray:
+    """Sine-core bell pluck with two inharmonic partials for a glassy top."""
+    f = nf(name)
+    t = t_axis(dur)
+    out = (np.sin(2 * np.pi * f * t) * exp_env(len(t), dur * 0.30)
+           + 0.30 * np.sin(2 * np.pi * f * 2.76 * t) * exp_env(len(t), dur * 0.11)
+           + 0.14 * np.sin(2 * np.pi * f * 5.40 * t) * exp_env(len(t), dur * 0.05))
+    out *= adsr(len(out), 0.0016, 0.02, 0.85, 0.25)
+    return fade(norm(out, 0.9), 3.0)
+
+
+# ------------------------------------------------------------------ T6  kick
+
+def kick(dur: float = 0.42) -> np.ndarray:
+    """Three-layer trap kick.
+
+    A single pitch-swept sine is thin next to a commercial kick. Current
+    practice layers a deep sub for weight, a faster mid "punch" that gives the
+    hit its body on small speakers, and a separate transient top that survives
+    heavy limiting. Each layer gets its own pitch envelope and decay.
+    """
+    n = int(dur * SR)
+    t = t_axis(dur)
+
+    f_sub = 42.0 + (95.0 - 42.0) * np.exp(-t / 0.032)       # weight
+    sub = np.sin(2 * np.pi * np.cumsum(f_sub) / SR) * exp_env(n, 0.105)
+
+    f_pun = 105.0 + (255.0 - 105.0) * np.exp(-t / 0.013)    # punch / body
+    pun = bp(np.sin(2 * np.pi * np.cumsum(f_pun) / SR) * exp_env(n, 0.034),
+             55, 420, order=2)
+
+    cn = int(0.011 * SR)                                     # transient top
+    top = hp(noise(cn, 11) * exp_env(cn, 0.0019), 2800, order=2)
+
+    out = sub + pun * 0.58
+    out[:cn] += top * 0.45
+    out = np.tanh(out * 1.9) / np.tanh(1.9)                 # soft clip in the box
+    return fade(norm(out, 0.95), 3.0)
+
+
+def clap(dur: float = 0.34, seed: int = 71) -> np.ndarray:
+    """A clap is four transients smeared over ~25 ms, not one noise burst —
+    that stagger is the whole sound, and a single hit reads as a snare."""
+    n = int(dur * SR)
+    out = np.zeros(n)
+    for i, off in enumerate((0.0, 0.0085, 0.0163, 0.0235)):
+        i0 = int(off * SR)
+        ln = min(int(0.30 * SR), n - i0)
+        tail = 0.055 if i == 3 else 0.0055                   # last one rings
+        b = bp(noise(ln, seed + i), 1050, 3700, order=3) * exp_env(ln, tail)
+        out[i0:i0 + ln] += b * (1.0 if i == 3 else 0.68)
+    return fade(norm(out, 0.9), 2.0)
+
+
+def snare_layered(dur: float = 0.34, seed: int = 23) -> np.ndarray:
+    """Body + clap + bright top — the standard three-layer trap snare."""
+    n = int(dur * SR)
+    out = np.zeros(n)
+    body = rimshot()
+    out[:min(n, len(body))] += body[:n] * 0.90
+    cl = clap(dur, seed + 40)
+    out[:min(n, len(cl))] += cl[:n] * 0.62
+    tn = int(0.022 * SR)                                     # top / air
+    out[:tn] += hp(noise(tn, seed + 5), 6500, order=2) * exp_env(tn, 0.0045) * 0.38
+    return fade(norm(out, 0.95), 2.0)
+
+
+# ------------------------------------------------------------ T7  snare/rim
+
+def rimshot(dur: float = 0.115) -> np.ndarray:
+    """Sharp, dry, short. No tail — the tail is what eats a rap vocal."""
+    n = int(dur * SR)
+    t = t_axis(dur)
+    crack = bp(noise(n, 23), 1500, 7000, order=3) * exp_env(n, 0.019)
+    # The low body is tuned to F4 (349.23 Hz), the b7 of G minor. It was at
+    # 331 Hz, which is E4 — the one pitch in the whole kit foreign to the key.
+    # At 13 ms it reads as a transient rather than a note, but it is measurably
+    # tonal (Q~25), and F sits a semitone away for no loss of character.
+    tone = (np.sin(2 * np.pi * nf("F4") * t) * exp_env(n, 0.013) * 0.55
+            + np.sin(2 * np.pi * 1740.0 * t) * exp_env(n, 0.007) * 0.35)
+    out = crack * 0.85 + tone
+    out = np.tanh(out * 1.5) / np.tanh(1.5)
+    return fade(norm(out, 0.95), 2.0)
+
+
+# ---------------------------------------------------------------- T8/T9  hats
+
+def _metal(n: int, seed: int, pitch: float = 1.0) -> np.ndarray:
+    t = np.arange(n) / SR
+    sq = np.zeros(n)
+    for f in (2434.0, 3116.0, 3671.0, 4218.0, 5049.0, 5926.0):
+        sq += np.sign(np.sin(2 * np.pi * f * pitch * t + seed * 0.11))
+    return sq / 6.0
+
+
+def hihat(dur: float = 0.055, seed: int = 31, pitch: float = 1.0) -> np.ndarray:
+    """`pitch` shifts the metallic partials so a pattern can cycle through
+    several hat timbres instead of repeating one identical sample."""
+    n = int(dur * SR)
+    x = _metal(n, seed, pitch) * 0.55 + noise(n, seed) * 0.45
+    x = hp(x, 7200 * pitch, order=4) * exp_env(n, dur * 0.22)
+    return fade(norm(x, 0.9), 1.5)
+
+
+def open_hat(dur: float = 0.30, seed: int = 37) -> np.ndarray:
+    n = int(dur * SR)
+    x = _metal(n, seed) * 0.6 + noise(n, seed) * 0.4
+    x = hp(x, 6200, order=4) * exp_env(n, dur * 0.30)
+    return fade(norm(x, 0.9), 2.0)
+
+
+def woodblock(dur: float = 0.075, seed: int = 41) -> np.ndarray:
+    """Dark snap/woodblock — a resonant knock, not a clap."""
+    n = int(dur * SR)
+    t = t_axis(dur)
+    tone = (np.sin(2 * np.pi * 812.0 * t) * exp_env(n, 0.012)
+            + 0.5 * np.sin(2 * np.pi * 1571.0 * t) * exp_env(n, 0.006))
+    snap = bp(noise(n, seed), 1900, 5200, order=3) * exp_env(n, 0.010)
+    return fade(norm(tone * 0.7 + snap * 0.6, 0.9), 2.0)
+
+
+# --------------------------------------------------------------- T10  impact
+
+def impact(dur: float = 3.2) -> np.ndarray:
+    n = int(dur * SR)
+    t = t_axis(dur)
+    f = 33.0 + (78.0 - 33.0) * np.exp(-t / 0.12)
+    boom = np.sin(2 * np.pi * np.cumsum(f) / SR) * exp_env(n, 0.62)
+
+    rng = np.random.default_rng(57)
+    crash = np.zeros(n)
+    for base in (412.0, 587.0, 733.0, 941.0, 1237.0, 1583.0):
+        for m in (1.0, 1.71, 2.53, 3.44, 4.81):
+            crash += np.sin(2 * np.pi * base * m * t + rng.uniform(0, 2 * np.pi))
+    crash = bp(crash / 30.0, 800, 8500, order=2)
+    crash += bp(noise(n, 59), 1500, 10000, order=2) * 0.5
+    crash *= exp_env(n, 0.40)
+    crash = lp(crash, 7000, order=2)                        # keep it dark
+
+    return fade(norm(boom * 1.0 + crash * 0.55, 0.95), 4.0)
+
+
+# ------------------------------------------------------------------ T11  808
+
+def sub808(freqs: np.ndarray, dur: float, glide_ms: float = 60.0,
+           start_freq: float | None = None) -> np.ndarray:
+    """Pure sine 808 driven by a per-sample frequency curve.
+
+    `start_freq` (the previous note's pitch) engages a `glide_ms` portamento
+    ramp so overlapping notes bend into each other instead of retriggering.
+    """
+    n = len(freqs)
+    f = freqs.copy()
+    if start_freq is not None and glide_ms > 0:
+        g = min(int(glide_ms / 1000 * SR), n)
+        # exponential (musical) interpolation in the log-frequency domain
+        f[:g] = np.exp(np.linspace(np.log(start_freq), np.log(f[0]), g))
+    phase = 2 * np.pi * np.cumsum(f) / SR
+    out = np.sin(phase)
+    env = adsr(n, 0.006, 0.05, 0.90, min(0.22, dur * 0.35))
+    return out * env
+
+
+# ------------------------------------------------- T13  aggressive lead synth
+
+def _square(f: float, t: np.ndarray, nharm: int, phase: float) -> np.ndarray:
+    out = np.zeros(len(t))
+    for k in range(1, nharm + 1, 2):
+        if f * k > SR / 2 * 0.85:
+            break
+        out += np.sin(2 * np.pi * f * k * t + phase) / k
+    return out * (4 / np.pi)
+
+
+def _sweep_lp(x: np.ndarray, f_hi: float, f_lo: float, tau: float,
+              block: int = 256) -> np.ndarray:
+    """Time-varying lowpass — the filter envelope is what makes a pluck pluck.
+
+    Coefficients are recomputed per block while the biquad state carries across
+    the boundary, so the cutoff glides instead of producing the zipper noise a
+    naive block-by-block refilter would.
+    """
+    out = np.zeros_like(x)
+    zi = None
+    for i in range(0, len(x), block):
+        j = min(i + block, len(x))
+        fc = float(np.clip(f_lo + (f_hi - f_lo) * np.exp(-(i / SR) / tau),
+                           60.0, SR / 2 * 0.95))
+        sos = butter(2, fc / (SR / 2), btype="low", output="sos")
+        if zi is None:
+            zi = np.zeros((sos.shape[0], 2))
+        out[i:j], zi = sosfilt(sos, x[i:j], zi=zi)
+    return out
+
+
+def lead_pluck(name: str, dur: float, seed: int, voices: int = 5,
+               detune_cents: float = 18.0, f_hi: float = 7000.0,
+               f_lo: float = 620.0, sweep_tau: float = 0.055,
+               drive: float = 2.4) -> np.ndarray:
+    """Detuned saw/pulse stack through a fast downward filter sweep, then
+    driven. The detune spread is the growl, the sweep is the attack bite."""
+    f = nf(name)
+    t = t_axis(dur)
+    rng = np.random.default_rng(seed)
+
+    x = np.zeros(len(t))
+    spread = max(1.0, (voices - 1) / 2)
+    for v in range(voices):
+        cents = (v - (voices - 1) / 2) / spread * detune_cents
+        x += _saw(f * 2 ** (cents / 1200), t, 48, rng.uniform(0, 2 * np.pi))
+    x /= voices
+    x += 0.32 * _square(f, t, 24, rng.uniform(0, 2 * np.pi))      # hollow edge
+    x += 0.18 * _saw(f * 0.5, t, 24, rng.uniform(0, 2 * np.pi))   # sub octave
+
+    x = _sweep_lp(x, f_hi, f_lo, sweep_tau)
+    n = len(t)
+    x *= np.minimum(1.0, np.arange(n) / max(1.0, 0.0015 * SR)) * exp_env(n, dur * 0.30)
+    x = np.tanh(x * drive) / np.tanh(drive)
+    return fade(norm(x, 0.9), 3.0)
+
+
+# --------------------------------------------------------- T12  vocal chops
+
+def vocal_chop(name: str, dur: float, seed: int, vowel=(690.0, 1180.0, 2560.0)) -> np.ndarray:
+    """Formant-synthesized 'ahh', then resampled 2:1 so it drops exactly 12
+    semitones. Shifting the formants with the pitch is what gives a real
+    pitched-down chop its hollow, ethereal weight."""
+    f0 = nf(name)
+    t = t_axis(dur / 2)                                     # halved: 2x resample doubles it
+    vib = 1.0 + 0.006 * np.sin(2 * np.pi * 4.7 * t)
+    src = np.zeros(len(t))
+    rng = np.random.default_rng(seed)
+    for k in range(1, 45):
+        fk = f0 * k
+        if fk > SR / 2 * 0.85:
+            break
+        src += np.sin(2 * np.pi * fk * np.cumsum(vib) / SR + rng.uniform(0, 2 * np.pi)) / k
+
+    voiced = np.zeros(len(t))
+    for fc, g in zip(vowel, (1.0, 0.62, 0.32)):
+        voiced += bp(src, fc * 0.86, fc * 1.16, order=2) * g
+    voiced += bp(noise(len(t), seed + 5), 2000, 6000, order=2) * 0.02   # breath
+
+    voiced *= adsr(len(voiced), 0.14, 0.18, 0.72, 0.45)
+    down = resample_poly(voiced, 2, 1)                      # -12 semitones
+    return fade(norm(down, 0.9), 25.0)

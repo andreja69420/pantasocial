@@ -1,7 +1,15 @@
-node_modules
-.next
-.env
-.env.local
-dist
-build
+__pycache__/
+*.pyc
 .DS_Store
+
+LTYL_Modern_12Track/venv/
+LTYL_Modern_12Track/assets/
+LTYL_Modern_12Track/stems/
+LTYL_Modern_12Track/stems_raw/
+
+# Derived from the committed 24-bit master by LTYL_Modern_12Track/build.py
+LoveTheWayYouLie_Modern12Track_16bit.wav
+
+# One-off listening-reference exports, not build artifacts
+LoveTheWayYouLie_Modern12Track_128kbps.mp3
+LoveTheWayYouLie_Modern12Track_RealPiano*

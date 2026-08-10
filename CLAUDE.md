@@ -1,172 +1,93 @@
-# PantaSocial LLC — Project Context for Claude Code
+# Instrumentals — Project Context for Claude Code
 
 ## What this project is
 
-PantaSocial LLC is a digital marketing agency founded by Andreja Pantic. This repository is the company's own marketing website — a Next.js landing page that sells the agency's services to local businesses (plumbers, dentists, HVAC, lawyers, contractors, restaurants, etc.). It is not a client project; it is PantaSocial's own storefront.
+This repository is where instrumentals for songs get built — fully synthesized,
+mixed, and mastered from first principles in Python (no samples). It is not a
+web app and has no unrelated storefront/marketing content; everything in here
+should serve the music.
 
-The site's job is to convert visitors into leads by showcasing services, building trust, and funneling people to a contact form that emails Andreja directly.
+Each track lives in its own subdirectory (e.g. `LTYL_Modern_12Track/`) with its
+own `README.md` documenting the production notes for that track: reference
+research, synthesis design, arrangement, mix/master chain, and measured QA
+results. Read that README before touching a track's code — it's the spec.
 
-## Tech stack
+## Current track: LTYL_Modern_12Track
 
-- **Framework**: Next.js 14 with the Pages Router (not App Router). All pages live in `pages/`.
-- **Language**: TypeScript throughout. No `.js` files in components or pages.
-- **Styling**: Tailwind CSS v3 with a custom theme defined in `tailwind.config.js`. No CSS Modules. All one-off styles use inline `style={{}}` props.
-- **Animations**: Framer Motion for all transitions, entrance animations, scroll effects, and motion values.
-- **Icons**: Lucide React only. Do not introduce other icon libraries.
-- **Email**: Nodemailer via `pages/api/contact.ts`. SMTP credentials come from environment variables.
-- **Fonts**: Inter from Google Fonts, loaded via `@import` at the top of `styles/globals.css`.
-- **No database**: The site is entirely static + one API route. No Prisma, no Supabase, no external data store.
-- **No auth**: No login, no sessions, no protected routes.
-- **Dev port**: 3000 (`npm run dev`).
+`LTYL_Modern_12Track/` — "Love The Way You Lie — Modern Rework", a 56-bar dark
+trap/drill instrumental reimagining of the 2010 Eminem/Rihanna ballad. 90 BPM,
+G minor, 48 kHz / 24-bit, mastered to −6 dBFS peak to leave headroom for a raw
+vocal on top. Full production notes, DSP chain, and QA measurements are in
+`LTYL_Modern_12Track/README.md` — that file is long and detailed; treat it as
+authoritative over anything summarized here.
 
-## File structure
+### Layout
 
 ```
-pages/
-  index.tsx              — Main landing page, composes all sections
-  _app.tsx               — Wraps app, imports globals.css
-  contact.tsx            — Standalone contact page
-  about.tsx              — About page
-  faq.tsx                — FAQ page
-  free-audit.tsx         — Free audit offer page
-  blog.tsx               — Blog placeholder
-  case-studies.tsx       — Case studies placeholder
-  privacy.tsx            — Privacy policy
-  how-it-works.tsx       — How it works standalone
-  api/
-    contact.ts           — POST endpoint, validates fields, sends email via nodemailer
-
-components/
-  Navbar.tsx             — Fixed top nav with scroll-aware opacity
-  Hero.tsx               — Above-the-fold section: badge, headline, CTAs, stats, marquee
-  TrustBar.tsx           — Industry pills (Plumbing, Dental, Law, etc.)
-  Problem.tsx            — 6 problem cards explaining why local businesses struggle online
-  Solution.tsx           — 4 solution cards describing PantaSocial's offerings
-  HowItWorks.tsx         — Step-by-step process section
-  Results.tsx            — Social proof / results section
-  Services.tsx           — 4 service cards with CTAs (no prices shown)
-  Testimonials.tsx       — Client testimonials
-  CTA.tsx                — Final call-to-action section with embedded ContactForm
-  ContactForm.tsx        — Reusable form: name, business, email, phone, service, message
-  Footer.tsx             — Links, email, copyright 2026
-  FloatingCTA.tsx        — Fixed bottom-center bar, appears after 700px scroll, dismissible
-  FixedWidgets.tsx       — Fixed bottom-left Growth Dashboard widget (visible from load)
-  PageLayout.tsx         — Shared layout wrapper for inner pages
-
-hooks/
-  useRealtimeMetrics.ts  — Deterministic pseudo-random metrics engine for the dashboard widget
-
-styles/
-  globals.css            — Tailwind directives, custom classes, animations, mesh background
-
-pages/services/
-  [slug].tsx             — Dynamic service detail pages (web-design, lead-generation, seo-ads, automation)
+LTYL_Modern_12Track/
+  synth.py       DSP primitives + per-track sound generators (all synthesized, no samples)
+  arrange.py     56-bar sequencer: chord/root tables, per-zone track gains, sidechain triggers
+  mixdsp.py      Per-track Pedalboard effect chains, sidechain ducking, bus summing, master chain
+  build.py       End-to-end render -> LoveTheWayYouLie_Modern12Track.wav + stems/
+  analyze.py     Automated QA pass: levels, spectral tilt, dynamics, groove grid, pitch/glide -> analysis.png
+  README.md      Full production writeup — research, design decisions, measured results
+  analysis.png   QA chart output from analyze.py
+  venv/          Local virtualenv (gitignored, not committed)
+  stems/         Rendered per-track stems, gitignored (regenerate with build.py)
+  stems_raw/     Raw pre-mix stems, gitignored
+  assets/        Any fetched/cached source material, gitignored
 ```
 
-## Brand and design rules
+Top-level repo also carries the rendered output of the current track:
+`LoveTheWayYouLie_Modern12Track.wav` (24-bit master, committed) and
+`LoveTheWayYouLie_Modern12Track.mp3`. `LoveTheWayYouLie_Modern12Track_16bit.wav`
+is a derived, gitignored artifact from `build.py` — don't hand-edit it.
 
-**Color palette** (defined in `tailwind.config.js` under `theme.extend.colors`):
-- `brand-400` through `brand-600`: indigo (#8193f8 → #6366f1 → #5855eb) — primary brand color
-- `neon.purple`: #a855f7 — secondary accent
-- `neon.cyan`: #06b6d4 — tertiary accent
-- `dark-950`: #020206 — page background
-- All text on dark backgrounds. Never use light backgrounds.
+### Toolchain
 
-**Design language**: Dark mode only. Glassmorphism cards. Subtle grid overlay. Neon glows on interactive elements. Framer Motion entrance animations on scroll (`whileInView`, `once: true`). No light mode toggle exists or should be added.
-
-**Tone**: Professional but direct. No AI buzzwords. No "automated client machines", no "smart outreach", no "on autopilot". Speak about real services: website, Instagram, Facebook, Google, SEO, ads. The client hates generic AI marketing copy.
-
-**CSS utility classes** (defined in `globals.css` `@layer components`):
-- `.glass` — frosted glass background
-- `.glass-card` — darker glass card
-- `.gradient-text-brand` — indigo→purple→cyan gradient text
-- `.gradient-text-hero` — white→blue→purple gradient text (for hero h1)
-- `.btn-primary` — gradient purple CTA button with glow
-- `.btn-secondary` — subtle ghost button
-- `.section-label` — small pill badge above section headings
-- `.glow-dot` — animated pulsing dot used inside `.section-label`
-- `.cyber-corner` — bracket decoration on corners of elements
-- `.holo-card` — holographic shimmer on hover
-- `.mesh-bg` — animated radial gradient background (used in index.tsx)
-- `.grid-overlay` — subtle indigo grid lines (used in index.tsx)
-
-## Component patterns
-
-**Section heading pattern** (used in every section):
-```tsx
-<div className="section-label mb-6 mx-auto w-fit">
-  <span className="glow-dot" />
-  Section Title
-</div>
-<h2 className="font-black tracking-tight text-white" style={{ fontSize: 'clamp(2rem, 4vw, 3.5rem)' }}>
-  Main headline with <span className="gradient-text-brand">gradient accent.</span>
-</h2>
+```
+cd LTYL_Modern_12Track
+python3 -m venv venv && ./venv/bin/pip install pydub numpy scipy pedalboard requests librosa
+./venv/bin/python build.py      # renders the wav + stems/
+./venv/bin/python analyze.py    # QA pass + analysis.png
 ```
 
-**Card alignment pattern** (for equal-height cards with pinned CTAs):
-```tsx
-<div className="relative p-8 flex flex-col h-full">
-  <p className="text-white/50 text-sm leading-relaxed mb-6 flex-1">{desc}</p>
-  <a href="#contact" className="mt-auto ...">CTA</a>
-</div>
-```
+Always use the track's own `venv`, not a system Python — `pedalboard`, `librosa`,
+etc. are pinned there.
 
-**Widget row alignment pattern** (for narrow fixed widgets):
-```tsx
-<div className="flex items-center">
-  <span className="flex-1 text-[10px] text-white/35 truncate">Label</span>
-  <div className="flex items-center gap-1.5 flex-shrink-0">
-    <span className="tabular-nums font-bold text-white">{value}</span>
-  </div>
-</div>
-```
+## Working conventions
 
-## Services (the four things PantaSocial sells)
-
-1. **Web Design & Development** — slug: `web-design`, accent: `#6366f1`
-2. **Lead Generation** — slug: `lead-generation`, accent: `#a855f7`, marked "Most Popular"
-3. **SEO & Google Ads** — slug: `seo-ads`, accent: `#06b6d4`
-4. **Full Automation System** — slug: `automation`, accent: `#10b981`
-
-No prices are displayed anywhere on the site. CTAs say "Get Free Audit" or "Get My Free Website Preview".
-
-## The Growth Dashboard widget
-
-`components/FixedWidgets.tsx` renders a live-looking dashboard in the bottom-left corner. It is visible from page load and disappears when the footer enters the viewport (IntersectionObserver). It uses deterministic pseudo-random numbers so all visitors see the same metrics at the same moment.
-
-The metrics engine is in `hooks/useRealtimeMetrics.ts`:
-- Uses mulberry32 PRNG seeded by the current date integer
-- `businessProgress(hour)` — piecewise function that weights metrics by time of day
-- Monthly leads accumulate deterministically; they only go up, never down
-- Recalculates every 60 seconds
-
-## Contact form and email
-
-`pages/api/contact.ts` handles POST requests from `components/ContactForm.tsx`. It:
-- Validates: name, business name, email, message (all required)
-- Sends a styled HTML email to `andreja@pantasocial.com`
-- Sets reply-to as the sender's email
-- Returns 200 on success, 400 on validation error, 500 on send failure
-
-Environment variables required (see `.env.local.example`):
-- `SMTP_HOST` — e.g. smtp.gmail.com
-- `SMTP_PORT` — e.g. 587
-- `SMTP_USER` — sender Gmail address
-- `SMTP_PASS` — Gmail app password (not account password)
+- **Determinism matters.** Seeds must be derived from a stable hash (e.g.
+  FNV-1a), never Python's built-in `hash()` — it's salted per process and was a
+  real bug fixed in this project (see the README's "Also fixed along the way"
+  note). A render must be byte-reproducible run to run.
+- **Synthesize, don't sample**, unless a track's README says otherwise. Every
+  instrument here is generated from DSP primitives so pitch and timing stay
+  exact and license-clean.
+- **Arrangement is data, not conditionals.** Per-zone track presence belongs in
+  a table like `arrange.LAYERS`, not scattered `if section == ...` branches —
+  it's what makes the QA scripts able to derive "expected" counts instead of
+  hard-coding them.
+- **Every mix/arrangement claim should be measured.** This project verifies
+  itself: onset counts vs. expected, spectral tilt per band, LUFS/true-peak,
+  pitch deviation in cents, sidechain envelope shape, etc., via `analyze.py`.
+  When you change the DSP or arrangement, re-run the QA pass and update the
+  numbers in the README rather than asserting the change worked.
+- **Leave room for the vocal.** The 1–5 kHz "vocal pocket" is deliberately the
+  quietest region of the mix, and verses must measure less dense in that band
+  than choruses. Don't add melodic content in that range without checking the
+  occupancy numbers in the README.
+- Master peak target is stated per-track in its README (this track: exactly
+  −6.00 dBFS) — headroom is intentional, not a mistake to "fix" toward 0 dBFS.
 
 ## What NOT to do
 
-- Do not mention AI, automation bots, or "autopilot" in any user-facing copy. The founder explicitly hates this language.
-- Do not add prices to service cards. Pricing is handled in consultation calls.
-- Do not add a light mode, theme toggle, or any light-background sections.
-- Do not use `grid-cols-1` for the services section on desktop — it should be `lg:grid-cols-4`.
-- Do not create a new CSS file or use CSS Modules. All styles go in `globals.css` or inline.
-- Do not introduce new npm packages without a strong reason. Current bundle is intentionally lean.
-- Do not use `process.env` values on the client side (only in `pages/api/`).
-- Do not add comments explaining what code does — only add comments when the WHY is non-obvious.
-- Do not wrap every section in a new `<motion.div>` — use `whileInView` on the elements themselves.
-- Do not use `justify-between` in narrow widget rows without `flex-1 truncate` on the label and `flex-shrink-0` on the value — this causes layout jamming in 240px-wide containers.
-
-## Founder
-
-**Andreja Pantic** — founder of PantaSocial LLC. Contact: andreja@pantasocial.com. All enquiry emails go to this address. The site footer shows 2026 as the copyright year.
+- Do not reintroduce unrelated storefront/marketing/web-app content into this
+  repo. This is a music production repo only.
+- Do not commit `venv/`, `stems/`, `stems_raw/`, `assets/`, or `__pycache__/` —
+  they're gitignored on purpose; regenerate them from `build.py` instead.
+- Do not hand-edit the derived 16-bit wav — it comes from `build.py` off the
+  committed 24-bit master.
+- Do not swap a synthesized instrument for a sampled one, or add a new
+  dependency, without a strong reason — the point of this pipeline is
+  from-scratch, license-clean, exactly-in-key synthesis.

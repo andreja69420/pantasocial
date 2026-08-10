@@ -1,0 +1,7 @@
+venv/
+assets/
+stems/
+__pycache__/
+LoveTheWayYouLie_Modern12Track.wav
+stems_raw/
+real_stems/
