@@ -12,7 +12,7 @@ worst). It is still a backtest found after trying many variants, so the next ste
   from `data.binance.vision` (475 spot pairs map to a perp).
 
 ## Method
-- `features.py` - 31 point-in-time features per coin per day (returns 1-90d, volatility, volume trend,
+- `features.py` - 27 point-in-time features per coin per day (returns 1-90d, volatility, volume trend,
   taker-buy ratio, distance from highs/lows, beta/correlation to BTC, age) plus cross-sectional ranks and
   market-state features. Universe each day = top-100 coins by trailing 30d volume with 90+ days of history.
 - `backtest.py` - walk-forward training (expanding window, purged gap, retrain every 30-90 days), test only on
