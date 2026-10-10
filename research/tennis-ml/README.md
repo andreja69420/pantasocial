@@ -518,3 +518,16 @@ Blend weights fitted on each single TE Bet365 year (model, market): 2014 0.56/0.
 2024 0.56/0.52, 2025 0.49/0.56 - stable, the model always carries ~40-55% of the weight.
 Separate blends per segment (women's ITF 0.43/0.66, Challenger 0.50/0.51; men's ITF borrows Challenger) do worse on
 BetMGM 2025-26 than the single pooled blend (odds<=5: +6.0% vs +8.9%; men's ITF drops to +1.0%). Keep the pooled blend.
+
+### BetMGM 2025-26 with the retrained predictions (learning rate x0.33, patience 2000)
+Same blend (Bet365 2014-2024), same data; only the 2025/2026 model predictions changed (setting chosen on 2024).
+| Rule | Old model | New model (lr x0.33) |
+|---|---|---|
+| raw EV>5% odds<=2 | 6,478 bets +3.35% (lo +1.9%) | 6,585 bets **+3.73% (lo +2.3%)** |
+| blend EV>5% odds<=2 | 1,695 +5.73% (lo +2.9%), void +2.8% | 1,766 **+6.45% (lo +3.7%), void +3.4%** |
+| blend EV>10% odds<=2 | 446 +9.65% | 458 +9.10% |
+| blend EV>5% odds<=3 | 2,278 +5.18% | 2,373 +5.35% |
+| blend EV>5% odds<=5 | 2,526 +8.92% (lo +5.8%), void +4.4% | 2,626 **+8.99% (lo +5.9%)**, void +4.0% |
+| blend EV>10% odds<=5 | 907 +13.0% | 934 +12.0% |
+A small, consistent improvement at the main rules (2026 alone, odds<=5: +8.9% -> +10.3%). The new setting is the
+default for future training (6x slower).
