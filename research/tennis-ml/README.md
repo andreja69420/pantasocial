@@ -494,3 +494,10 @@ Opening timestamp vs the match day (start times unknown, so measured to the matc
 | match day, later | 360 | +2.5% (5.0%) | +9.7% | -10.5% |
 The earliest lines are the softest: picks on lines published more than 6 hours before the match day return the
 most and move the most. In practice the bet should go in as soon as the line appears.
+| ATP 2024 (8,477 matches) | Best iter XGB / LGBM | Log-loss | vs baseline (paired, z) | Challenger b365 open EV>5% |
+|---|---|---|---|---|
+| baseline, patience 60 | 292 / 196 | 0.61425 | - | 884 bets +5.4% |
+| A: patience 2000, same rate | 292 / 196 | 0.61425 | identical | 884 bets +5.4% |
+| B: patience 2000, rate x0.33 | 1,216 / 1,044 | 0.61367 | -0.00057 (z -2.3) | 876 bets +5.6% |
+Both tours agree: patience alone does nothing; the smaller learning rate is slightly better (z -2.2 and -2.3).
+Setting B is adopted: 2025 and 2026 predictions are being retrained with it (chosen on 2024 only).
