@@ -150,3 +150,17 @@ Secondary (picked from the 2012-2018 screen, reported regardless of outcome): EV
 EV>5% odds 1.6-2.0; core & opponent retires often; core & opponent played yesterday; core & rising Elo;
 core & opponent 3+ matches in 7 days; core & lefty. Average odds carry ~9% margin, so a best-price bettor would do
 better than this test shows.
+
+### Result: men's ITF 2024-2026 at BetExplorer average odds -> FAIL
+17,812 matches, margin 9.0%. Log-loss market 0.5330 vs model 0.5424: the market now beats the model (in 2012-2018
+the model beat it, 0.5435 vs 0.5455). The market got sharper; the model did not get worse.
+| Rule | Bets | ROI | 90% CI | Random at odds<=2 |
+|---|---|---|---|---|
+| PRIMARY EV>5% odds<=2 | 2,439 | -2.9% | [-5.4, -0.5] | -3.9% |
+| EV>10% odds<=2 | 1,225 | -4.4% | [-8.0, -0.7] | -4.1% |
+| EV>20% odds<=2 | 339 | -8.6% | [-16.3, -1.2] | -4.0% |
+| core & opp retires often | 489 | +1.1% | [-4.5, +7.0] | -3.8% |
+| core & opp played yesterday | 1,039 | -1.3% | [-5.0, +2.4] | -4.0% |
+| core & lefty | 240 | -3.9% | [-11.8, +3.7] | -4.5% |
+By year (primary): 2024 +4.8%, 2025 -3.6%, 2026 -7.1%. The 2012-2018 men's ITF edge does not hold on current
+prices; none of the subset tactics picked from the 2012-2018 screen holds either.
