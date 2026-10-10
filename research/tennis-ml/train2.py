@@ -93,6 +93,10 @@ X["rord"], X["best_of"], X["main"] = df.rord.values, df.best_of.fillna(3).values
 X["draw"] = pd.to_numeric(df.draw_size, errors="coerce").values
 X["month"] = df.date.dt.month.values
 FEATS = list(X.columns)
+ONLY = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--only=")), None)
+if ONLY:
+    FEATS = [c for c in FEATS if re.search(ONLY, c)]
+X = X[FEATS]
 print(f"{TOUR} {MODE}: {len(FEATS)} features", flush=True)
 
 tr = (df.year >= TR0) & (df.year < VAL)
