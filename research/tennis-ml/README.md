@@ -83,3 +83,11 @@ Success = ROI > 0 with a 90% bootstrap interval above zero, separately on 2020-2
 - **ITF rule** (found on 2014-2018): ATP ITF/Futures, bet when p_model * odds > 1.05 and odds <= 2.0, flat stake.
   Success = ROI > 0 on 2012-2013 combined.
 - **Challenger**: any segment rule must be chosen on 2012-2015 and confirmed on 2016-2018.
+
+### Result of the 2012-2013 test
+- **ITF rule: PASS.** 2012-2013 (never seen before): **+7.7% ROI** on 2,091 bets (2012 +10.4%, 2013 +4.0%).
+  ITF 2012-2018 overall: +6.7% ROI on 4,693 bets (90% interval about +/-1.7%). All lower levels together in 2012-2013:
+  model log-loss 0.5583 vs market 0.5634.
+- **Challenger: no reliable edge.** Overall ~0% (explore 2012-2015 +1.3%, confirm 2016-2018 -1.3% at odds <= 2).
+  No segment (experience, ranking, round, surface) is positive in both halves with a meaningful margin; the best
+  ("weaker player ranked >300", any odds) is +1.9% / +3.1% but within noise.
