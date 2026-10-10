@@ -399,3 +399,28 @@ above 2 it again leans on big line moves. Caveats: this is the data in which the
 unknown, and Bet365 restricts the stakes of accounts that consistently beat its opening lines.
 Stake: no historical Stake odds are available here (BetExplorer from this server lists only BetMGM.us, and
 stake.com is not reachable from a US server); testing Stake needs its opening odds collected going forward.
+
+## Calibration methods for the bet decision (`calib_open.py`, Bet365 opening, walk-forward)
+Online research: calibration matters more than accuracy for betting (Walsh & Joshi 2024, Machine Learning with
+Applications 16:100539); beta calibration (Kull et al. 2017) as an alternative to Platt; Shin's method for removing
+the bookmaker margin puts more of it on the longshot, which matches the favourite-longshot bias.
+Methods, each map fitted only on years before the test year (2014..Y-1), scored on 2020-2025 (women's ITF + WTA125 +
+WTA Tour + Challenger, 101,496 matches). Log-loss on all sides:
+| Market fair (proportional) | Market fair (Shin) | Model raw | Beta-calibrated model | Blend model+market | Blend model+Shin | Blend+Shin, own slopes above 2 |
+|---|---|---|---|---|---|---|
+| 0.5757 | 0.5738 | 0.5757 | 0.5757 | 0.5696 | **0.5695** | 0.5694 |
+The model and the market are equally good alone, and the blend beats both: the model adds information the opening
+line does not have. Beta calibration of the model alone changes nothing.
+Bets, EV>5%, ROI as-is / if bets whose price was cut >30% are void / if bets whose fair win probability rose >12
+points are void:
+| Odds | Raw model | Shin blend |
+|---|---|---|
+| 1-2 | 18,538: +4.4% / +3.8% / +3.0% | **4,785: +8.1% / +6.5% / +4.4%** (all lower bounds > +2.9%) |
+| 2-3 | 10,989: +3.3% / +0.4% / +1.1% | 2,134: +7.6% / -0.1% / -0.1% |
+| 3-5 | 7,460: +6.3% / +1.1% / +3.6% | 1,180: +17.5% / +4.7% / +8.2% (lo of last +0.8%) |
+| 5+ | 3,145: -1.7% / -7.3% / -4.1% | 332: +24.4% / +7.4% / +12.8% (lo -9.9%) |
+| <=3 total | 29,527: +4.0% / +2.6% / +2.3% | 6,919: +7.9% / +4.5% / +3.0% |
+Conclusions: the Shin blend nearly doubles the edge at odds <=2 (+8.1%, ~2.2 bets/day over these four segments) and
+it survives both stress tests. Odds 2-3 stay at ~0% under both stress tests whatever the calibration: the profit
+there is line-movement, not calibration. Odds 3-5 with the Shin blend are a possible second market (+8% under the
+probability stress, lower bound just above 0) but not proven. Above 5: no.
