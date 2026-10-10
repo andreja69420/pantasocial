@@ -467,3 +467,19 @@ distribution over 200 reshuffled bet orders.
 Compounded multiples assume the book takes every stake at the opening price, which it will not (ITF opening
 limits are small and winning accounts get limited); the drawdown columns are the useful part. Kelly x0.10-0.25
 keeps the typical worst drawdown at 20-40%; half Kelly is too aggressive given model uncertainty.
+
+## Literature notes (night research)
+- Tennis market efficiency: Lyocsa & Vyrost (2018) find top-level tennis betting close to efficient once 40 rules
+  are corrected for data snooping; Lobao & Rolla (2015) report behavioural biases; exchange studies of ATP-level
+  matches cannot reject efficiency. No study found on ITF/Challenger opening lines - consistent with our result that
+  the edge is in lower-tier opening prices, not in ATP Tour or closing prices.
+- Opening vs closing: a Greek football study (Kalaitzakis et al. 2022) finds opening odds carry information the
+  close does not fully capture; practitioners report early-bet edges that are gone by match day (our CLV result).
+- Models: Kovalchik (2016) - Elo (FiveThirtyEight style) is the best results-only method, below the bookmaker
+  consensus; career-to-date history helps most for LOWER-ranked players (59% -> 64%), which is where our edge is;
+  margin-of-victory / weighted Elo variants improve on plain Elo (already in the 481 features).
+- Calibration over accuracy for betting model selection (Walsh & Joshi 2024); Shin margin removal handles the
+  favourite-longshot bias better than proportional (used in the blend).
+Sources: muni.cz/en/research/publications/1397002, periodicos.fgv.br/rae/article/view/52958,
+emerald.com/insight/content/doi/10.1108/EMJB-01-2021-0014, arxiv.org/pdf/1211.4000,
+degruyterbrill.com/document/doi/10.1515/jqas-2015-0059, researchportal.bath.ac.uk (Walsh & Joshi 2024).
