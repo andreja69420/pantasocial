@@ -326,3 +326,32 @@ Pooled women's ITF + Challenger + men's ITF, BetMGM.us opening prices, 2025-01-0
 ROI rises with the threshold up to ~16% and then levels off at +6-8%; ~1 bet a day is EV>25% (+7.2%, still positive
 at the 90% lower bound). Fewer bets mean less total profit at flat stakes (+38u vs +142u at EV>10%) and a wider
 interval. With odds<=3 instead of <=2 every row is worse (EV>25%: +2.5%, lower bound -2.2%): keep the odds<=2 cap.
+
+### Odds above 2: why the raw rule fails there, and a recalibration (`blend_open.py`, exploratory)
+Calibration by opening-odds band, all 2025-26 sides (women's ITF + Challenger + men's ITF, BetMGM.us):
+| Odds | Sides | Model | Market fair | Actual | ROI (all sides) |
+|---|---|---|---|---|---|
+| 1.0-1.5 | 21,064 | 0.766 | 0.739 | 0.784 | -2.6% |
+| 1.5-2.0 | 15,277 | 0.538 | 0.533 | 0.541 | -7.0% |
+| 2.0-2.5 | 8,584 | 0.403 | 0.414 | 0.392 | -13.2% |
+| 2.5-3.0 | 5,559 | 0.318 | 0.338 | 0.299 | -18.8% |
+| 3-4 | 6,070 | 0.238 | 0.266 | 0.237 | -18.2% |
+| 4-6 | 4,595 | 0.158 | 0.190 | 0.132 | -36.9% |
+| 6+ | 2,845 | 0.089 | 0.125 | 0.051 | -63.4% |
+1. BetMGM has a strong favourite-longshot bias: above odds 4 the outsider wins far less than even the fair price says.
+2. Among the model's own picks (EV>5%) the model is overconfident: at 2.0-2.5 it says 0.539, market 0.415, actual
+0.446 - it captures only about a quarter of its claimed gap, so EV above 2 is inflated (picks 2-3: ~0% ROI).
+Recalibration: P = logistic(a*logit(model) + b*logit(fair open) + c), fitted on 2025 and applied to 2026 and vice
+versa (weights ~0.4-0.5 model, ~0.7-0.9 market). Pooled out-of-sample, 2025+2026:
+| Rule | Bets | ROI | 90% lo | 2025 / 2026 |
+|---|---|---|---|---|
+| raw EV>5% odds<=2 (reference) | 6,478 | +3.4% | +1.9% | +3.7% / +2.2% |
+| blend EV>5% odds<=2 | 1,720 | +4.6% | +1.8% | +5.7% / +1.7% |
+| blend EV>10% odds<=2 | 357 | +8.7% | +2.2% | +10.1% / +5.5% |
+| blend EV>5% odds<=3 | 2,087 | +4.4% | +1.7% | +5.4% / +2.5% |
+| blend EV>5% odds<=4 | 2,196 | +7.6% | +4.6% | +7.7% / +7.3% |
+| blend EV>10% any odds | 695 | +15.4% | +7.8% | +18.0% / +11.4% |
+With the blend, odds 2-3 are no longer losing. The big jump from odds 3-4 upward is NOT a reliable edge: model picks
+at 3-4 earn +54% when BetMGM later cut the price by more than 30% (193 bets) and only +0.6% otherwise (940 bets).
+Those are opening prices the book itself corrected sharply (stale or erroneous lines); such bets are the ones books
+void as "palpable errors" or accept only with tiny limits. Treat everything above odds 3 as unproven.
