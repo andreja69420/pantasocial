@@ -131,3 +131,22 @@ Post-hoc exploration, reported with an explore half / confirm half of the years.
 - Consequence: **backtests on these free datasets are not trustworthy at odds above ~2.5.** The odds<=2 cap in the
   pre-registered rule protects against this (a swapped row puts the true favourite at the long price, which the
   cap excludes), which is why it stays the only rule used for decisions.
+
+### Tactic screen (`tactics.py`): ~50 tactics per segment, explore/confirm halves, no-skill control
+Survivor = >=300 bets, positive in both halves, 90% lower bound > 0. Control: model probabilities shuffled within
+year (5 shuffles) -> 0-2 survivors per segment, so the screen itself rarely produces false positives. It does not
+control for bad odds data, though: every "model p>X & EV>0" survivor on women's ITF and Challenger comes from a
+handful of bets at odds > 2 with +130% to +1000% ROI (swapped-price rows). Capped at odds <= 2 they shrink to ~+1%.
+- ATP Tour (Bet365 and best): 0 survivors.
+- Challenger: Bet365 nothing clean; best price only small (+2 to +3%).
+- Women's ITF: Bet365 nothing clean at odds <= 2 above ~+2%; best price +1 to +4%.
+- Men's ITF 2012-2018: 41 of 48 survive, all subsets of the core rule (EV>5%, odds<=2, +6.7%). Strongest:
+  lefty bettee +13.8% (627 bets), EV>20% +13.7% (851), opponent 3+ matches in 7 days +11.6% (712), opponent with
+  retirements in the last year +10.5% (1,510), odds 1.6-2.0 +10.2% (1,510), rising Elo +8.7% (3,009).
+
+## Pre-registered: men's ITF 2024-2026 at BetExplorer average odds (written before the predictions finished)
+Primary: core rule EV>5% & odds<=2 (success = ROI > 0 with 90% lower bound > 0).
+Secondary (picked from the 2012-2018 screen, reported regardless of outcome): EV>10% odds<=2; EV>20% odds<=2;
+EV>5% odds 1.6-2.0; core & opponent retires often; core & opponent played yesterday; core & rising Elo;
+core & opponent 3+ matches in 7 days; core & lefty. Average odds carry ~9% margin, so a best-price bettor would do
+better than this test shows.
