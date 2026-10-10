@@ -483,3 +483,14 @@ keeps the typical worst drawdown at 20-40%; half Kelly is too aggressive given m
 Sources: muni.cz/en/research/publications/1397002, periodicos.fgv.br/rae/article/view/52958,
 emerald.com/insight/content/doi/10.1108/EMJB-01-2021-0014, arxiv.org/pdf/1211.4000,
 degruyterbrill.com/document/doi/10.1515/jqas-2015-0059, researchportal.bath.ac.uk (Walsh & Joshi 2024).
+
+### How early the line opened (BetMGM 2025-26, blend EV>5% odds<=5, exploratory)
+Opening timestamp vs the match day (start times unknown, so measured to the match day's midnight):
+| Line opened | Picks | ROI (se) | CLV picks | Random sides ROI |
+|---|---|---|---|---|
+| >6h before the match day | 805 | **+15.4% (3.4%)** | +16.1% | -9.2% |
+| 0-6h before the match day (evening before) | 783 | +6.0% (3.5%) | +10.7% | -9.8% |
+| match day, first 6h | 578 | +7.9% (4.0%) | +7.8% | -9.1% |
+| match day, later | 360 | +2.5% (5.0%) | +9.7% | -10.5% |
+The earliest lines are the softest: picks on lines published more than 6 hours before the match day return the
+most and move the most. In practice the bet should go in as soon as the line appears.

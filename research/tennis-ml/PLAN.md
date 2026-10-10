@@ -7,7 +7,8 @@ Sažetak svega što je testirano (detalji i brojevi su u `README.md`). Ovo je pl
 - **Ne:** ATP Tour (nema prednosti), totali gemova, NBA i Evroliga (testirano, gubi).
 
 ## 2. Kada
-- **Odmah kad kladionica objavi početnu kvotu** (obično dan pred meč).
+- **Odmah kad kladionica objavi početnu kvotu** (obično dan pred meč). Što ranije, to bolje: na BetMGM 2025–26
+  opklade na kvote objavljene više od 6 sati pre dana meča dale su +15%, a one objavljene na dan meča +2,5% do +8%.
 - Na završnoj kvoti iste opklade gube u svim testovima — cela prednost je u tajmingu. Do meča kvota na našu
   stranu padne u proseku 5–10%, a kod nasumičnih strana 0%.
 
