@@ -511,3 +511,10 @@ probability, Shin fair opening, their gap, odds, segment), walk-forward on TE Be
   (lo +5.7%, void stress +4.3%); predicted move >0.03 & blend EV>0 4,177 bets +6.1% (lo +3.8%, +2.3%); predicted
   move >0.05 732 bets +11.0% (lo +4.1%, +6.0%). Similar returns, no clear gain - the blend already captures it.
 Kept as a cross-check: a pick whose predicted move is also large is the same signal seen from another angle.
+
+### Blend stability and per-segment blends
+Blend weights fitted on each single TE Bet365 year (model, market): 2014 0.56/0.48, 2015 0.42/0.64, 2016 0.39/0.71,
+2017 0.45/0.63, 2018 0.35/0.70, 2019 0.45/0.64, 2020 0.42/0.59, 2021 0.42/0.74, 2022 0.40/0.68, 2023 0.44/0.61,
+2024 0.56/0.52, 2025 0.49/0.56 - stable, the model always carries ~40-55% of the weight.
+Separate blends per segment (women's ITF 0.43/0.66, Challenger 0.50/0.51; men's ITF borrows Challenger) do worse on
+BetMGM 2025-26 than the single pooled blend (odds<=5: +6.0% vs +8.9%; men's ITF drops to +1.0%). Keep the pooled blend.
