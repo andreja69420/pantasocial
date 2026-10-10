@@ -11,7 +11,7 @@ import sys
 import numpy as np
 import pandas as pd
 
-D = sys.argv[1]
+D = sys.argv[1] if __name__ == "__main__" else None  # importers set tactics.D
 TE = "2014-2015-2016-2017-2018-2019-2020-2021-2022-2023-2024-2025"
 COLS = ["rest_days", "n_7d", "prev_minutes", "home", "entry_WC", "entry_Q", "entry_LL", "age", "rank", "n_career",
         "h2h_n", "h2h_wins", "welo_mom10", "left", "ret_365d", "seeded", "win_10"]
@@ -112,37 +112,42 @@ SEGS = [
     ("Women ITF @Bet365", "wta", [f"preds3_wta_ens_r6_hist1991_ens_te_{TE}.parquet"], r"^\d", "b365"),
     ("Women ITF @best", "wta", [f"preds3_wta_ens_r6_hist1991_ens_te_{TE}.parquet"], r"^\d", "best"),
 ]
-pd.set_option("display.width", 250)
-pd.set_option("display.max_rows", 200)
-rng = np.random.default_rng(0)
-summary = []
-for name, tour, preds, lvl, odds in SEGS:
-    S = load(tour, preds, lvl, odds)
-    years = sorted(S.year.unique())
-    cut = years[len(years) // 2]
-    R = score(S, tactics(S), cut)
-    null = []
-    for _ in range(5):  # no-skill control: shuffle model probabilities within each year (sides stay paired)
-        Sn = S.copy()
-        n = len(S) // 2
-        p1 = S.p1.values[:n].copy()
-        for y in years:  # p1/p2 order is random, so a shuffled p1 probability carries no information on the winner
-            i = np.where(S.year.values[:n] == y)[0]
-            p1[i] = p1[rng.permutation(i)]
-        qw = np.where(S.y1.values[:n], p1, 1 - p1)
-        Sn["q"] = np.r_[qw, 1 - qw]
-        Sn["ev"] = Sn.q * Sn.o - 1
-        null.append(score(Sn, tactics(Sn), cut).survives.sum())
-    print(f"\n######## {name}: {len(S) // 2} matches, years {years[0]}-{years[-1]}, explore < {cut} <= confirm; "
-          f"median margin {np.median(1 / S.o[:len(S) // 2] + 1 / S.oo[:len(S) // 2] - 1):.1%}")
-    print(f"  tactics tested {len(R)}, survivors {R.survives.sum()} | no-skill model survivors (5 shuffles): {null}")
-    show = R[R.bets >= 300].sort_values("confirm", ascending=False).head(12)
-    fmt = show.assign(**{c: show[c].map(lambda v: f"{v:+.1%}") for c in ["roi", "lo90", "explore", "confirm"]})
-    print(fmt.to_string(index=False))
-    for _, r in R[R.survives].iterrows():
-        summary.append({"segment": name, **r.to_dict()})
-print("\n======== ALL SURVIVORS (>=300 bets, + in both halves, 90% lower bound > 0)")
-if summary:
-    Z = pd.DataFrame(summary).sort_values("lo90", ascending=False)
-    print(Z.assign(**{c: Z[c].map(lambda v: f"{v:+.1%}") for c in ["roi", "lo90", "explore", "confirm"]})
-          .drop(columns="survives").to_string(index=False))
+def main():
+    pd.set_option("display.width", 250)
+    pd.set_option("display.max_rows", 200)
+    rng = np.random.default_rng(0)
+    summary = []
+    for name, tour, preds, lvl, odds in SEGS:
+        S = load(tour, preds, lvl, odds)
+        years = sorted(S.year.unique())
+        cut = years[len(years) // 2]
+        R = score(S, tactics(S), cut)
+        null = []
+        for _ in range(5):  # no-skill control: shuffle model probabilities within each year (sides stay paired)
+            Sn = S.copy()
+            n = len(S) // 2
+            p1 = S.p1.values[:n].copy()
+            for y in years:  # p1/p2 order is random, so a shuffled p1 probability carries no information on the winner
+                i = np.where(S.year.values[:n] == y)[0]
+                p1[i] = p1[rng.permutation(i)]
+            qw = np.where(S.y1.values[:n], p1, 1 - p1)
+            Sn["q"] = np.r_[qw, 1 - qw]
+            Sn["ev"] = Sn.q * Sn.o - 1
+            null.append(score(Sn, tactics(Sn), cut).survives.sum())
+        print(f"\n######## {name}: {len(S) // 2} matches, years {years[0]}-{years[-1]}, explore < {cut} <= confirm; "
+              f"median margin {np.median(1 / S.o[:len(S) // 2] + 1 / S.oo[:len(S) // 2] - 1):.1%}")
+        print(f"  tactics tested {len(R)}, survivors {R.survives.sum()} | no-skill model survivors (5 shuffles): {null}")
+        show = R[R.bets >= 300].sort_values("confirm", ascending=False).head(12)
+        fmt = show.assign(**{c: show[c].map(lambda v: f"{v:+.1%}") for c in ["roi", "lo90", "explore", "confirm"]})
+        print(fmt.to_string(index=False))
+        for _, r in R[R.survives].iterrows():
+            summary.append({"segment": name, **r.to_dict()})
+    print("\n======== ALL SURVIVORS (>=300 bets, + in both halves, 90% lower bound > 0)")
+    if summary:
+        Z = pd.DataFrame(summary).sort_values("lo90", ascending=False)
+        print(Z.assign(**{c: Z[c].map(lambda v: f"{v:+.1%}") for c in ["roi", "lo90", "explore", "confirm"]})
+              .drop(columns="survives").to_string(index=False))
+
+
+if __name__ == "__main__":
+    main()
