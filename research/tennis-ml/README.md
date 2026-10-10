@@ -188,3 +188,21 @@ Model: walk-forward ens trained to 2024, calibrated on 2025 (no 2026 data).
 Primary: women's ITF 2026, EV>5% & odds<=2 at the opening price. Success = ROI > 0 and 90% lower bound > 0.
 Also reported: the same at BetMGM closing price, and mean closing-line value of the picks (open/close - 1);
 CLV > random sides is the secondary success signal, since a few hundred bets give a wide ROI interval.
+
+## Total games (over/under) - `train_totals.py`, `eval_totals.py`
+Regression on total games from the same 481 features (no odds), walk-forward; P(over L) from the predicted mean +
+the validation-year residuals. Settled at Bet365 / Unibet / Ladbrokes lines from TennisExplorer; retired = void.
+Men (75,996 matches with a line): RMSE ~6.0-6.2 games vs sd 7.0-7.4. Over log-loss model 0.6906 vs market 0.6927
+(slightly better than Bet365's line), but Bet365 totals margin is 8.2%.
+| Men, Bet365 | Rule | 2014-19 | 2020-25 |
+|---|---|---|---|
+| Challenger close | EV>5% both sides | +2.7% (5,107) | -1.6% (3,706) |
+| Challenger close | EV>10% over | +6.3% (1,582) | +0.6% (532) |
+| Challenger OPEN | EV>3% both | +2.3% (6,940) | +0.9% (6,178), 10/12 yrs+ |
+| Challenger OPEN | EV>10% both | +5.9% (2,328) | +2.8% (1,181) |
+| Tour close | EV>5% both | +7.4% (4,487) | -5.3% (3,015) |
+| Tour OPEN | EV>10% both | +11.7% (2,579) | -1.0% (1,480) |
+Men's totals at closing prices: FAIL on the modern market (explore half positive, confirm half negative).
+At opening prices Challenger stays slightly positive in 2020-25 but within noise (+2.8% on 1,181 bets, se ~2.8%).
+"Best book" totals rows (+30-80%) are a data artefact: in 2014-19 even random overs return +6-12% there, i.e. the
+Unibet/Ladbrokes over prices in the free data are often for a different line; ignore them.

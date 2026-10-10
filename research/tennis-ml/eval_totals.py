@@ -1,7 +1,7 @@
 """Evaluate the total-games model against Bet365 / Unibet / Ladbrokes over-under lines (closing), 2014-2025.
 Retired matches are void. Explore = 2014-2019, confirm = 2020-2025.
 
-usage: eval_totals.py DATA_DIR TOUR
+usage: eval_totals.py DATA_DIR TOUR [--open]
 """
 import sys
 
@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 
 D, TOUR = sys.argv[1:3]
+SUF = "_o" if "--open" in sys.argv else ""  # --open: price at the opening over/under odds (same line)
 T = pd.read_parquet(f"{D}/out/tot_{TOUR}.parquet")
 E = pd.read_parquet(f"{D}/out/{TOUR}_te_extra.parquet").reindex(T.index)
 lvl = pd.read_parquet(f"{D}/out/{TOUR}_f2.parquet", columns=["tourney_level"]).tourney_level.astype(str).reindex(T.index)
@@ -28,7 +29,7 @@ def p_over_under(mu, key, line):
 
 rows = []
 for bk in ("b365", "ub", "lb"):
-    L, oo, ou = E[f"{bk}_tline"].values, E[f"{bk}_over"].values, E[f"{bk}_under"].values
+    L, oo, ou = E[f"{bk}_tline"].values, E[f"{bk}_over{SUF}"].values, E[f"{bk}_under{SUF}"].values
     ok = ~np.isnan(L) & (oo > 1) & (ou > 1)
     for i in np.flatnonzero(ok):
         po, pu = p_over_under(T.mu.values[i], T.res_key.values[i], L[i])
