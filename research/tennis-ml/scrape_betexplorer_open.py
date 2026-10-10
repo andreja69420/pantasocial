@@ -4,6 +4,7 @@ Step 1: results pages of every tournament (match id, players slug, date, result,
 Step 2: per match, the bookmaker table (closing odds + archive ids).
 Step 3: per bookmaker side, the odds history; the oldest entry is the opening price.
 Everything is cached on disk; rate limited like scrape_betexplorer_itf.py (RATE env, default 8/s).
+MIN_DATE / MAX_DATE env (YYYY-MM-DD) skip matches outside the window that the Sackmann data covers.
 
 usage: scrape_betexplorer_open.py OUT_DIR CATEGORY SEASON   (e.g. itf-women-singles 2026; current season = base slug)
 """
@@ -106,13 +107,18 @@ def res_job(slug):
 
 run(slugs, res_job, "results pages")
 matches = {}
+lo = os.environ.get("MIN_DATE", f"{SEASON}-01-01")
+hi = os.environ.get("MAX_DATE", f"{SEASON}-12-31")
 for slug in slugs:
     h = open(os.path.join(OUT, "res", f"{slug}.html"), encoding="utf-8").read()
     for tr in re.findall(r"<tr[^>]*>(.*?)</tr>", h, re.S):
         link = re.search(rf'href="/tennis/{CAT}/[a-z0-9\-]+/([a-z0-9\-]+)/([A-Za-z0-9]+)/"', tr)
-        if link and "data-odd" in tr:
-            matches[link.group(2)] = link.group(1)
-print(f"matches with odds: {len(matches)}", flush=True)
+        date = re.search(r">\s*(\d\d)\.(\d\d)\.(\d{4})?\s*<", tr)
+        if link and "data-odd" in tr and date:
+            d = f"{date.group(3) or CURRENT}-{date.group(2)}-{date.group(1)}"
+            if lo <= d <= hi:
+                matches[link.group(2)] = link.group(1)
+print(f"matches with odds {lo}..{hi}: {len(matches)}", flush=True)
 run(list(matches), lambda mid: cached(os.path.join(OUT, "match", f"{mid}.json"),
                                       f"https://www.betexplorer.com/match-odds-old/{mid}/1/ha/1/en/"), "bookmaker tables")
 arch = []
