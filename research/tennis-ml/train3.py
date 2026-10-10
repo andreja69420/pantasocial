@@ -21,6 +21,8 @@ from design import build_X
 D, TOUR, MODEL, TAG = sys.argv[1:5]
 HOLDOUT = "--holdout" in sys.argv
 ONLY = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--only=")), None)
+NO_FUTURES = "--no-futures" in sys.argv  # futures/ITF rows still feed the ratings, just not the training set
+HALFLIFE = float(next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--halflife=")), 0))
 STEP = int(next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--step=")), 1))  # retrain every STEP years
 TRAIN_FROM = 2010
 TEST_YEARS = [2025, 2026] if HOLDOUT else list(range(2014, 2025))
@@ -33,31 +35,34 @@ X, y, flip = build_X(df, TOUR)
 if ONLY:
     X = X[[c for c in X.columns if re.search(ONLY, c)]]
 FEATS = list(X.columns)
+lvl = df.tourney_level.astype(str)
+futures = (lvl.str.match(r"^\d") | (lvl == "S")).values
 has_odds = (df.odds_w.notna() & df.agree.fillna(False).astype(bool)).values
 year = df.year.values
 print(f"{TOUR} {MODEL} {TAG}: {len(FEATS)} features, rows {len(X)}", flush=True)
 
 
-def fit_predict(tr, va, te):
+def fit_predict(tr, va, te, Y):
     preds_va, preds_te = [], []
+    sw = 0.5 ** ((Y - year[tr]) / HALFLIFE) if HALFLIFE > 0 else np.ones(len(tr))
     if MODEL in ("xgb", "ens"):
         m = xgb.XGBClassifier(n_estimators=1500, learning_rate=0.06, max_depth=6, min_child_weight=50, subsample=0.8,
                               colsample_bytree=0.4, reg_lambda=5.0, tree_method="hist", max_bin=64, n_jobs=2,
                               early_stopping_rounds=60, eval_metric="logloss")
-        m.fit(X.iloc[tr], y[tr], eval_set=[(X.iloc[va], y[va])], verbose=False)
+        m.fit(X.iloc[tr], y[tr], sample_weight=sw, eval_set=[(X.iloc[va], y[va])], verbose=False)
         preds_va.append(m.predict_proba(X.iloc[va])[:, 1]); preds_te.append(m.predict_proba(X.iloc[te])[:, 1])
     if MODEL in ("lgbm", "ens"):
         m = lgb.LGBMClassifier(n_estimators=1500, learning_rate=0.05, num_leaves=48, min_child_samples=100,
                                subsample=0.8, subsample_freq=1, colsample_bytree=0.4, reg_lambda=5.0, max_bin=63,
                                n_jobs=2, verbose=-1)
-        m.fit(X.iloc[tr], y[tr], eval_set=[(X.iloc[va], y[va])], callbacks=[lgb.early_stopping(60, verbose=False)])
+        m.fit(X.iloc[tr], y[tr], sample_weight=sw, eval_set=[(X.iloc[va], y[va])], callbacks=[lgb.early_stopping(60, verbose=False)])
         preds_va.append(m.predict_proba(X.iloc[va])[:, 1]); preds_te.append(m.predict_proba(X.iloc[te])[:, 1])
     if MODEL == "ens":
         # simple, well-calibrated anchor: logistic regression on the rating/Markov probabilities
         cols = [c for c in FEATS if c.startswith(("prob_", "mk_match"))]
         lg = lambda p: np.log(np.clip(p, 1e-4, 1 - 1e-4) / (1 - np.clip(p, 1e-4, 1 - 1e-4)))
         Z = lambda idx: np.nan_to_num(lg(X.iloc[idx][cols].values.astype(float)))
-        m = LogisticRegression(C=1.0, max_iter=500).fit(Z(tr), y[tr])
+        m = LogisticRegression(C=1.0, max_iter=500).fit(Z(tr), y[tr], sample_weight=sw)
         preds_va.append(m.predict_proba(Z(va))[:, 1]); preds_te.append(m.predict_proba(Z(te))[:, 1])
     pv, pt = np.mean(preds_va, axis=0), np.mean(preds_te, axis=0)
     # Platt scaling on the validation year (isotonic on a single year overfit in round 3)
@@ -77,11 +82,13 @@ t0 = time.time()
 rows = []
 for Y in TEST_YEARS[::STEP]:
     tr = (year >= TRAIN_FROM) & (year <= Y - 2)
+    if NO_FUTURES:
+        tr &= ~futures
     va = year == Y - 1
     te = (year >= Y) & (year < Y + STEP) & (year <= max(TEST_YEARS)) & has_odds
     if te.sum() == 0:
         continue
-    raw, cal = fit_predict(np.flatnonzero(tr), np.flatnonzero(va), np.flatnonzero(te))
+    raw, cal = fit_predict(np.flatnonzero(tr), np.flatnonzero(va), np.flatnonzero(te), Y)
     sub = df.iloc[np.flatnonzero(te)]
     o1 = np.where(flip[te], sub.odds_l, sub.odds_w)
     o2 = np.where(flip[te], sub.odds_w, sub.odds_l)
