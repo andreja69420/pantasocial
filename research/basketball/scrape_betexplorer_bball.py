@@ -18,6 +18,7 @@ from concurrent.futures import ThreadPoolExecutor
 OUT, LEAGUE, FIRST, LAST = sys.argv[1], sys.argv[2], int(sys.argv[3]), int(sys.argv[4])
 ODDS_FROM = int(sys.argv[5]) if len(sys.argv) > 5 else 2020
 SKIP_STAGES = ("pre-season", "all stars", "all-star")
+CURRENT = 2026
 UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36",
       "X-Requested-With": "XMLHttpRequest", "Referer": "https://www.betexplorer.com/"}
 for sub in ("res", "match", "arch"):
@@ -122,11 +123,11 @@ for y in range(FIRST, LAST + 1):
             link = re.search(rf'href="/basketball/{LEAGUE}-{season}/[a-z0-9\-]+/([A-Za-z0-9]{{8}})/"', tr)
             teams = re.findall(r"<span>(?:<strong>)?([^<]+)(?:</strong>)?</span>", tr)
             score = re.search(r">\s*(\d+):(\d+)(?:\s*[A-Z.]*)?\s*<", tr)
-            date = re.search(r">\s*(\d\d)\.(\d\d)\.(\d{4})\s*<", tr)
+            date = re.search(r">\s*(\d\d)\.(\d\d)\.(\d{4})?\s*<", tr)  # current-year dates carry no year
             if not (link and len(teams) >= 2 and score and date):
                 continue
             odds = re.findall(r'data-odd="([0-9.]+)"', tr)
-            games.append({"season": y, "stage": sname, "date": f"{date.group(3)}-{date.group(2)}-{date.group(1)}",
+            games.append({"season": y, "stage": sname, "date": f"{date.group(3) or CURRENT}-{date.group(2)}-{date.group(1)}",
                           "home": teams[0].strip(), "away": teams[1].strip(), "home_pts": score.group(1), "away_pts": score.group(2),
                           "mid": link.group(1), "avg_home": odds[0] if len(odds) >= 2 else "", "avg_away": odds[1] if len(odds) >= 2 else ""})
             n += 1
