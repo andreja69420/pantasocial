@@ -100,3 +100,17 @@ men's and women's ITF + Challenger).
   best odds. Success = ROI > 0 with 90% interval above zero.
 - **Men's Challenger 2019-2025** (years not tested before): same rule; expectation from 2012-2018 is ~0%.
 - **2026 ITF (men + women) at Pinnacle and 1xBet**: same rule, holdout models (trained up to 2024).
+
+### Result: women's ITF 2014-2025 (walk-forward, 131k matches)
+| Odds | Margin | Bets | ROI | 90% CI | Years + | Random bets, same odds |
+|---|---|---|---|---|---|---|
+| Bet365 | 7.4% | 21,127 | -0.3% | [-1.1, +0.5] | 3/12 | -4.7% |
+| Best price | 4.8% | 26,558 | **+1.7%** | [+1.0, +2.4] | 11/12 | -2.0% |
+
+Bet365: FAIL. Best price: PASS. The model beats random selection by 4-5 points at every source, but a 7% margin
+absorbs the edge. Best price is an upper bound (needs many accounts; the maximum is often stale or stake-limited).
+WTA125 and WTA Tour: no significant edge at any source.
+
+### Men's ITF 2024-2026 at BetExplorer average odds (pre-registered same rule, written before running)
+Scraped 1,044 BetExplorer men's ITF result pages (2024-2026); 17,813 Sackmann matches matched (41%), median margin
+9.0% (average odds across bookmakers, so harsher than any single sharp book). Rule: EV>5%, odds<=2.
