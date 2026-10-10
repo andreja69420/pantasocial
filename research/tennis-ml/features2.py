@@ -71,16 +71,18 @@ def elo_p(a, b):
     return 1.0 / (1.0 + 10 ** ((b - a) / 400.0))
 
 
-def ratings(m, games_share):
-    """Several Elo variants, recorded pre-match for winner and loser."""
-    E, SE, FE, GE, ME = (defaultdict(lambda: 1500.0) for _ in range(5))
+def ratings(m, games_share, sets_share):
+    """Several Elo variants, recorded pre-match for winner and loser. WE/WSE/WS are WElo (Angelini, Candila &
+    De Angelis 2022): the Elo update is scaled by the winner's share of games (or sets) in the match."""
+    E, SE, FE, GE, ME, WE, WSE, WS = (defaultdict(lambda: 1500.0) for _ in range(8))
     n, ns = defaultdict(int), defaultdict(int)
     W, L, S = m.winner_id.values, m.loser_id.values, m.surface.values
     main, ret = m.main.values, m.retired.values
-    out = np.zeros((len(m), 10))
+    out = np.zeros((len(m), 16))
     for i in range(len(m)):
         w, l, s = W[i], L[i], S[i]
-        out[i] = (E[w], E[l], SE[(w, s)], SE[(l, s)], FE[w], FE[l], GE[w], GE[l], ME[w], ME[l])
+        out[i] = (E[w], E[l], SE[(w, s)], SE[(l, s)], FE[w], FE[l], GE[w], GE[l], ME[w], ME[l],
+                  WE[w], WE[l], WSE[(w, s)], WSE[(l, s)], WS[w], WS[l])
         mult = 0.5 if ret[i] else 1.0
         kw, kl = 250 / (n[w] + 5) ** 0.4, 250 / (n[l] + 5) ** 0.4
         e = elo_p(E[w], E[l]); E[w] += mult * kw * (1 - e); E[l] -= mult * kl * (1 - e)
@@ -93,6 +95,11 @@ def ratings(m, games_share):
             e = elo_p(GE[w], GE[l]); GE[w] += mult * 1.5 * kw * (g - e); GE[l] -= mult * 1.5 * kl * (g - e)
         if main[i]:
             e = elo_p(ME[w], ME[l]); ME[w] += mult * kw * (1 - e); ME[l] -= mult * kl * (1 - e)
+        fg = g if not np.isnan(g) else 0.5
+        fs = sets_share[i] if not np.isnan(sets_share[i]) else 0.5
+        e = elo_p(WE[w], WE[l]); WE[w] += kw * (1 - e) * fg; WE[l] -= kl * (1 - e) * fg
+        e = elo_p(WSE[(w, s)], WSE[(l, s)]); WSE[(w, s)] += ksw * (1 - e) * fg; WSE[(l, s)] -= ksl * (1 - e) * fg
+        e = elo_p(WS[w], WS[l]); WS[w] += kw * (1 - e) * fs; WS[l] -= kl * (1 - e) * fs
         n[w] += 1; n[l] += 1; ns[(w, s)] += 1; ns[(l, s)] += 1
     return out
 
@@ -164,7 +171,8 @@ def build():
     print(TOUR, len(m), "matches", m.date.min().date(), m.date.max().date(), flush=True)
     sc = np.array([parse_score(s) for s in m.score.values], dtype=float)
     gshare = np.where(sc[:, 0] + sc[:, 1] > 0, sc[:, 0] / np.maximum(sc[:, 0] + sc[:, 1], 1), np.nan)
-    R = ratings(m, gshare)
+    sshare = np.where(sc[:, 2] + sc[:, 3] > 0, sc[:, 2] / np.maximum(sc[:, 2] + sc[:, 3], 1), np.nan)
+    R = ratings(m, gshare, sshare)
     print("ratings done", flush=True)
 
     # long table: one row per player per match
@@ -179,6 +187,7 @@ def build():
             "age": m[f"{prefix}_age"].values, "ht": m[f"{prefix}_ht"].values,
             "left": (m[f"{prefix}_hand"] == "L").astype(int).values,
             "entry": m[f"{prefix}_entry"].fillna("").astype(str).values,
+            "ioc": m[f"{prefix}_ioc"].fillna("").astype(str).values,
             "seed": pd.to_numeric(m[f"{prefix}_seed"], errors="coerce").values,
         })
         a, b = ("w", "l") if won == 1 else ("l", "w")
@@ -205,9 +214,9 @@ def build():
         d["decw"] = d["decider"] * won
         d["ret_me"] = (m.retired.values & (won == 0)).astype(float)
         cols = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
-        me = [0, 2, 4, 6, 8] if won == 1 else [1, 3, 5, 7, 9]
-        op = [1, 3, 5, 7, 9] if won == 1 else [0, 2, 4, 6, 8]
-        for name, a_, b_ in zip(["elo", "selo", "felo", "gelo", "melo"], me, op):
+        me = [0, 2, 4, 6, 8, 10, 12, 14] if won == 1 else [1, 3, 5, 7, 9, 11, 13, 15]
+        op = [1, 3, 5, 7, 9, 11, 13, 15] if won == 1 else [0, 2, 4, 6, 8, 10, 12, 14]
+        for name, a_, b_ in zip(["elo", "selo", "felo", "gelo", "melo", "welo", "wselo", "wsetelo"], me, op):
             d[name], d[f"o_{name}"] = R[:, a_], R[:, b_]
         d["exp"] = elo_p(d["elo"].values, d["o_elo"].values)
         d["resid"] = won - d["exp"]
@@ -232,6 +241,17 @@ def build():
     PH = Prior(pd.factorize(L.pid.astype(str) + "|" + L.opp.astype(str))[0], order, day)
     PHS = Prior(pd.factorize(L.pid.astype(str) + "|" + L.opp.astype(str) + "|" + L.surface)[0], order, day)
     PE = Prior(pd.factorize(L.pid.astype(str) + "|" + L.tid.astype(str))[0], order, day)
+    # Tournament country is not in the data; wildcards almost always go to home players, so the most common
+    # nationality among a tournament's wildcard entrants identifies its country.
+    wc = L[L.entry == "WC"].groupby(["tname", "ioc"]).size().rename("n").reset_index()
+    wc = wc.sort_values("n", ascending=False).drop_duplicates("tname")
+    tot = L[L.entry == "WC"].groupby("tname").size()
+    wc = wc[(wc.n >= 3) & (wc.n >= 0.5 * tot.reindex(wc.tname).values)]
+    country = L.tname.map(wc.set_index("tname").ioc).fillna("").values
+    home = ((country != "") & (country == L.ioc.values)).astype(float)
+    ccode = pd.factorize(pd.Series(country))[0].astype(float)
+    ccode[country == ""] = np.nan
+    PHM = Prior(L.pid.values * 2 + home.astype(int), order, day)
     PLH = Prior(L.pid.values * 2 + np.where(L.won == 1, Ll.set_index("mi").left.reindex(L.mi).values, Lw.set_index("mi").left.reindex(L.mi).values).astype(int), order, day)
     bo5 = m.best_of.fillna(3).values[L.mi.values] == 5
     PB5 = Prior(L.pid.values * 2 + bo5.astype(int), order, day)
@@ -248,8 +268,9 @@ def build():
     }, index=Mv.index).reindex(L.mi.values)
 
     # ratings and their dynamics
-    for r in ["elo", "selo", "felo", "gelo", "melo"]:
+    for r in ["elo", "selo", "felo", "gelo", "melo", "welo", "wselo", "wsetelo"]:
         F[r] = L[r].values
+    F["welo_mom10"] = L.welo.values - P.lag(L.welo.values, 10)
     F["elo_mom5"] = L.elo.values - P.lag(L.elo.values, 5)
     F["elo_mom20"] = L.elo.values - P.lag(L.elo.values, 20)
     F["elo_vs_avg20"] = L.elo.values - P.rows(L.elo.values, 20) / np.maximum(P.rows(L.one.values, 20), 1)
@@ -335,6 +356,14 @@ def build():
     for c in venue.columns:
         F[c] = venue[c].values
     F["sv_vs_venue_30"] = F["sv_won_30"] - F["venue_sv_won"]
+    # home crowd and travel
+    F["home"] = home
+    F["country_known"] = (country != "").astype(float)
+    prev_c = P.lag(ccode, 1)
+    F["same_country_as_prev"] = np.where(np.isnan(prev_c) | np.isnan(ccode), np.nan, (prev_c == ccode).astype(float))
+    F["home_side_resid_30"] = ratio(PHM.rows(L.resid.values, 30), PHM.rows(L.one.values, 30))
+    F["home_side_win_30"] = ratio(PHM.rows(L.won.values, 30), PHM.rows(L.one.values, 30))
+    F["home_side_n"] = PHM.count_prior()
     # head to head
     F["h2h_n"] = PH.count_prior()
     F["h2h_wins"] = PH.all(L.won.values)
