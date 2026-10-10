@@ -64,3 +64,17 @@ Rules fixed now, evaluated once on ATP 2020-2024 (dev predictions, odds never in
 - **Rule A (primary):** ATP, bet a player when p_model * MaxOdds > 1.05 and MaxOdds <= 3.0, flat 1 unit.
 - **Rule B:** same model, Pinnacle odds, p_model * PSOdds > 1.02 and PSOdds <= 3.0.
 Success = ROI > 0 with a 90% bootstrap interval above zero, separately on 2020-2024 and on 2025-2026.
+
+## Results of the pre-registered test and the Challenger/ITF test
+- **Rule A (Max odds)**: 2020-2024 **PASS** (+3.8% ROI, 90% CI [+1.3%, +6.4%], 4,474 bets); 2025-2026 holdout **FAIL**
+  (-7.8%). The tennis-data "Max" column has a 1.2-2.7% margin from 2025 (about 0% before), so that edge depended on a
+  best-price source that changed. **Rule B (Pinnacle)**: FAIL on both.
+- **Challenger/ITF** (Kaggle "A large Tennis dataset for ATP and ITF betting", odds 2009-2018, mostly OddsPortal):
+  the same model (no odds as features) on ATP 2014-2018:
+  - ITF/Futures (14,055 matches, 8.2% margin): the model's log-loss **beats the market** (0.5435 vs 0.5455).
+    Value >5% & odds <= 2: **+5.9% ROI**, 90% CI [+3.6%, +8.0%], 2,602 bets, 5/5 years positive. All 9 rule variants
+    are positive. Betting every favourite at the same prices: -4.6%; 2,000 random draws of the same size: mean -5.1%,
+    99th percentile -2.4%. The model beats all of them.
+  - Challenger: about break-even. Qualifying: negative.
+- Caveats: the ITF segment was identified on 2014-2018 and no later ITF odds are available yet, so a forward
+  (paper-trading) test is the remaining proof. ITF markets have low limits and integrity risk (match-fixing).

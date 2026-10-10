@@ -25,7 +25,8 @@ NO_FUTURES = "--no-futures" in sys.argv  # futures/ITF rows still feed the ratin
 HALFLIFE = float(next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--halflife=")), 0))
 STEP = int(next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--step=")), 1))  # retrain every STEP years
 TRAIN_FROM = 2010
-TEST_YEARS = [2025, 2026] if HOLDOUT else list(range(2014, 2025))
+LOWER = "--lower" in sys.argv  # evaluate on Challenger/ITF/qualifying matches with Kaggle odds (2014-2018)
+TEST_YEARS = [2025, 2026] if HOLDOUT else (list(range(2014, 2019)) if LOWER else list(range(2014, 2025)))
 LOG = os.path.join(os.path.dirname(os.path.abspath(__file__)), "experiments.csv")
 
 df = pd.read_parquet(f"{D}/out/{TOUR}_f2.parquet")
@@ -37,6 +38,11 @@ if ONLY:
 FEATS = list(X.columns)
 lvl = df.tourney_level.astype(str)
 futures = (lvl.str.match(r"^\d") | (lvl == "S")).values
+if LOWER:
+    lo = pd.read_parquet(f"{D}/out/{TOUR}_lower_odds.parquet")
+    lo = lo.reindex(df.index)
+    df["odds_w"], df["odds_l"] = lo.odds_w.astype(float), lo.odds_l.astype(float)
+    df["agree"] = lo.agree.fillna(False).astype(bool)
 has_odds = (df.odds_w.notna() & df.agree.fillna(False).astype(bool)).values
 year = df.year.values
 print(f"{TOUR} {MODEL} {TAG}: {len(FEATS)} features, rows {len(X)}", flush=True)
@@ -98,7 +104,7 @@ for Y in TEST_YEARS[::STEP]:
 P = pd.concat(rows)
 inv = 1 / P.o1 + 1 / P.o2
 P["p_mkt"] = (1 / P.o1) / inv
-split = "holdout" if HOLDOUT else "dev"
+split = "holdout" if HOLDOUT else ("lower" if LOWER else "dev")
 P.to_parquet(f"{D}/out/preds3_{TOUR}_{MODEL}_{TAG}_{split}.parquet")
 
 
