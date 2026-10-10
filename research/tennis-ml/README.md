@@ -438,3 +438,15 @@ Applied to the fresh BetMGM.us 2025-26 opening prices (women's ITF + Challenger 
 | blend EV>10% odds<=5 | 907 | +13.0% (+6.9%) | +5.5% | +11.4% | +18.4% |
 The blend transfers across bookmakers and years: on data it never saw it beats the raw rule at every cap, every
 segment is positive, and with it odds up to 5 become profitable even under the void stress (+4.4%).
+
+## Boosting budget: early-stopping patience 2000 and a lower learning rate (`train3.py --patience/--trees/--lr-mult`)
+Dev year 2024 only (2025-26 untouched), same matches, paired log-loss difference vs the round-6 setup
+(learning rate 0.06/0.05, patience 60):
+| WTA 2024 (16,718 matches) | Best iter XGB / LGBM | Log-loss | vs baseline (paired, z) | Women's ITF b365 open EV>5% |
+|---|---|---|---|---|
+| baseline, patience 60 | - | 0.55229 | - | 2,600 bets +7.0% |
+| A: patience 2000, same rate | 428 / 307 | 0.55219 | -0.00009 (z -1.3) | 2,613 bets +6.7% |
+| B: patience 2000, rate x0.33 | 1,126 / 1,361 | 0.55188 | -0.00041 (z -2.2) | 2,616 bets +7.7% |
+A longer patience alone changes nothing (the best iteration is reached long before 2000 extra rounds). A three
+times smaller learning rate gives a small but real improvement (-0.0004 log-loss, about 1% of the model's edge over
+the market). Training takes ~6x longer. ATP running.
