@@ -291,3 +291,17 @@ but at a 9% book that only reaches break-even.
 | All three | 1,549 | ~+2.3% | | |
 The scraper's adaptive rate reached 148 requests/s on BetExplorer without a single error.
 Next: the same test on the full 2025 season (predictions trained to 2023, calibrated on 2024).
+
+## 2025 + 2026 at BetMGM.us opening prices (same rule, EV>5% & odds<=2)
+2025 predictions: walk-forward ens trained to 2023, calibrated on 2024, for every 2025 match (`train3.py --years=2025`
+with dummy odds). Odds: BetExplorer 2025 season pages plus 2025 matches on the current-season pages (both sources
+are needed; the `-2025` pages miss most late-2025 events). Note: 2025 outcomes were part of the 2014-2025 TE study
+that suggested opening odds (at Bet365 prices); BetMGM prices and this rule were not tuned on them.
+| Segment | 2025 bets | 2025 ROI (90% lo) | 2025+2026 bets | 2025+2026 ROI (90% lo) | CLV picks / random |
+|---|---|---|---|---|---|
+| Women's ITF | 2,682 | **+4.7% (+2.5%)** | 3,404 | **+3.8% (+1.9%)** | +6.3% / +0.3% |
+| Challenger | 986 | +1.6% (-2.4%) | 1,334 | +3.4% (+0.0%) | +8.8% / -0.2% |
+Women's ITF by quarter: 2025 Q1 -0.7% (182), Q2 +6.7% (916), Q3 +4.4% (980), Q4 +3.5% (604), 2026 Q1 -1.6% (466),
+Q2 +4.6% (256). Challenger: 2025 Q1 +2.3%, Q2 -2.0%, Q3 +2.6%, Q4 +4.1%, 2026 Q1 +7.7%, Q2 +10.3%.
+At BetMGM CLOSING prices the same picks lose in every segment (-2.0% women's ITF, -4.7% Challenger): the edge is
+only in taking the opening price. The 9% BetMGM margin is the worst case; a lower-margin opening book should do better.
