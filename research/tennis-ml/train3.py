@@ -27,6 +27,9 @@ STEP = int(next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--step=")
 TRAIN_FROM = 2010
 LOWER = "--lower" in sys.argv  # evaluate on Challenger/ITF/qualifying matches with Kaggle odds (2014-2018)
 TEST_YEARS = [2025, 2026] if HOLDOUT else (list(range(2014, 2019)) if LOWER else list(range(2014, 2025)))
+YEARS = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--years=")), None)
+if YEARS:
+    TEST_YEARS = [int(v) for v in YEARS.split(",")]
 LOG = os.path.join(os.path.dirname(os.path.abspath(__file__)), "experiments.csv")
 
 df = pd.read_parquet(f"{D}/out/{TOUR}_f2.parquet")
@@ -105,7 +108,7 @@ P = pd.concat(rows)
 inv = 1 / P.o1 + 1 / P.o2
 P["p_mkt"] = (1 / P.o1) / inv
 split = "holdout" if HOLDOUT else ("lower" if LOWER else "dev")
-P.to_parquet(f"{D}/out/preds3_{TOUR}_{MODEL}_{TAG}_{split}.parquet")
+P.to_parquet(f"{D}/out/preds3_{TOUR}_{MODEL}_{TAG}_{split}{'_' + YEARS.replace(',', '-') if YEARS else ''}.parquet")
 
 
 def ll(q):

@@ -78,3 +78,8 @@ Success = ROI > 0 with a 90% bootstrap interval above zero, separately on 2020-2
   - Challenger: about break-even. Qualifying: negative.
 - Caveats: the ITF segment was identified on 2014-2018 and no later ITF odds are available yet, so a forward
   (paper-trading) test is the remaining proof. ITF markets have low limits and integrity risk (match-fixing).
+
+## Pre-registered: fresh 2012-2013 test (written before running those years)
+- **ITF rule** (found on 2014-2018): ATP ITF/Futures, bet when p_model * odds > 1.05 and odds <= 2.0, flat stake.
+  Success = ROI > 0 on 2012-2013 combined.
+- **Challenger**: any segment rule must be chosen on 2012-2015 and confirmed on 2016-2018.
