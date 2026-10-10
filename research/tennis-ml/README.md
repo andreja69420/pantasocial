@@ -91,3 +91,12 @@ Success = ROI > 0 with a 90% bootstrap interval above zero, separately on 2020-2
 - **Challenger: no reliable edge.** Overall ~0% (explore 2012-2015 +1.3%, confirm 2016-2018 -1.3% at odds <= 2).
   No segment (experience, ranking, round, surface) is positive in both halves with a meaningful margin; the best
   ("weaker player ranked >300", any odds) is +1.9% / +3.1% but within noise.
+
+## Pre-registered: new ITF odds sources (written before running)
+Sources: Kaggle "Tennis Results and Betting Odds (2014-2025)" (TennisExplorer; Bet365/Betfair/Ladbrokes/Unibet/best;
+women's ITF + men's Challenger, almost no men's ITF) and "Tennis Closing Odds: Pinnacle vs 1xBet" (Mar-Sep 2026,
+men's and women's ITF + Challenger).
+- **Women's ITF 2014-2025** (new domain): same ITF rule, p_model * odds > 1.05 and odds <= 2.0, at Bet365 and at
+  best odds. Success = ROI > 0 with 90% interval above zero.
+- **Men's Challenger 2019-2025** (years not tested before): same rule; expectation from 2012-2018 is ~0%.
+- **2026 ITF (men + women) at Pinnacle and 1xBet**: same rule, holdout models (trained up to 2024).
