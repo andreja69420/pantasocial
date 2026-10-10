@@ -1,5 +1,5 @@
 """Scrape men's ITF results pages (with average odds) from BetExplorer for the given seasons.
-Rate: up to 8 requests/second; on errors (429/403/5xx/timeouts) halve the rate and pause, then recover slowly.
+Rate: up to RATE (env, default 8) requests/second; on errors (429/403/5xx/timeouts) halve the rate and pause, then recover slowly.
 Pages are cached on disk so the run can be resumed.
 
 usage: scrape_betexplorer_itf.py OUT_DIR SEASON [SEASON ...]   (current season = base slug, older = slug-YYYY)
@@ -47,7 +47,7 @@ class Limiter:
                 self.ok_streak = 0
 
 
-L = Limiter(8.0)
+L = Limiter(float(os.environ.get("RATE", "8")))
 
 
 def fetch(url, tries=5):
@@ -94,7 +94,7 @@ def work(job):
         print(f"  {done[0]}/{len(jobs)} pages, {time.time() - t0:.0f}s, rate {L.rate:.1f}/s", flush=True)
 
 
-with ThreadPoolExecutor(16) as ex:
+with ThreadPoolExecutor(32) as ex:
     list(ex.map(work, jobs))
 n_ok = sum(1 for f in os.listdir(OUT) if os.path.getsize(os.path.join(OUT, f)) > 0)
 print(f"done: {n_ok} pages with odds in {time.time() - t0:.0f}s", flush=True)
