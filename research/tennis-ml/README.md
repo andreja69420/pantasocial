@@ -114,3 +114,20 @@ WTA125 and WTA Tour: no significant edge at any source.
 ### Men's ITF 2024-2026 at BetExplorer average odds (pre-registered same rule, written before running)
 Scraped 1,044 BetExplorer men's ITF result pages (2024-2026); 17,813 Sackmann matches matched (41%), median margin
 9.0% (average odds across bookmakers, so harsher than any single sharp book). Rule: EV>5%, odds<=2.
+
+### Result: men's Challenger 2014-2025 (TE odds)
+Bet365 EV>5% odds<=2: -3.0% (6,152 bets, 2/12 years +). Best price: +1.2%, CI [-0.1, +2.3] -> FAIL, as expected.
+
+### Odds-range systems (user request: bet only at odds >= 2, 2.5, ... 5) - `odds_systems.py`
+Post-hoc exploration, reported with an explore half / confirm half of the years.
+- Odds floors (only odds >= X) are worse than no floor at Bet365 for women's ITF (EV>5%: -2.5% all odds,
+  -4.0% at >=2, -5.6% at >=3, -8.9% at >=5): the favourite-longshot bias works against high odds.
+- "Model flips the favourite" (market underdog the model rates >60%) showed +36% ROI, 12/12 years on women's ITF.
+  **This is a data artefact, not an edge.** The TennisExplorer odds have swapped prices on some ITF matches
+  (e.g. a #400 player at 11.00 vs a #848 player at 1.02, won 6-1 6-0; best price disagrees with Bet365 on the
+  favourite in 11% of these bets). Even without a rank-inversion signature, dog odds >= 3.5 showed +201% ROI,
+  impossible on real prices. The model spots the mispriced row and the backtest pays out a price no bookmaker
+  offered. The ehallmar men's ITF data shows the same pattern at smaller scale.
+- Consequence: **backtests on these free datasets are not trustworthy at odds above ~2.5.** The odds<=2 cap in the
+  pre-registered rule protects against this (a swapped row puts the true favourite at the long price, which the
+  cap excludes), which is why it stays the only rule used for decisions.
