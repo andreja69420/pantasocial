@@ -3,6 +3,7 @@ the current price when the line never moved) and closing price, oriented winner/
 Sackmann matches by sorted name tokens + date window. Writes {tour}_bxo_odds.parquet indexed like {tour}_f2.parquet.
 
 usage: parse_betexplorer_open.py RAW_DIR OUT_DIR TOUR BXO_DIR [BOOK_ID=851]
+NAME env: output file {tour}_{NAME}.parquet (default bxo_odds).
 """
 import json
 import os
@@ -90,4 +91,4 @@ j = j[((j.date_bx - j.date).dt.days >= -2) & ((j.date_bx - j.date).dt.days <= 14
 j = j.drop_duplicates("mi").set_index("mi")
 print(f"matched to Sackmann: {len(j)}; margin open {(1 / j.open_w + 1 / j.open_l - 1).median():.2%}, "
       f"close {(1 / j.close_w + 1 / j.close_l - 1).median():.2%}", flush=True)
-j[["open_w", "open_l", "close_w", "close_l", "open_time", "date_bx", "moves", "retired"]].to_parquet(f"{OUT}/{TOUR}_bxo_odds.parquet")
+j[["open_w", "open_l", "close_w", "close_l", "open_time", "date_bx", "moves", "retired"]].to_parquet(f"{OUT}/{TOUR}_{os.environ.get('NAME', 'bxo_odds')}.parquet")

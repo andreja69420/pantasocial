@@ -1,8 +1,10 @@
 """Pre-registered 2026 opening-odds test (see README): EV>5% & odds<=2 at the BetMGM.us opening price.
 Reports ROI at the opening and the closing price, 90% lower bound, and closing-line value of the picks vs random sides.
 
-usage: eval_open2026.py DATA_DIR TOUR PREDS LEVEL_REGEX [LABEL]
+usage: eval_open2026.py DATA_DIR TOUR PREDS[,PREDS..] LEVEL_REGEX [LABEL]
+env YEARS (default 2026, e.g. 2025,2026) and BXO (odds file names, default bxo_odds, comma-separated to stack).
 """
+import os
 import sys
 
 import numpy as np
@@ -10,10 +12,13 @@ import pandas as pd
 
 D, TOUR, PREDS, LEVEL = sys.argv[1:5]
 LABEL = sys.argv[5] if len(sys.argv) > 5 else TOUR
-P = pd.read_parquet(f"{D}/out/{PREDS}")
-O = pd.read_parquet(f"{D}/out/{TOUR}_bxo_odds.parquet")
+YEARS = [int(y) for y in os.environ.get("YEARS", "2026").split(",")]
+P = pd.concat([pd.read_parquet(f"{D}/out/{f}") for f in PREDS.split(",")])
+P = P[~P.index.duplicated()]
+O = pd.concat([pd.read_parquet(f"{D}/out/{TOUR}_{n}.parquet") for n in os.environ.get("BXO", "bxo_odds").split(",")])
+O = O[~O.index.duplicated()]
 lvl = pd.read_parquet(f"{D}/out/{TOUR}_f2.parquet", columns=["tourney_level"]).tourney_level.astype(str)
-P = P[P.year == 2026].join(O, how="inner")
+P = P[P.year.isin(YEARS)].join(O, how="inner")
 P = P[lvl.reindex(P.index).str.match(LEVEL).fillna(False).values]
 P = P[(P.open_w > 1) & (P.open_l > 1) & (P.close_w > 1) & (P.close_l > 1)]
 rows = []
@@ -29,7 +34,7 @@ S["clv"] = S.oo / S.oc - 1
 for px in ("oo", "oc"):
     S[f"pnl_{px}"] = np.where(S.stands, np.where(S.won, S[px] - 1, -1.0), 0.0)
 y = S.won[S.index < len(P)]  # winner side rows: outcome 1
-print(f"{LABEL} 2026: {len(P)} matches with BetMGM open+close; median margin open "
+print(f"{LABEL} {YEARS}: {len(P)} matches with BetMGM open+close; median margin open "
       f"{(1 / P.open_w + 1 / P.open_l - 1).median():.2%} close {(1 / P.close_w + 1 / P.close_l - 1).median():.2%}")
 W = S[S.won]  # log-loss on the winner side = -mean log p(winner)
 print(f"log-loss  model {-np.log(W.q.clip(1e-4)).mean():.4f}  fair close {-np.log(W.fair_c.clip(1e-4)).mean():.4f}")
@@ -51,7 +56,6 @@ report("PRIMARY: EV>5% & open<=2", S[(S.ev > 0.05) & (S.oo <= 2.0)])
 for e in (0.0, 0.02, 0.10):
     report(f"EV>{e:.0%} & open<=2", S[(S.ev > e) & (S.oo <= 2.0)])
 report("EV>5% & open<=2.5", S[(S.ev > 0.05) & (S.oo <= 2.5)])
-report("EV>5% & open<=2, line moved", S[(S.ev > 0.05) & (S.oo <= 2.0) & (S.moves > 0)])
 b = S[(S.ev > 0.05) & (S.oo <= 2.0)]
 m = pd.read_parquet(f"{D}/out/{TOUR}_f2.parquet", columns=["date"]).date.reindex(b.mi)
-print("primary by month:", b.groupby(m.dt.month.values).pnl_oo.agg(["size", "mean"]).round(3).to_dict("index"))
+print("primary by quarter:", b.groupby(m.dt.to_period("Q").astype(str).values).pnl_oo.agg(["size", "mean"]).round(3).to_dict("index"))
