@@ -4,7 +4,7 @@ Features, all computed from games strictly before the one predicted: margin-of-v
 rolling form over 3/5/10/20 games (win share, margin, points for/against, opponent-adjusted margin), season-to-date
 record, home/away-specific form, rest, back-to-back, games in the last 4/7 days, road-trip / home-stand length,
 head-to-head, and home-minus-away differences of everything.
-Test season S: train on seasons < S-1, early stopping + Platt calibration on S-1. XGB + LGBM + logistic(Elo).
+Test season S: train on seasons before the latest earlier season V, early stopping + Platt calibration on V. XGB + LGBM + logistic(Elo).
 
 usage: bball_model.py LEAGUE_DIR FIRST_TEST LAST_TEST     (LEAGUE_DIR holds games.csv from the scraper)
 Writes LEAGUE_DIR/preds.parquet (mid, season, date, home, away, p_home, y).
@@ -106,7 +106,8 @@ print(f"{DIR}: {len(F)} games, {X.shape[1]} features, seasons {F.season.min()}-{
 lgt = lambda p: np.log(np.clip(p, 1e-4, 1 - 1e-4) / (1 - np.clip(p, 1e-4, 1 - 1e-4)))
 out = []
 for S in range(FIRST, LAST + 1):
-    tr, va, te = (F.season < S - 1).values, (F.season == S - 1).values, (F.season == S).values
+    prev = F.season[F.season < S].max()  # validation = latest earlier season (EuroLeague has no 2019-20)
+    tr, va, te = (F.season < prev).values, (F.season == prev).values, (F.season == S).values
     if te.sum() == 0:
         continue
     pv, pt = [], []
