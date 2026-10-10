@@ -501,3 +501,13 @@ most and move the most. In practice the bet should go in as soon as the line app
 | B: patience 2000, rate x0.33 | 1,216 / 1,044 | 0.61367 | -0.00057 (z -2.3) | 876 bets +5.6% |
 Both tours agree: patience alone does nothing; the smaller learning rate is slightly better (z -2.2 and -2.3).
 Setting B is adopted: 2025 and 2026 predictions are being retrained with it (chosen on 2024 only).
+
+### Line-movement model (`move_model.py`)
+LightGBM regression of the side's fair-probability move (close - open) on opening-time information only (model
+probability, Shin fair opening, their gap, odds, segment), walk-forward on TE Bet365; transfer fitted on 2014-2024.
+- The move is predictable: corr(predicted, actual) 0.435 on TE 2020-25 and 0.474 on the fresh BetMGM 2025-26 data;
+  the plain model-minus-market gap alone already gives 0.415.
+- As a bet filter it does not beat the blend EV rule. BetMGM 2025-26, odds<=5: blend EV>5% 2,444 bets +9.0%
+  (lo +5.7%, void stress +4.3%); predicted move >0.03 & blend EV>0 4,177 bets +6.1% (lo +3.8%, +2.3%); predicted
+  move >0.05 732 bets +11.0% (lo +4.1%, +6.0%). Similar returns, no clear gain - the blend already captures it.
+Kept as a cross-check: a pick whose predicted move is also large is the same signal seen from another angle.
