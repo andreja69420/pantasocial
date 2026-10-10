@@ -206,3 +206,7 @@ Men's totals at closing prices: FAIL on the modern market (explore half positive
 At opening prices Challenger stays slightly positive in 2020-25 but within noise (+2.8% on 1,181 bets, se ~2.8%).
 "Best book" totals rows (+30-80%) are a data artefact: in 2014-19 even random overs return +6-12% there, i.e. the
 Unibet/Ladbrokes over prices in the free data are often for a different line; ignore them.
+Women (27,411 matches with a Bet365 line, no ITF lines in the data): RMSE 5.65-5.76 vs sd 5.7-5.85, i.e. the model
+explains almost nothing of the total (log-loss 0.6897 vs market 0.6956 only because the line is at ~50/50).
+WTA Tour 2020-25: every rule negative (EV>5% both -5.4% close / -4.0% open; overs -11% to -14%).
+WTA125 open EV>10% +4.1% on 367 bets: noise. Women's totals: FAIL.
