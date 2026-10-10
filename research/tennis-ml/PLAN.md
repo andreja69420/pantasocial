@@ -29,9 +29,11 @@ Sažetak svega što je testirano (detalji i brojevi su u `README.md`). Ovo je pl
 
 | Varijanta (BetMGM 2025–26, podaci koje ništa nije videlo) | Opklada | ROI | Donja granica 90% | Najgori slučaj* |
 |---|---|---|---|---|
-| EV>5%, kvota ≤ 2 | 1.695 (~3,3 dnevno) | +5,7% | +2,9% | +2,8% |
-| EV>5%, kvota ≤ 5 | 2.526 (~5 dnevno) | +8,9% | +5,8% | +4,4% |
-| EV>10%, kvota ≤ 2 (~1 dnevno) | 446 | +9,7% | +3,8% | +4,5% |
+| EV>5%, kvota ≤ 2 | 1.766 (~3,5 dnevno) | +6,5% | +3,7% | +3,4% |
+| EV>5%, kvota ≤ 5 | 2.626 (~5 dnevno) | +9,0% | +5,9% | +4,0% |
+| EV>10%, kvota ≤ 2 (~1 dnevno) | 458 | +9,1% | +3,4% | +3,9% |
+
+Brojevi su za model treniran sa manjim learning rate-om (malo bolji od prvobitnog na svim glavnim pravilima).
 
 \* Kao da kladionica poništi svaku opkladu čija je fer verovatnoća do početka meča porasla za više od 12 poena.
 
