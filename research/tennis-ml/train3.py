@@ -42,7 +42,8 @@ FEATS = list(X.columns)
 lvl = df.tourney_level.astype(str)
 futures = (lvl.str.match(r"^\d") | (lvl == "S")).values
 if LOWER:
-    lo = pd.read_parquet(f"{D}/out/{TOUR}_lower_odds.parquet")
+    ODDS_FILE = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--odds-file=")), "lower_odds")
+    lo = pd.read_parquet(f"{D}/out/{TOUR}_{ODDS_FILE}.parquet")
     lo = lo.reindex(df.index)
     df["odds_w"], df["odds_l"] = lo.odds_w.astype(float), lo.odds_l.astype(float)
     df["agree"] = lo.agree.fillna(False).astype(bool)
@@ -107,7 +108,7 @@ for Y in TEST_YEARS[::STEP]:
 P = pd.concat(rows)
 inv = 1 / P.o1 + 1 / P.o2
 P["p_mkt"] = (1 / P.o1) / inv
-split = "holdout" if HOLDOUT else ("lower" if LOWER else "dev")
+split = "holdout" if HOLDOUT else ((("te" if "--odds-file=te_odds" in sys.argv else "lower")) if LOWER else "dev")
 P.to_parquet(f"{D}/out/preds3_{TOUR}_{MODEL}_{TAG}_{split}{'_' + YEARS.replace(',', '-') if YEARS else ''}.parquet")
 
 
