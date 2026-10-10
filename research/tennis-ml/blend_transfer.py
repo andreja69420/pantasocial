@@ -2,7 +2,7 @@
 fitted ONLY on TennisExplorer Bet365 opening prices 2014-2024 (women's ITF, WTA125, WTA Tour, Challenger), then
 applied unchanged to the fresh BetMGM.us 2025-26 opening prices (women's ITF, Challenger, men's ITF).
 
-usage: blend_transfer.py DATA_DIR
+usage: blend_transfer.py DATA_DIR      (env PREDTAG selects the 2025-26 prediction run, default r6_hist1991_ens)
 """
 import os
 import sys
@@ -25,7 +25,7 @@ SEGS = (("Women ITF", "wta", ["bxo25_witf", "bxo_odds"], r"^\d"), ("Challenger",
         ("Men ITF", "atp", ["bxo25_mitf", "bxo_odds_mitf"], r"^(\d|S)"))
 rows = []
 for seg, tour, bxo, rx in SEGS:
-    P = pd.concat([pd.read_parquet(f"{D}/out/preds3_{tour}_ens_r6_hist1991_ens_lower_{y}.parquet") for y in (2025, 2026)])
+    P = pd.concat([pd.read_parquet(f"{D}/out/preds3_{tour}_ens_{os.environ.get('PREDTAG', 'r6_hist1991_ens')}_lower_{y}.parquet") for y in (2025, 2026)])
     O = pd.concat([pd.read_parquet(f"{D}/out/{tour}_{n}.parquet") for n in bxo])
     P, O = P[~P.index.duplicated()], O[~O.index.duplicated()]
     F = pd.read_parquet(f"{D}/out/{tour}_f2.parquet", columns=["tourney_level"])
