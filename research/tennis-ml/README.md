@@ -249,3 +249,24 @@ Betfair "opening" prices have 26-92% overround (thin first exchange books), so t
 closing prices every segment loses. The opening-price edge is not general: it is strongest at Bet365 (and BetMGM by
 CLV, 2026), weaker at Ladbrokes, absent at Unibet. It is an edge against specific bookmakers' soft opening lines,
 not against the market, and those are exactly the books that limit winning accounts.
+
+### Result: Challenger 2026 at BetMGM.us opening prices -> PASS (pre-registered)
+2,440 Challenger matches Jan-May 2026 with BetMGM open and close (margin open 8.7%, close 8.1%).
+Log-loss: model 0.5960, BetMGM fair close 0.5936.
+| Rule | Bets | ROI @open (90% lo) | ROI @close | CLV of picks |
+|---|---|---|---|---|
+| random sides odds<=2 | 2,838 | -3.6% (-5.8%) | -3.3% | -0.6% |
+| **PRIMARY EV>5% & open<=2** | 348 | **+8.5% (+2.0%)** | -1.9% | **+10.4%** |
+| EV>0% & open<=2 | 710 | +6.5% (+2.1%) | -1.1% | +7.6% |
+| EV>2% & open<=2 | 539 | +7.0% (+1.9%) | -1.5% | +8.7% |
+| EV>10% & open<=2 | 156 | +5.7% (-4.6%) | -7.5% | +13.6% |
+| EV>5% & open<=2.5 | 543 | +10.0% (+3.8%) | -1.6% | +11.8% |
+Primary by month: Jan +7.4%, Feb +8.5%, Mar +7.0%, Apr +8.0%, May +25.5% (15 bets) - positive every month.
+Robustness (`robust_open2026.py`): picks win 69.3% vs model 69.7% vs opening-implied 63.0% (calibrated);
+bootstrap 90% interval [+1.8%, +14.9%]; shuffle null (model probabilities permuted, 300 runs) mean -6.5%, never
+reaches +8.5%; 87 different tournaments; 14 void. The profit sits in picks whose price then moved a lot
+(median CLV +10%; picks with |CLV|<=15% only +0.5%, picks with no move -12.8% on 38 bets), i.e. the model finds
+BetMGM opening prices that are stale relative to where the market goes.
+At the same price the bet at BetMGM CLOSE loses (-1.9%): timing is the whole edge.
+
+Pooled pre-registered 2026 primary (women's ITF + Challenger): 1,070 bets, about +3.2%.
