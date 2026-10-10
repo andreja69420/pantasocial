@@ -237,3 +237,15 @@ Same rule and setup as the women's ITF 2026 test: BetMGM.us opening price, EV>5%
 and calibrated on 2025. Challenger predictions: preds3_atp_ens_r6_hist1991_ens_lower_2026.parquet, level 'C'.
 Men's ITF: same file, levels '^\d|S'. Success = ROI > 0 with 90% lower bound > 0; secondary = CLV of picks above
 random sides.
+
+### Opening odds by bookmaker (TE data, EV>5% & odds<=2, 2020-2025) - `eval_open.py`
+Added Betfair (5% commission), Unibet and Ladbrokes opening prices (`attach_te_extra.py`).
+| Segment | b365 OPEN | Unibet OPEN | Ladbrokes OPEN | Betfair close | Betfair OPEN |
+|---|---|---|---|---|---|
+| Women's ITF | +4.9% (11,825) | -1.9% (5,785) | +1.8% (8,651) | -4.3% (3,942) | unusable |
+| Challenger | +2.8% (4,253) | -1.1% (2,884) | +1.8% (3,493) | -3.6% (3,710) | unusable |
+| WTA Tour | +4.8% (1,593) | +2.2% (1,175) | -0.1% (1,108) | -3.1% (1,373) | unusable |
+Betfair "opening" prices have 26-92% overround (thin first exchange books), so they cannot be used; at Betfair's
+closing prices every segment loses. The opening-price edge is not general: it is strongest at Bet365 (and BetMGM by
+CLV, 2026), weaker at Ladbrokes, absent at Unibet. It is an edge against specific bookmakers' soft opening lines,
+not against the market, and those are exactly the books that limit winning accounts.

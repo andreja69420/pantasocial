@@ -1,4 +1,5 @@
-"""Moneyline at OPENING odds (Bet365 opening, best opening) vs closing, by segment; modern = 2020-2025.
+"""Moneyline at OPENING odds (Bet365, best, Betfair, Unibet, Ladbrokes) vs closing, by segment; modern = 2020-2025.
+Betfair winnings pay 5% commission.
 
 usage: eval_open.py DATA_DIR
 """
@@ -18,15 +19,18 @@ for tour, segs in (("atp", {"Tour": r"^[GMAF]", "Challenger": r"^C$"}), ("wta", 
     for seg, rx in segs.items():
         G = P[lvl.str.match(rx).fillna(False).values]
         for src, (cw, cl) in {"b365 close": ("b365_w", "b365_l"), "b365 OPEN": ("b365o_w", "b365o_l"),
-                              "best close": ("best_w", "best_l"), "best OPEN": ("besto_w", "besto_l")}.items():
-            T = E if "OPEN" in src else C
+                              "best close": ("best_w", "best_l"), "best OPEN": ("besto_w", "besto_l"),
+                              "bf close": ("bf_w", "bf_l"), "bf OPEN": ("bfo_w", "bfo_l"),
+                              "ub OPEN": ("ubo_w", "ubo_l"), "lb OPEN": ("lbo_w", "lbo_l")}.items():
+            T = E if ("OPEN" in src or src.startswith("bf")) else C
+            com = 0.05 if src.startswith("bf") else 0.0
             w, l = T.loc[G.index, cw].astype(float).values, T.loc[G.index, cl].astype(float).values
             o1, o2 = np.where(G.y == 1, w, l), np.where(G.y == 1, l, w)
             ok = (o1 > 1) & (o2 > 1)
             rows = []
             for s, o, q, win in ((1, o1, G.p.values, G.y.values == 1), (2, o2, 1 - G.p.values, G.y.values == 0)):
                 pick = ok & (q * o - 1 > 0.05) & (o <= 2.0)
-                rows.append(pd.DataFrame({"year": G.year.values[pick], "pnl": np.where(G.stands.values, np.where(win, o - 1, -1.0), 0.0)[pick]}))
+                rows.append(pd.DataFrame({"year": G.year.values[pick], "pnl": np.where(G.stands.values, np.where(win, (o - 1) * (1 - com), -1.0), 0.0)[pick]}))
             b = pd.concat(rows)
             mod = b[b.year >= 2020].pnl
             se = mod.std() / np.sqrt(max(len(mod), 1))

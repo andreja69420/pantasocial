@@ -24,7 +24,9 @@ base = pd.DataFrame({"mi": m.index, "date": m.date, "w": m.winner_name.map(key).
 a = pd.read_csv(ALI, low_memory=False)
 a = a[a.tour.str.upper() == TOUR.upper()]
 a = a.assign(ka=a.player_a.map(key), kb=a.player_b.map(key), d=pd.to_datetime(a.match_date_formatted, errors="coerce"))
-SIDED = {"b365o": ("bet365_odds_a_opening", "bet365_odds_b_opening"), "besto": ("best_odds_a_opening", "best_odds_b_opening")}
+SIDED = {"b365o": ("bet365_odds_a_opening", "bet365_odds_b_opening"), "besto": ("best_odds_a_opening", "best_odds_b_opening"),
+         "bf": ("Betfair_odds_a", "Betfair_odds_b"), "bfo": ("Betfair_odds_a_opening", "Betfair_odds_b_opening"),
+         "ubo": ("Unibet_odds_a_opening", "Unibet_odds_b_opening"), "lbo": ("Ladbrokes_odds_a_opening", "Ladbrokes_odds_b_opening")}
 FLAT = {}
 for bk, pre in (("b365", "bet365"), ("ub", "Unibet"), ("lb", "Ladbrokes")):
     FLAT.update({f"{bk}_tline": f"{pre}_total_games_line", f"{bk}_over": f"{pre}_odds_over", f"{bk}_under": f"{pre}_odds_under",
@@ -41,5 +43,5 @@ for left, right, flip in (("ka", "kb", False), ("kb", "ka", True)):
         r[n] = j[c].values
     out.append(r)
 X = pd.concat(out).drop_duplicates("mi").set_index("mi").apply(pd.to_numeric, errors="coerce")
-print(f"{TOUR}: {len(X)} matches; Bet365 totals {X.b365_tline.notna().sum()}, opening match odds {X.b365o_w.notna().sum()}")
+print(f"{TOUR}: {len(X)} matches; Bet365 totals {X.b365_tline.notna().sum()}, opening match odds {X.b365o_w.notna().sum()}, Betfair open {X.bfo_w.notna().sum()}")
 X.to_parquet(f"{OUT}/{TOUR}_te_extra.parquet")
