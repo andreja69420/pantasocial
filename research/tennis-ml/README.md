@@ -210,3 +210,30 @@ Women (27,411 matches with a Bet365 line, no ITF lines in the data): RMSE 5.65-5
 explains almost nothing of the total (log-loss 0.6897 vs market 0.6956 only because the line is at ~50/50).
 WTA Tour 2020-25: every rule negative (EV>5% both -5.4% close / -4.0% open; overs -11% to -14%).
 WTA125 open EV>10% +4.1% on 367 bets: noise. Women's totals: FAIL.
+
+### Result: women's ITF 2026 at BetMGM.us opening prices -> primary FAIL, secondary PASS
+`parse_betexplorer_open.py` + `eval_open2026.py`. 4,199 women's ITF matches Jan-May 2026 (end of Sackmann
+coverage) with BetMGM open and close; BetMGM margin 9.1% (Bet365 in the TE data: ~6%). The archive gives one entry
+per price: the opening odds (opens ~0-1 day before the match); 64% of matches moved between open and close.
+Log-loss: model 0.5504, BetMGM fair close 0.5393.
+| Rule | Bets | ROI @open (90% lo) | ROI @close | CLV of picks |
+|---|---|---|---|---|
+| random sides odds<=2 | 4,732 | -4.5% (-6.1%) | -4.7% | +0.2% |
+| **PRIMARY EV>5% & open<=2** | 722 | **+0.6% (-3.9%)** | -5.3% | **+6.45%** |
+| EV>0% & open<=2 | 1,321 | -2.3% | -6.3% | +4.6% |
+| EV>10% & open<=2 | 384 | +1.5% | -6.4% | +8.4% |
+| EV>5% & open<=2.5 | 939 | -0.9% | -6.6% | +6.4% |
+Primary by month: Jan +1.6%, Feb -0.9%, Mar -4.0%, Apr +2.4%, May +11.2%.
+Reading: the pre-registered ROI criterion fails (lower bound below 0). The secondary signal passes clearly: on
+unseen 2026 data the bookmaker moves the model's pick by +6.45% on average between open and close (random sides
++0.2%), and the stronger the model's EV the larger the move. The model's edge over the opening line is real; at a
+9% margin it is almost exactly eaten. Exploratory (not pre-registered) - the same picks re-priced at a lower
+margin (BetMGM fair opening price with the overround reset): 6% -> +3.3% (958 bets), 4% -> +2.6%, 2% -> +4.3%,
+0% -> +6.7% (random sides at 0%: +3.5%, a favourite-longshot bias at odds<=2). So the plan only works with
+low-margin opening prices (Bet365/Pinnacle/exchange), not with a 9% book.
+
+## Pre-registered: Challenger and men's ITF 2026 opening-odds test (written before the data was parsed)
+Same rule and setup as the women's ITF 2026 test: BetMGM.us opening price, EV>5% & odds<=2, model trained to 2024
+and calibrated on 2025. Challenger predictions: preds3_atp_ens_r6_hist1991_ens_lower_2026.parquet, level 'C'.
+Men's ITF: same file, levels '^\d|S'. Success = ROI > 0 with 90% lower bound > 0; secondary = CLV of picks above
+random sides.
