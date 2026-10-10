@@ -4,6 +4,7 @@ applied unchanged to the fresh BetMGM.us 2025-26 opening prices (women's ITF, Ch
 
 usage: blend_transfer.py DATA_DIR
 """
+import os
 import sys
 
 import numpy as np
@@ -12,7 +13,7 @@ from sklearn.linear_model import LogisticRegression
 
 sys.argv = [sys.argv[0], sys.argv[1]]
 D = sys.argv[1]
-src = open(__file__.replace("blend_transfer.py", "calib_open.py")).read()
+src = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "calib_open.py")).read()
 exec(src.split("cl = lambda p:")[0].split('"""', 2)[2])  # builds S (TE Bet365 sides) and shin()
 cl = lambda p: np.clip(p, 1e-4, 1 - 1e-4)
 lg = lambda p: np.log(cl(p) / (1 - cl(p)))
@@ -35,7 +36,7 @@ for seg, tour, bxo, rx in SEGS:
         o, oo = (P.open_w, P.open_l) if won else (P.open_l, P.open_w)
         c, cc = (P.close_w, P.close_l) if won else (P.close_l, P.close_w)
         st = P.stands.values & ~P.retired.values
-        rows.append(pd.DataFrame({"seg": seg, "year": P.year.values, "q": np.where((P.y == 1) == won, P.p, 1 - P.p),
+        rows.append(pd.DataFrame({"seg": seg, "year": P.year.values, "day": P.date_bx.values, "q": np.where((P.y == 1) == won, P.p, 1 - P.p),
                                   "o": o.values, "oo": oo.values, "c": c.values, "cc": cc.values,
                                   "pnl": np.where(st, np.where(won, o.values - 1, -1.0), 0.0)}))
 T = pd.concat(rows, ignore_index=True)

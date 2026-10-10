@@ -450,3 +450,20 @@ Dev year 2024 only (2025-26 untouched), same matches, paired log-loss difference
 A longer patience alone changes nothing (the best iteration is reached long before 2000 extra rounds). A three
 times smaller learning rate gives a small but real improvement (-0.0004 log-loss, about 1% of the model's edge over
 the market). Training takes ~6x longer. ATP running.
+
+### Stake sizing on the fresh BetMGM 2025-26 picks (`kelly_sim.py`)
+Blend (Bet365-fitted) picks in date order, Jan 2025 - May 2026; Kelly fraction uses the blend probability; drawdown
+distribution over 200 reshuffled bet orders.
+| Picks | Staking | Bank x after 17 months | Max DD (by date) | Max DD median / 95th pct (reshuffled) | P(bank < 50%) |
+|---|---|---|---|---|---|
+| EV>5% odds<=2 (1,695 bets, +5.7%) | flat 1% of start bank | 1.97 | 8% | 11% / 17% | 0% |
+| | flat 2% | 2.94 | 13% | 17% / 28% | 0.5% |
+| | Kelly x0.10, cap 2% | 4.5 | 16% | 20% / 28% | 0% |
+| | Kelly x0.25, cap 3% | 11.7 | 27% | 36% / 50% | 0% |
+| | Kelly x0.50, cap 5% | 46 | 45% | 56% / 74% | 2.5% |
+| EV>5% odds<=5 (2,526 bets, +8.9%) | flat 1% | 3.25 | 12% | 12% / 21% | 0% |
+| | Kelly x0.10, cap 2% | 16.8 | 20% | 22% / 31% | 0% |
+| | Kelly x0.25, cap 3% | 104 | 33% | 39% / 53% | 0% |
+Compounded multiples assume the book takes every stake at the opening price, which it will not (ITF opening
+limits are small and winning accounts get limited); the drawdown columns are the useful part. Kelly x0.10-0.25
+keeps the typical worst drawdown at 20-40%; half Kelly is too aggressive given model uncertainty.
