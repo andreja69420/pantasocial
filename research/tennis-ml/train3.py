@@ -30,6 +30,10 @@ TEST_YEARS = [2025, 2026] if HOLDOUT else (list(range(2014, 2019)) if LOWER else
 YEARS = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--years=")), None)
 if YEARS:
     TEST_YEARS = [int(v) for v in YEARS.split(",")]
+# boosting budget: learning-rate multiplier, max trees, early-stopping patience (defaults = the tuned round-6 setup)
+LR_MULT = float(next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--lr-mult=")), 1.0))
+TREES = int(next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--trees=")), 1500))
+PATIENCE = int(next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--patience=")), 60))
 LOG = os.path.join(os.path.dirname(os.path.abspath(__file__)), "experiments.csv")
 
 df = pd.read_parquet(f"{D}/out/{TOUR}_f2.parquet")
@@ -56,17 +60,19 @@ def fit_predict(tr, va, te, Y):
     preds_va, preds_te = [], []
     sw = 0.5 ** ((Y - year[tr]) / HALFLIFE) if HALFLIFE > 0 else np.ones(len(tr))
     if MODEL in ("xgb", "ens"):
-        m = xgb.XGBClassifier(n_estimators=1500, learning_rate=0.06, max_depth=6, min_child_weight=50, subsample=0.8,
+        m = xgb.XGBClassifier(n_estimators=TREES, learning_rate=0.06 * LR_MULT, max_depth=6, min_child_weight=50, subsample=0.8,
                               colsample_bytree=0.4, reg_lambda=5.0, tree_method="hist", max_bin=64, n_jobs=2,
-                              early_stopping_rounds=60, eval_metric="logloss")
+                              early_stopping_rounds=PATIENCE, eval_metric="logloss")
         m.fit(X.iloc[tr], y[tr], sample_weight=sw, eval_set=[(X.iloc[va], y[va])], verbose=False)
         preds_va.append(m.predict_proba(X.iloc[va])[:, 1]); preds_te.append(m.predict_proba(X.iloc[te])[:, 1])
+        print(f"    xgb best iteration {m.best_iteration}", flush=True)
     if MODEL in ("lgbm", "ens"):
-        m = lgb.LGBMClassifier(n_estimators=1500, learning_rate=0.05, num_leaves=48, min_child_samples=100,
+        m = lgb.LGBMClassifier(n_estimators=TREES, learning_rate=0.05 * LR_MULT, num_leaves=48, min_child_samples=100,
                                subsample=0.8, subsample_freq=1, colsample_bytree=0.4, reg_lambda=5.0, max_bin=63,
                                n_jobs=2, verbose=-1)
-        m.fit(X.iloc[tr], y[tr], sample_weight=sw, eval_set=[(X.iloc[va], y[va])], callbacks=[lgb.early_stopping(60, verbose=False)])
+        m.fit(X.iloc[tr], y[tr], sample_weight=sw, eval_set=[(X.iloc[va], y[va])], callbacks=[lgb.early_stopping(PATIENCE, verbose=False)])
         preds_va.append(m.predict_proba(X.iloc[va])[:, 1]); preds_te.append(m.predict_proba(X.iloc[te])[:, 1])
+        print(f"    lgbm best iteration {m.best_iteration_}", flush=True)
     if MODEL == "ens":
         # simple, well-calibrated anchor: logistic regression on the rating/Markov probabilities
         cols = [c for c in FEATS if c.startswith(("prob_", "mk_match"))]
