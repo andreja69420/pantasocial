@@ -270,3 +270,24 @@ BetMGM opening prices that are stale relative to where the market goes.
 At the same price the bet at BetMGM CLOSE loses (-1.9%): timing is the whole edge.
 
 Pooled pre-registered 2026 primary (women's ITF + Challenger): 1,070 bets, about +3.2%.
+
+### Result: men's ITF 2026 at BetMGM.us opening prices -> primary FAIL, secondary PASS
+3,742 matches Jan-May 2026, BetMGM margin 9.05%. Log-loss model 0.5544 vs fair close 0.5379.
+| Rule | Bets | ROI @open (90% lo) | ROI @close | CLV of picks |
+|---|---|---|---|---|
+| random sides odds<=2 | 4,158 | -5.3% (-6.9%) | -5.3% | -0.15% |
+| **PRIMARY EV>5% & open<=2** | 479 | **+0.1% (-5.5%)** | -5.0% | **+5.55%** |
+| EV>10% & open<=2 | 262 | -2.3% | -8.5% | +6.9% |
+Q1 +0.3% (348), Q2 -0.3% (131). Picks win 65.3%, opening-implied 65.0%, model said 73.3%: the men's ITF model is
+overconfident on its picks. Again the picks' prices shorten (+5.6% vs random -0.15%; shuffle null never matches),
+but at a 9% book that only reaches break-even.
+
+### 2026 pre-registered summary (BetMGM.us opening prices, EV>5% & odds<=2)
+| Segment | Bets | ROI | CLV | Verdict |
+|---|---|---|---|---|
+| Challenger | 348 | +8.5% (90% lo +2.0%) | +10.4% | PASS |
+| Women's ITF | 722 | +0.6% | +6.5% | fail (CLV pass) |
+| Men's ITF | 479 | +0.1% | +5.6% | fail (CLV pass) |
+| All three | 1,549 | ~+2.3% | | |
+The scraper's adaptive rate reached 148 requests/s on BetExplorer without a single error.
+Next: the same test on the full 2025 season (predictions trained to 2023, calibrated on 2024).
