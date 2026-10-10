@@ -424,3 +424,17 @@ Conclusions: the Shin blend nearly doubles the edge at odds <=2 (+8.1%, ~2.2 bet
 it survives both stress tests. Odds 2-3 stay at ~0% under both stress tests whatever the calibration: the profit
 there is line-movement, not calibration. Odds 3-5 with the Shin blend are a possible second market (+8% under the
 probability stress, lower bound just above 0) but not proven. Above 5: no.
+
+### Out-of-sample: Shin blend fitted on Bet365 2014-2024, applied unchanged to BetMGM 2025-26 (`blend_transfer.py`)
+Blend weights from TE Bet365 opening prices 2014-2024 only (377k sides): 0.44 * logit(model) + 0.64 * logit(Shin fair).
+Applied to the fresh BetMGM.us 2025-26 opening prices (women's ITF + Challenger + men's ITF), nothing refitted:
+| Rule | Bets | ROI (90% lo) | Void >12pt stress | 2025 | 2026 |
+|---|---|---|---|---|---|
+| raw EV>5% odds<=2 (reference) | 6,478 | +3.4% (+1.9%) | +1.9% | +3.7% | +2.2% |
+| blend EV>5% odds<=2 | 1,695 | +5.7% (+2.9%) | +2.8% | +6.5% | +2.2% |
+| blend EV>10% odds<=2 | 446 | +9.7% (+3.8%) | +4.5% | +8.8% | +13.9% |
+| blend EV>5% odds<=3 | 2,278 | +5.2% (+2.3%) | +1.5% | +5.7% | +3.3% |
+| **blend EV>5% odds<=5** | **2,526** | **+8.9% (+5.8%)** | **+4.4%** | **+8.9%** | **+8.9%** |
+| blend EV>10% odds<=5 | 907 | +13.0% (+6.9%) | +5.5% | +11.4% | +18.4% |
+The blend transfers across bookmakers and years: on data it never saw it beats the raw rule at every cap, every
+segment is positive, and with it odds up to 5 become profitable even under the void stress (+4.4%).
