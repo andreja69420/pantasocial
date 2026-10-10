@@ -371,3 +371,31 @@ Realistically, odds 2-3 do not add profit: what they earn comes from opening pri
 and without those they lose. The higher the EV threshold, the more of the profit comes from such big movers.
 The most robust rule is the original one: raw model, odds<=2, EV between 5% and ~16%
 (+2.8% to +4.2% even if every big mover is voided, lower bound > 0).
+
+## Bet365 opening prices only (`b365_open.py`, TE data 2020-2025)
+Walk-forward predictions (each year trained to Y-2, calibrated on Y-1). Bet365 opening odds from TennisExplorer;
+void stress = bets whose Bet365 price was cut by >30% before the close are refunded. Bet365 margin ~6-7.5%.
+| Segment, EV>5% odds<=2 | Bets | ROI (90% lo) | Void stress (lo) | By year 2020..2025 |
+|---|---|---|---|---|
+| Women's ITF | 11,824 | +4.9% (+3.8%) | +4.3% (+3.2%) | +3 +6 +6 -0 +7 +5 |
+| WTA125 | 868 | +5.4% (+1.2%) | +5.2% (+1.0%) | |
+| WTA Tour | 1,593 | +4.8% (+1.6%) | +4.4% (+1.2%) | +2 +4 +3 +13 +6 -1 |
+| Challenger | 4,253 | +2.8% (+0.8%) | +2.2% (+0.2%) | +3 +2 +4 +4 +5 -0 |
+| ATP Tour | 1,777 | -0.8% | -1.1% | no edge |
+Pooled women's ITF + WTA125 + WTA Tour + Challenger:
+| Rule | Bets | Per day | ROI (90% lo) | Void stress (lo) | Years positive |
+|---|---|---|---|---|---|
+| EV>5% odds<=2 | 18,538 | 8.6 | +4.4% (+3.5%) | +3.8% (+3.0%) | 6/6 |
+| EV>10% odds<=2 | 9,597 | 4.4 | +6.3% (+5.0%) | +5.2% (+3.9%) | 6/6 |
+| **EV>16% odds<=2** | **4,440** | **2.1** | **+8.6% (+6.6%)** | **+6.5% (+4.6%)** | **6/6** |
+| EV>25% odds<=2 | 1,434 | 0.7 | +8.4% (+4.8%) | +3.8% (+0.4%) | 5/6 |
+| EV>10% odds<=3 | 17,676 | 8.2 | +5.4% (+4.1%) | +3.2% (+2.0%) | 6/6 |
+| EV>16% odds<=3 | 9,855 | 4.6 | +7.2% (+5.5%) | +3.5% (+1.9%) | 6/6 |
+By odds band (EV>5%): 1-1.5 +5.1% (void stress +5.1%, almost no big movers), 1.5-2 +4.0% (+2.9%),
+2-2.5 +2.6% (+0.3%), 2.5-3 +4.5% (+0.5%), 3-4 +7.2% (+2.2%), 4+ +0.4% (-5.1%).
+At Bet365 the edge is about twice the BetMGM one and holds in every year; it is still concentrated at odds<=2, and
+above 2 it again leans on big line moves. Caveats: this is the data in which the opening-odds effect was found
+(not a fresh test - the fresh confirmation is the BetMGM 2025-26 test above), TE's opening snapshot time is
+unknown, and Bet365 restricts the stakes of accounts that consistently beat its opening lines.
+Stake: no historical Stake odds are available here (BetExplorer from this server lists only BetMGM.us, and
+stake.com is not reachable from a US server); testing Stake needs its opening odds collected going forward.
