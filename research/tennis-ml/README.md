@@ -164,3 +164,27 @@ the model beat it, 0.5435 vs 0.5455). The market got sharper; the model did not 
 | core & lefty | 240 | -3.9% | [-11.8, +3.7] | -4.5% |
 By year (primary): 2024 +4.8%, 2025 -3.6%, 2026 -7.1%. The 2012-2018 men's ITF edge does not hold on current
 prices; none of the subset tactics picked from the 2012-2018 screen holds either.
+
+## Opening odds (moneyline) - `eval_open.py`
+Same walk-forward predictions, settled at Bet365 OPENING prices from the TennisExplorer data instead of closing.
+EV>5% & odds<=2, 2020-2025 ("modern market"):
+| Segment | Bet365 close | Bet365 OPEN | best OPEN |
+|---|---|---|---|
+| ATP Tour | -5.2% | -0.8% | +1.5% |
+| Challenger | -2.8% | +2.8% (4,253 bets, 90% lo +0.8%) | +4.7% |
+| Women's ITF | -1.1% | **+4.9%** (11,825 bets, 90% lo +3.8%) | +7.0% |
+| WTA125 | -2.5% | +5.4% (868) | +7.7% |
+| WTA Tour | -2.3% | +4.8% (1,593) | +7.1% |
+The picks get closing-line value: Bet365 shortens the model's side by +4.8% on average between open and close
+(women's ITF; +5.4% Challenger; random sides +0.2%). The model anticipates the market's own moves, which does not
+depend on match outcomes. Women's ITF at Bet365 open is positive in 11 of 12 years (2014-2025).
+Caveats: all 2014-2025 years have now been looked at; opening prices carry low stake limits and accounts that take
+them get limited; TE opening odds may include a few erroneous prices (moves >= 25% are 2% of bets).
+
+## Pre-registered: 2026 opening-odds test on fresh data (written before scraping)
+Data: BetExplorer odds history for 2026 matches (Jan-Jun, Sackmann coverage). From this server only BetMGM.us is
+listed, so the test is at BetMGM.us opening prices (first price in its history), not Bet365.
+Model: walk-forward ens trained to 2024, calibrated on 2025 (no 2026 data).
+Primary: women's ITF 2026, EV>5% & odds<=2 at the opening price. Success = ROI > 0 and 90% lower bound > 0.
+Also reported: the same at BetMGM closing price, and mean closing-line value of the picks (open/close - 1);
+CLV > random sides is the secondary success signal, since a few hundred bets give a wide ROI interval.
