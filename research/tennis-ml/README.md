@@ -355,3 +355,19 @@ With the blend, odds 2-3 are no longer losing. The big jump from odds 3-4 upward
 at 3-4 earn +54% when BetMGM later cut the price by more than 30% (193 bets) and only +0.6% otherwise (940 bets).
 Those are opening prices the book itself corrected sharply (stale or erroneous lines); such bets are the ones books
 void as "palpable errors" or accept only with tiny limits. Treat everything above odds 3 as unproven.
+
+### Realistic check: void the bets the book later cut by >30% (worst case for stale/erroneous opening lines)
+| Rule | Bets | Per day | ROI as-is | ROI if >30% movers are void (90% lo) | Share >30% movers |
+|---|---|---|---|---|---|
+| raw EV>5% odds<=2 | 6,478 | 13.1 | +3.4% | **+2.8% (+1.4%)** | 1.9% |
+| raw EV>10% odds<=2 | 3,495 | 7.1 | +4.1% | **+3.2% (+1.1%)** | 3.3% |
+| raw EV>16% odds<=2 | 1,618 | 3.3 | +6.2% | **+4.2% (+1.1%)** | 6.2% |
+| raw EV>25% odds<=2 | 528 | 1.1 | +7.2% | +4.5% (-1.1%) | 10.6% |
+| raw EV>5% odds<=3 | 9,507 | 19.3 | +2.1% | +0.8% (-0.6%) | 4.2% |
+| blend EV>5% odds<=3 | 2,087 | 4.2 | +4.4% | +2.6% (+0.0%) | 6.9% |
+| blend EV>10% odds<=3 | 548 | 1.1 | +7.1% | +1.9% (-3.7%) | 14.4% |
+| blend EV>5% odds 2-3 only | 367 | 0.7 | +4.0% | -1.0% (-9.4%) | 20.2% |
+Realistically, odds 2-3 do not add profit: what they earn comes from opening prices the book corrected sharply,
+and without those they lose. The higher the EV threshold, the more of the profit comes from such big movers.
+The most robust rule is the original one: raw model, odds<=2, EV between 5% and ~16%
+(+2.8% to +4.2% even if every big mover is voided, lower bound > 0).
