@@ -3,7 +3,7 @@
 Step 1: results pages of every tournament (match id, players slug, date, result, average odds).
 Step 2: per match, the bookmaker table (closing odds + archive ids).
 Step 3: per bookmaker side, the odds history; the oldest entry is the opening price.
-Everything is cached on disk; rate limited like scrape_betexplorer_itf.py (RATE env, default 8/s).
+Everything is cached on disk; adaptive rate (see Limiter), starting at RATE env (default 8/s).
 MIN_DATE / MAX_DATE env (YYYY-MM-DD) skip matches outside the window that the Sackmann data covers.
 
 usage: scrape_betexplorer_open.py OUT_DIR CATEGORY SEASON   (e.g. itf-women-singles 2026; current season = base slug)
@@ -28,8 +28,14 @@ for sub in ("res", "match", "arch"):
 
 
 class Limiter:
+    """Probe for the fastest rate the site tolerates: +STEP/s after every UP clean requests; on an error go back to
+    the last rate that ran clean, pause, and retry there; after STRIKES errors at that rate step down by STEP.
+    A rate that failed becomes a ceiling, lifted again after REPROBE clean requests."""
+    STEP, UP, STRIKES, PAUSE, REPROBE = 4.0, 300, 3, 90, 5000
+
     def __init__(self, rate):
-        self.rate, self.max_rate, self.lock, self.next_t, self.ok_streak, self.pause_until = rate, rate, threading.Lock(), 0.0, 0, 0.0
+        self.rate = self.good = rate
+        self.ceiling, self.lock, self.next_t, self.ok_streak, self.pause_until, self.strikes = 1e9, threading.Lock(), 0.0, 0, 0.0, 0
 
     def wait(self):
         with self.lock:
@@ -39,16 +45,29 @@ class Limiter:
 
     def error(self):
         with self.lock:
-            self.rate = max(0.5, self.rate / 2)
-            self.pause_until = time.time() + 30
+            if time.time() < self.pause_until:  # in-flight requests from before the pause
+                return
+            if self.rate > self.good:
+                self.ceiling, self.rate, self.strikes = self.rate, self.good, 1
+            else:
+                self.strikes += 1
+                if self.strikes > self.STRIKES:
+                    self.ceiling, self.rate = self.rate, max(1.0, self.rate - self.STEP)
+                    self.good, self.strikes = self.rate, 1
             self.ok_streak = 0
-            print(f"  ! error -> rate {self.rate:.1f}/s, pausing 30s", flush=True)
+            self.pause_until = time.time() + self.PAUSE
+            print(f"  ! error -> rate {self.rate:.0f}/s (ceiling {self.ceiling:.0f}), pausing {self.PAUSE}s", flush=True)
 
     def ok(self):
         with self.lock:
             self.ok_streak += 1
-            if self.ok_streak >= 50 and self.rate < self.max_rate:
-                self.rate, self.ok_streak = min(self.max_rate, self.rate * 1.5), 0
+            if self.ok_streak >= self.REPROBE and self.ceiling < 1e9:
+                self.ceiling = 1e9
+            if self.ok_streak % self.UP == 0:
+                self.good, self.strikes = self.rate, 0
+                if self.rate + self.STEP < self.ceiling:
+                    self.rate += self.STEP
+                    print(f"  rate up -> {self.rate:.0f}/s", flush=True)
 
 
 L = Limiter(float(os.environ.get("RATE", "8")))
@@ -90,7 +109,7 @@ def run(jobs, fn, label):
         done[0] += 1
         if done[0] % 500 == 0:
             print(f"  {label}: {done[0]}/{len(jobs)} {time.time() - t0:.0f}s rate {L.rate:.1f}/s", flush=True)
-    with ThreadPoolExecutor(32) as ex:
+    with ThreadPoolExecutor(96) as ex:
         list(ex.map(w, jobs))
 
 
