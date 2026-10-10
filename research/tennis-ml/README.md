@@ -53,3 +53,14 @@ information the price does not, but it is far smaller than the ~6% margin.
 Get Pinnacle and max-odds columns (tennis-data.co.uk xlsx files contain `PSW/PSL`, `MaxW/MaxL`; download them
 from a normal browser) and re-run the test against Pinnacle closing odds. Beating Pinnacle closing is the
 real bar; soft books like Bet365 also limit winning accounts quickly.
+
+## Pre-registered out-of-sample test (written before looking at 2020+ Pinnacle/Max odds)
+Finding on 2014-2019 (dev): the model (r6_hist1991_ens, no odds as features) is profitable when settled at
+best-available (Max) odds: ATP value>5% & odds<=3 -> +4.1% ROI on 6,211 bets (5/6 years positive), clearly above
+random bets at the same prices (+0.85%). At Bet365 it loses; at Pinnacle it is about +1%.
+
+Rules fixed now, evaluated once on ATP 2020-2024 (dev predictions, odds never inspected) and on the locked
+2025-2026 holdout (model trained 2010-2023, early stopping 2024):
+- **Rule A (primary):** ATP, bet a player when p_model * MaxOdds > 1.05 and MaxOdds <= 3.0, flat 1 unit.
+- **Rule B:** same model, Pinnacle odds, p_model * PSOdds > 1.02 and PSOdds <= 3.0.
+Success = ROI > 0 with a 90% bootstrap interval above zero, separately on 2020-2024 and on 2025-2026.
