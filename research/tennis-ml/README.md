@@ -4,6 +4,12 @@ Question: can a model built on the complete match history (futures/ITF, challeng
 beat bookmaker prices? Short answer: **not at Bet365 margins.** The model carries a small amount of
 information the price does not, but it is far smaller than the ~6% margin.
 
+## Project requirements (from the owner)
+- The model must **not** use bookmaker odds as features. Odds are used only to decide value and settle bets.
+- The model must have **at least 150 features**.
+- Iterate on a short recent window first (last ~5 years); extend the history only when asked.
+- Development period 2021-2024 is used for iterating on features; 2025-2026 is a locked holdout evaluated once.
+
 ## Data
 - **Matches:** Jeff Sackmann's `tennis_atp` / `tennis_wta` (the GitHub originals are no longer reachable;
   used the archival mirror `Aneeshers/tennis-sackmann-archive` on Hugging Face, CC BY-NC-SA 4.0).
