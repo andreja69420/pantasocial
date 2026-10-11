@@ -702,6 +702,19 @@ fetched with the match list of the GB odds file. Same test (r6_v3, EV>5% odds<=5
 - Flashscore's Serbian prices look sound: no book pair below 100% (no impossible prices), typical margins bet365 5.7%,
   1xBet 6.6%, Admiral 7.0%, SoccerBet 7.5%, Mozzart 8.0%, Superbet 8.1%.
 
+### Six Serbian books, no ITF, quarter Kelly at the opening price (whole 2026, 2026-01-04 .. 10-10)
+1,869 bets (6.6 a day), flat ROI +17.2% (lower 90% bound +13.2%). Per level (flat): ATP Challenger 1,084 bets +18.4%,
+Masters 1000 60 +38%, ATP 250/500 163 +5.7%, men's Grand Slams 62 +11.8%, WTA 125 102 +5.8%, WTA 250 103 +23.7%,
+WTA 500 148 +11.3%, WTA 1000 56 +4.3%, women's Grand Slams 78 +28.5%. Quarter Kelly (median stake 2.45% of the bank,
+90th percentile 5.6%, largest 17%), start 100,000, stakes from the bank at the start of each day:
+
+| staking | end of 2026-10-10 | largest drop | lowest bank |
+|---|---|---|---|
+| quarter Kelly of a fixed 100,000 (no compounding) | 1,026,333 | 55,704 | 96,691 |
+| compounding, at most 5,000 per bet | 1,606,752 | 87,850 | 96,691 |
+| compounding, at most 20,000 per bet | 5,225,068 | 351,400 | 96,691 |
+| compounding without a cap (theory only: 47% largest drop, stakes far above book limits) | 260,872,954 | | |
+
 ### bet365 only, and opening vs closing prices (whole 2026, `eval_levels2026.py --book=bet365 [--close]`)
 Same test as above (r6_v3, EV>5% odds<=5, flat 1 unit), at bet365's prices only, and at the closing price (last price
 before the start) instead of the opening one:
