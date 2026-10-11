@@ -672,17 +672,38 @@ First re-check (20 pending bets, 22:35 Belgrade):
   1.29 → 1.20, Lagutin 1.67 → 1.53, Gadamauri 2.29 → 2.24), i.e. we beat the market and the value is in our entry
   price (`ev_hold` +7% .. +20%); two old-model bets the new model likes less (T. Paul, Shelbayh 1.91 `ev_hold` +3.5%)
 
-**Old-model bets re-checked at their own entry odds (from 2026-10-11 22:45 Belgrade)**: the comparison that matches
-the test is the same bet at the same price: the current model's probability blended with the Shin price of the entry
-book's opening pair (backed out of the logged blend), at the entry odds, against the bet's rule threshold
-(`ev_entry_new`, `enter_entry` in the ledger). A pending bet logged by the old model that the current model would not
-take leaves the plan (it is dropped from the Excel sheet; the last check before kick-off counts; settled bets are not
-touched). Excel columns S-U: best price now, the current model's edge at our entry odds, DA / NE.
+**One model only (2026-10-11 22:50 Belgrade, `rescore_ledger.py`)**: every bet logged by the old model, pending or
+settled, was priced again by the current model (`models_v3`) at its own opening price (entry odds, Shin price of that
+book's opening pair backed out of the logged blend) against the bet's rule threshold. Kept bets carry the current
+model's probabilities (the Excel stake is quarter Kelly of its estimate) and `model = novi`; the rest were deleted
+(ledger before the change kept in the data dir as `ledger.csv.bak-*`). Settled matches use their rows in the feature
+build (features from earlier matches only) plus `fx_live.features` on the whole table (the modules order rows by
+`order`, so each row sees only the matches before it).
 
-First check, 12 pending old-model bets: 8 stay (Radivojević 4.33 +10.0%, Sisková 3.75 +10.4%, Arango 1.95 +14.7%,
-Siniakov 1.70 +8.9%, Wobker 1.33 +6.4%, Bernet 1.36 +5.4%, Kopřiva 2.75 +5.1%, Blanchet 1.29 +5.1%), 4 leave the plan
-(Kučmová 3.25 -1.6%, T. Paul 1.67 -0.4%, Pigossi 3.20 +1.4%, Shelbayh 1.91 +3.5%). All 9 new-model bets still pass at
-their entry odds (+5.8% .. +15.7%).
+| old-model bet | odds | result | old EV | current model EV | |
+|---|---|---|---|---|---|
+| Van Emst | 1.95 | lost | +8.8% | +8.5% | kept |
+| Radivojević | 4.33 | pending | +7.0% | +10.0% | kept |
+| Sisková | 3.75 | pending | +10.2% | +10.4% | kept |
+| Arango | 1.95 | pending | +10.8% | +14.7% | kept |
+| Siniakov | 1.70 | pending | +6.5% | +8.9% | kept |
+| Wobker | 1.33 | pending | +8.4% | +6.4% | kept |
+| Bernet | 1.36 | pending | +5.7% | +5.4% | kept |
+| Kopřiva | 2.75 | pending | +5.0% | +5.1% | kept |
+| Blanchet | 1.29 | pending | +5.4% | +5.1% | kept |
+| Cakarević | 3.00 | won | +8.1% | +4.9% | deleted |
+| Nagy | 2.10 | won | +5.2% | +3.9% | deleted |
+| J. Paul | 1.95 | won | +5.1% | +3.1% | deleted |
+| Hesse | 2.60 | lost | +5.4% | -0.2% | deleted |
+| Jones | 2.60 | lost | +8.3% | +2.4% | deleted |
+| T. Paul | 1.67 | pending | +5.4% | -0.4% | deleted |
+| Shelbayh | 1.91 | pending | +5.1% | +3.5% | deleted |
+| Kučmová | 3.25 | pending | +5.1% | -1.6% | deleted |
+| Pigossi | 3.20 | pending | +7.9% | +1.4% | deleted |
+
+Plan after the change: 17 bets, 1 settled (Van Emst lost, stake 2,242), bank 97,758; the deleted settled bets had
+been 3 won / 2 lost. The loop keeps showing, for pending bets, the best price now and the current model's edge at our
+entry odds (Excel columns S-U, information only).
 
 ## Memory (15 GB machine): measured peaks and what changed (`peakmem.py`)
 `peakmem.py CMD ...` samples the summed PSS of a command's whole process tree every 0.2 s (PSS, not RSS: forked

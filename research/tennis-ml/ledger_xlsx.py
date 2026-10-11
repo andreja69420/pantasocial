@@ -34,9 +34,6 @@ L = pd.read_csv(SRC)
 L["thr"] = L.rule.str.extract(r"EV>(\d+)%").astype(float)[0]
 L = L.sort_values(["thr", "logged_at"]).drop_duplicates(["fs_mid", "side"]).sort_values("start")
 in_plan = L.tournament.str.split(":").str[0].str.strip().map(lambda c: SEG.get(c, ("", "ne"))[1] != "ne")
-# a bet logged by the old model that the current model would not take at the same entry odds leaves the plan
-dropped = (L.get("model", pd.Series("", index=L.index)).fillna("") != "novi") & (L.get("enter_entry", pd.Series("", index=L.index)) == "no")
-in_plan &= ~dropped
 now = pd.Timestamp.now("UTC").tz_localize(None)
 bg = lambda t: pd.Timestamp(t).tz_localize("UTC").tz_convert("Europe/Belgrade").tz_localize(None).to_pydatetime()
 

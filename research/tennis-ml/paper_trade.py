@@ -185,7 +185,6 @@ if not ledger.empty and seen:
 # log this side now at the best current price (EV>5%, odds<=5; the opening-price condition left out).
 # ev_entry_new / enter_entry: the same bet as the test rule sees it, the current model at the entry odds with the Shin
 # price of the entry book's opening pair (backed out of the logged blend): would the current model have taken this bet?
-# A bet logged by the old model that it would not take leaves the plan (Excel); the last check before kick-off counts.
 if not ledger.empty and not ALL.empty:
     A = ALL[(ALL.current > 1) & (ALL.cur_other > 1)].copy()
     A["qb_now"] = 1 / (1 + np.exp(-(0.44 * lg(A.q_model.values) + 0.64 * lg(shin(1 / A.current.values, 1 / A.cur_other.values)))))
