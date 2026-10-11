@@ -4,6 +4,7 @@ matches in the fs_results.py page cache (or the daily fixtures feed). One GraphQ
 usage: fs_odds.py OUT_DIR TOUR [GEO=GB] [--fixtures DAYS | --done DAYS_BACK]
   --done N: finished singles of today and the N days before (daily results feeds) with their result -> {tour}_fs_done_odds_{geo}.parquet
   without --fixtures: all matches in OUT_DIR/fs_cache_{tour} (results pages), for the history test
+  --matches ODDS_PARQUET: history test for the matches of an existing odds file (e.g. GB) in another region
   --fixtures N: every scheduled singles match Flashscore lists, for paper trading: the daily feeds for today .. +N days
     plus the fixtures page of every tournament on the category pages (matches scheduled further ahead show up there)
 Writes OUT_DIR/{tour}_fs_odds_{geo}.parquet (or {tour}_fs_fixture_odds_{geo}.parquet): one row per match and bookmaker
@@ -25,6 +26,7 @@ OUT, TOUR = sys.argv[1], sys.argv[2]
 GEO = sys.argv[3] if len(sys.argv) > 3 and not sys.argv[3].startswith("--") else "GB"
 FIX = int(sys.argv[sys.argv.index("--fixtures") + 1]) if "--fixtures" in sys.argv else 0
 DONE = int(sys.argv[sys.argv.index("--done") + 1]) if "--done" in sys.argv else -1
+NOCACHE = "--matches" in sys.argv  # another region's history: one pass, no page cache (the GB cache alone is 3.5 GB)
 UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36",
       "Origin": "https://www.flashscore.com", "Referer": "https://www.flashscore.com/", "x-fsign": "SW9D1eZo"}
 CATS = {"atp": ("ITF MEN - SINGLES", "CHALLENGER MEN - SINGLES", "ATP - SINGLES"),
@@ -75,6 +77,11 @@ elif FIX:
                                     "home": d.get("WU", d.get("AE")), "away": d.get("WV", d.get("AF")),
                                     "start": int(d["AD"]), "tournament": head["ZA"], "path": head.get("ZL", ""),
                                     "round": d.get("ER", "")}
+elif "--matches" in sys.argv:
+    # the match list of an existing odds file (another region's history), e.g. once the results page cache is gone
+    src = pd.read_parquet(sys.argv[sys.argv.index("--matches") + 1]).drop_duplicates("fs_mid")
+    matches = {r.fs_mid: {"fs_mid": r.fs_mid, "home_pid": r.home_pid, "away_pid": r.away_pid, "start": int(r.start),
+                          "home_won": bool(r.home_won)} for r in src.itertuples()}
 else:
     for f in glob.glob(os.path.join(OUT, f"fs_cache_{TOUR}", "*.html")):
         page = open(f, encoding="utf-8").read()
@@ -94,11 +101,11 @@ os.makedirs(CACHE, exist_ok=True)
 
 def odds(mid):
     path = os.path.join(CACHE, f"{mid}.json")
-    if not FIX and os.path.exists(path):
+    if not FIX and not NOCACHE and os.path.exists(path):
         s = open(path, encoding="utf-8").read()
     else:
         s = get(f"https://global.ds.lsapp.eu/odds/pq_graphql?_hash=oce&eventId={mid}&projectId=2&geoIpCode={GEO}&geoIpSubdivisionCode={GEO}")
-        if s and not FIX:
+        if s and not FIX and not NOCACHE:
             open(path, "w", encoding="utf-8").write(s)
     try:
         o = json.loads(s)["data"]["findOddsByEventId"]

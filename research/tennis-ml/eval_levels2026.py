@@ -7,6 +7,7 @@ usage: eval_levels2026.py DATA_DIR FS_DIR TAG:OUT_SUBDIR [TAG:OUT_SUBDIR ...]
   e.g. eval_levels2026.py $B $B/fs_full r6_v2:out_fx r6_v3:out_v3
   --bets=PATH: also save every side at its best opening price (tour, tag, level, model q, odds, blend EV, P&L)
   --book=NAME: that bookmaker's prices only; --close: closing prices (last before the start) instead of opening
+  --geo=XX: the odds file of another Flashscore region ({tour}_fs_odds_XX.parquet, fs_odds.py --matches)
   FS_DIR: fs_results.py / fs_odds.py output for 2026-01-01.. ({tour}__{tour}_matches_fs_2026.csv, {tour}_fs_odds_GB.parquet)
 """
 import re
@@ -20,6 +21,7 @@ D, FS = sys.argv[1], sys.argv[2]
 BETS = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--bets=")), None)  # save every side priced
 BOOK = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--book=")), None)  # one bookmaker only
 CLOSE = "--close" in sys.argv  # the last price before the start instead of the opening price
+GEO = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--geo=")), "GB")  # Flashscore region of the odds file
 RUNS = [a.split(":") for a in sys.argv[3:] if not a.startswith("--")]
 NAMES = {"wta": {"G": "Grand Slam", "PM": "WTA 1000", "P": "WTA 500", "I": "WTA 250", "C": "WTA 125", "100": "W100",
                  "75": "W75", "50": "W50", "35": "W35", "15": "W15"},
@@ -50,7 +52,7 @@ for tour in ("atp", "wta"):
     M = pd.read_parquet(f"{D}/{RUNS[0][1]}/{tour}_matches.parquet",
                         columns=["tourney_id", "tourney_name", "tourney_date", "tourney_level", "winner_id", "loser_id"])
     fs = pd.read_csv(f"{FS}/{tour}__{tour}_matches_fs_2026.csv", usecols=["fs_mid", "winner_id", "loser_id", "tourney_level", "tourney_name"])
-    O = pd.read_parquet(f"{FS}/{tour}_fs_odds_GB.parquet")
+    O = pd.read_parquet(f"{FS}/{tour}_fs_odds_{GEO}.parquet")
     if BOOK:
         O = O[O.book == BOOK]
     if CLOSE:
