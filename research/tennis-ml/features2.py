@@ -4,6 +4,7 @@ matches only, using cumulative sums over (group, chronological order) and search
 usage: features2.py RAW_DIR OUT_DIR TOUR START_YEAR
 """
 import glob
+import os
 import re
 import sys
 import unicodedata
@@ -13,6 +14,8 @@ import numpy as np
 import pandas as pd
 
 RAW, OUT, TOUR, START = sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[4])
+# F2_CLEAN_GAMES=1: game counts from completed sets only (new builds); off keeps the live base consistent until it is rebuilt
+CLEAN = os.environ.get("F2_CLEAN_GAMES") == "1"
 ROUND_ORDER = {"Q1": 0, "Q2": 1, "Q3": 2, "Q4": 3, "ER": 4, "R128": 5, "R64": 6, "R32": 7, "R16": 8, "RR": 9,
                "QF": 10, "SF": 11, "BR": 12, "F": 13}
 
@@ -58,7 +61,8 @@ def parse_score(s):
     complete = 0
     for a, b in sets:
         a, b = int(a), int(b)
-        gw += a; gl += b
+        if not CLEAN or max(a, b) >= 6 and (abs(a - b) >= 2 or max(a, b) == 7):
+            gw += a; gl += b  # CLEAN: the unfinished set of a retirement is not a game share
         if max(a, b) >= 6 and (abs(a - b) >= 2 or max(a, b) == 7):
             complete += 1
             sw += a > b; sl += b > a
@@ -232,7 +236,11 @@ def build(m=None, R=None, wcmap=None):
             d[name], d[f"o_{name}"] = R[:, a_], R[:, b_]
         d["exp"] = elo_p(d["elo"].values, d["o_elo"].values)
         d["resid"] = won - d["exp"]
-        d["gresid"] = np.nan_to_num(np.where(won == 1, gshare, 1 - gshare)) - elo_p(d["gelo"].values, d["o_gelo"].values)
+        gs = np.where(won == 1, gshare, 1 - gshare)
+        if CLEAN:  # NaN when no set was completed (early retirement): no residual
+            d["gresid"] = np.where(np.isnan(gs), 0.0, gs - elo_p(d["gelo"].values, d["o_gelo"].values))
+        else:
+            d["gresid"] = np.nan_to_num(gs) - elo_p(d["gelo"].values, d["o_gelo"].values)
         return d
 
     Lw, Ll = side("winner", "loser", 1), side("loser", "winner", 0)
