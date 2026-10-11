@@ -808,3 +808,24 @@ Rebuilt from the raw copy with Flashscore statistics, normalised surface and cle
 The fixes change nothing measurable (the results-only set does not use serve statistics; the surface and retirement
 fixes touch about 0.3% / 2.6% of matches). Base v2 is the base for the new-feature test. Full per-book output:
 `paper/eval_fs2026_basev2.txt`.
+
+### Base v2 + 158 new features (r6_v3): they help
+`fx_merge.py` adds the four modules (`fx_ratings.py` 48, `fx_score.py` 43, `fx_context.py` 47, `fx_pbp.py` 20 per player,
+columns `w_nx_*`/`l_nx_*`) to the base v2 build; training selects `nx_` plus the old 324 (same model, same walk-forward,
+2026 predicted by a model that never saw 2026, same betting-stage blend coefficients as before):
+
+| | base v2 | + new features |
+|---|---|---|
+| log-loss women (18,856): all / ITF / WTA 125 / tour | 0.5512 / 0.5449 / 0.5529 / 0.5788 | 0.5486 / 0.5421 / 0.5530 / 0.5763 |
+| log-loss men (27,820): all / ITF / Challenger / tour | 0.5661 / 0.5479 / 0.5848 / 0.5924 | 0.5648 / 0.5459 / 0.5845 / 0.5911 |
+| paired difference (same matches), women / men | | -0.0026 (se 0.0004) / -0.0013 (se 0.0003) |
+| winner picked, women / men | 70.99% / 70.33% | 71.29% / 70.43% |
+| best opening price, blend EV>5% odds<=2 | 1,809 bets +9.82% (lo +7.0%) | 1,691 bets +10.51% (lo +7.6%) |
+| best opening price, blend EV>5% odds<=5 | 3,333 bets +10.76% (lo +7.6%) | 3,119 bets +13.16% (lo +9.9%) |
+| ... of which women ITF / men ITF / Challenger (odds<=5) | +8.7% (1,191) / +6.2% (1,094) / +19.2% (607) | +10.1% (1,121) / +11.1% (1,019) / +18.8% (561) |
+
+The gain is 6 (women) and 4 (men) standard errors and sits in the ITF levels (W15 -0.004, M15 -0.003), where box
+scores are missing and the new ratings / score / pbp features carry most information; Challenger and WTA 125 are
+unchanged. Single books are mixed (bet365 lower, most UK books slightly higher), the best-price result is higher in all
+three plan segments except Challenger (flat). Full output: `paper/eval_fs2026_v3.txt`. Next: the production model and
+the live loop with these features.
