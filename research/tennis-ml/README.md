@@ -689,3 +689,24 @@ the highest blend EV (EV>5%), stakes = 0.25 x Kelly of the bank at the start of 
 | best 1 a day, odds<=2 | 167 | +10.3% (+2.9%) | 223,955 | 128,234 | 40% / 37% |
 Almost all of it comes from January-May at BetMGM (+24% to +36% flat on the top picks); June-October at the UK books
 is +1% to +6% flat. Quarter Kelly on these EVs stakes 4.7-6.2% of the bank per bet, hence the 40-50% drawdowns.
+
+## Calibration chart on test data (`calib_plot.py` → `paper/kalibracija.png`)
+
+Matches grouped by predicted win probability (5-point bins), predicted mean vs. actual win share, both sides of every
+match counted. Every number is out of sample.
+
+| Set | Matches | Brier | Log-loss | ECE (mean gap predicted vs actual) |
+|---|---|---|---|---|
+| Model alone (no odds), WTA walk-forward 2014-2025 | 157,025 | 0.1863 | 0.5494 | 0.34% |
+| Model alone, ATP walk-forward 2014-2025 | 80,937 | 0.2096 | 0.6052 | 0.94% |
+| Model alone, lower levels 2025-26 (BetMGM-priced matches) | 31,997 | 0.1897 | 0.5584 | 0.53% |
+| Bookmaker opening Shin, same matches | 31,997 | 0.1891 | 0.5575 | 1.85% |
+| Betting P (0.44 model + 0.64 Shin), same matches | 31,997 | 0.1870 | 0.5514 | 0.60% |
+
+- The model is calibrated: in the 47.5-52.5% bin it wins 47.5% / 52.5% (WTA), and every bin is within about 1 point
+  of the diagonal (ATP slightly too confident on favourites, 62.5% → 61.1%).
+- The bookmaker's opening price has the favourite-longshot bias: an outsider priced at 17.7% wins 14.5%, a favourite
+  priced at 91.7% wins 95.8%. The model does not have it, which is part of why the blend beats both alone.
+- The sides we would bet (blend EV>5%, odds ≤5, 2,490 BetMGM sides): mean P 63.4%, actually won 62.0%, bookmaker fair
+  53.4%, model alone 74.2%. P is 1.4 points optimistic on the selected sides (selection on the largest disagreements),
+  about 1.4 standard errors, but they still win 8.6 points more often than the opening price says.
