@@ -182,14 +182,18 @@ if not ledger.empty and seen:
 # pending bets re-priced now: the current model (fed with every result up to now) and the current prices of every book.
 # q_blend_now: blend with the Shin fair price of the bet's book now (the median over books if it no longer lists it);
 # ev_hold: what the bet already placed at its entry odds is worth now; best_now / ev_now / enter_now: would the rule
-# log this side now at the best current price (EV>5%, odds<=5; the opening-price condition left out)
+# log this side now at the best current price (EV>5%, odds<=5; the opening-price condition left out).
+# ev_entry_new / enter_entry: the same bet as the test rule sees it, the current model at the entry odds with the Shin
+# price of the entry book's opening pair (backed out of the logged blend): would the current model have taken this bet?
+# A bet logged by the old model that it would not take leaves the plan (Excel); the last check before kick-off counts.
 if not ledger.empty and not ALL.empty:
     A = ALL[(ALL.current > 1) & (ALL.cur_other > 1)].copy()
     A["qb_now"] = 1 / (1 + np.exp(-(0.44 * lg(A.q_model.values) + 0.64 * lg(shin(1 / A.current.values, 1 / A.cur_other.values)))))
-    for c in ("q_now", "q_blend_now", "ev_hold", "best_now", "book_now", "ev_now", "enter_now", "rechecked_at"):
+    for c in ("q_now", "q_blend_now", "ev_hold", "best_now", "book_now", "ev_now", "enter_now", "rechecked_at", "ev_entry_new",
+              "enter_entry"):
         if c not in ledger:
             ledger[c] = np.nan
-    for c in ("book_now", "enter_now", "rechecked_at"):
+    for c in ("book_now", "enter_now", "rechecked_at", "enter_entry"):
         ledger[c] = ledger[c].astype(object)
     started = pd.to_datetime(ledger.start) <= pd.Timestamp.now("UTC").tz_localize(None)
     for i in ledger.index[(ledger.result.fillna("") == "") & ~started]:
@@ -203,6 +207,10 @@ if not ledger.empty and not ALL.empty:
         ledger.loc[i, ["q_now", "q_blend_now", "ev_hold", "best_now", "book_now", "ev_now", "enter_now", "rechecked_at"]] = [
             float(a.q_model.iloc[0]), qb, qb * ledger.at[i, "open"] - 1, float(best.current), best.book, ev_now,
             "yes" if ev_now > 0.05 and best.current <= 5 else "no", str(pd.Timestamp.now("UTC").tz_localize(None))[:16]]
+        shin_lo = (lg(ledger.at[i, "q_blend"]) - 0.44 * lg(ledger.at[i, "q_model"])) / 0.64
+        ev_entry = 1 / (1 + np.exp(-(0.44 * lg(ledger.at[i, "q_now"]) + 0.64 * shin_lo))) * ledger.at[i, "open"] - 1
+        thr = float(ledger.at[i, "rule"].split("%")[0].split(">")[1]) / 100
+        ledger.loc[i, ["ev_entry_new", "enter_entry"]] = [ev_entry, "yes" if ev_entry > thr else "no"]
 # settle finished matches from the daily results feeds (today and the 3 days before)
 if not ledger.empty:
     done = {}

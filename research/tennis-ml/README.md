@@ -672,6 +672,18 @@ First re-check (20 pending bets, 22:35 Belgrade):
   1.29 → 1.20, Lagutin 1.67 → 1.53, Gadamauri 2.29 → 2.24), i.e. we beat the market and the value is in our entry
   price (`ev_hold` +7% .. +20%); two old-model bets the new model likes less (T. Paul, Shelbayh 1.91 `ev_hold` +3.5%)
 
+**Old-model bets re-checked at their own entry odds (from 2026-10-11 22:45 Belgrade)**: the comparison that matches
+the test is the same bet at the same price: the current model's probability blended with the Shin price of the entry
+book's opening pair (backed out of the logged blend), at the entry odds, against the bet's rule threshold
+(`ev_entry_new`, `enter_entry` in the ledger). A pending bet logged by the old model that the current model would not
+take leaves the plan (it is dropped from the Excel sheet; the last check before kick-off counts; settled bets are not
+touched). Excel columns S-U: best price now, the current model's edge at our entry odds, DA / NE.
+
+First check, 12 pending old-model bets: 8 stay (Radivojević 4.33 +10.0%, Sisková 3.75 +10.4%, Arango 1.95 +14.7%,
+Siniakov 1.70 +8.9%, Wobker 1.33 +6.4%, Bernet 1.36 +5.4%, Kopřiva 2.75 +5.1%, Blanchet 1.29 +5.1%), 4 leave the plan
+(Kučmová 3.25 -1.6%, T. Paul 1.67 -0.4%, Pigossi 3.20 +1.4%, Shelbayh 1.91 +3.5%). All 9 new-model bets still pass at
+their entry odds (+5.8% .. +15.7%).
+
 ## Memory (15 GB machine): measured peaks and what changed (`peakmem.py`)
 `peakmem.py CMD ...` samples the summed PSS of a command's whole process tree every 0.2 s (PSS, not RSS: forked
 workers share the parent's pages, RSS counted the 865k-row table once per worker and showed 19 GB for fx_live).
