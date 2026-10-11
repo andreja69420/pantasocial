@@ -216,9 +216,10 @@ if not ledger.empty:
     s = ledger.groupby("rule").agg(bets=("fs_mid", "size"), settled=("pnl", "count"), units=("pnl", "sum"), roi=("pnl", "mean"),
                                    clv=("clv", "mean"))
     print(s.round(3).to_string())
-    # the plan's segments: women's ITF (core), men's Challenger and ITF; everything else is logged only for comparison
-    seg = ledger.tournament.str.split(":").str[0].str.strip().map({"ITF WOMEN - SINGLES": "1 women ITF (core)",
-          "CHALLENGER MEN - SINGLES": "2 men Challenger", "ITF MEN - SINGLES": "2 men ITF"}).fillna("3 other (not in plan)")
+    # every competition is in the plan (since 2026-10-11 evening); summary per Flashscore category
+    seg = ledger.tournament.str.split(":").str[0].str.strip().map({"ITF WOMEN - SINGLES": "women ITF",
+          "CHALLENGER MEN - SINGLES": "men Challenger", "ITF MEN - SINGLES": "men ITF", "CHALLENGER WOMEN - SINGLES": "WTA 125",
+          "WTA - SINGLES": "WTA tour", "ATP - SINGLES": "ATP tour"}).fillna("other")
     s = ledger.assign(seg=seg).groupby(["seg", "rule"]).agg(bets=("fs_mid", "size"), settled=("pnl", "count"),
                                                             units=("pnl", "sum"), roi=("pnl", "mean"), clv=("clv", "mean"))
     print(s.round(3).to_string())

@@ -1,4 +1,4 @@
-"""Excel sheet of the plan's paper bets: summary on top (bank, profit, ROI, record), then one row per bet with kick-off
+"""Excel sheet of all paper bets (every competition, EV>5% odds<=5 at the opening price): summary on top (bank, profit, ROI, record), then one row per bet with kick-off
 in Belgrade time, odds, stake, result and profit. Stake = quarter Kelly of the bank at the moment the bet was logged =
 starting bank + profit of every bet already settled then (settled = when the loop first saw the result), so a settled
 bet changes only the stakes of later bets. Formulas, so changing the starting bank (B3) recomputes everything;
@@ -24,10 +24,10 @@ from fs_common import player_name
 SRC, OUT = sys.argv[1], sys.argv[2]
 BANK = float(sys.argv[3]) if len(sys.argv) > 3 else 100000.0
 KELLY = 0.25
-# "ne" = outside the plan: on the second sheet, same rules and its own starting bank, for comparison only
-SEG = {"ITF WOMEN - SINGLES": ("Ženski ITF", "DA (glavno)"), "CHALLENGER MEN - SINGLES": ("Muški Challenger", "DA"),
-       "ITF MEN - SINGLES": ("Muški ITF", "DA"), "CHALLENGER WOMEN - SINGLES": ("WTA 125", "ne"),
-       "WTA - SINGLES": ("WTA Tour", "ne"), "ATP - SINGLES": ("ATP Tour", "ne")}
+# every competition is in the plan since 2026-10-11 evening (one bank); the second sheet sums the bets per category
+SEG = {"ITF WOMEN - SINGLES": ("Ženski ITF", "DA"), "CHALLENGER MEN - SINGLES": ("Muški Challenger", "DA"),
+       "ITF MEN - SINGLES": ("Muški ITF", "DA"), "CHALLENGER WOMEN - SINGLES": ("WTA 125", "DA"),
+       "WTA - SINGLES": ("WTA Tour", "DA"), "ATP - SINGLES": ("ATP Tour", "DA")}
 
 L = pd.read_csv(SRC)
 # one row per match and side: the broadest rule that logged it (EV>5% odds<=5), stake sized by Kelly anyway
@@ -118,7 +118,34 @@ wb = Workbook()
 ws = wb.active
 ws.title = "Opklade"
 sheet(ws, L[in_plan], "Opklade")
-sheet(wb.create_sheet("Van plana"), L[~in_plan], "Van plana")
+# per category: bets, won, lost, profit, ROI, from the bet rows' formulas
+ws2 = wb.create_sheet("Po kategorijama")
+ws2.sheet_view.showGridLines = False
+ws2["A1"] = "Po kategorijama"
+ws2["A1"].font = font(size=14, bold=True)
+last = 6 + max(int(in_plan.sum()), 1) - 1
+rng = lambda c: f"Opklade!${c}$6:${c}${last}"
+heads = [("Kategorija", 20, "@"), ("Opklade", 10, "0"), ("Dobijeno", 10, "0"), ("Izgubljeno", 10, "0"),
+         ("Uloženo", 12, "#,##0"), ("Dobit", 12, "#,##0;[Red]-#,##0"), ("ROI", 9, "0.0%;[Red]-0.0%")]
+for j, (h, w, _) in enumerate(heads, 1):
+    c = ws2.cell(row=3, column=j, value=h)
+    c.font, c.fill = font(bold=True, color="FFFFFF"), PatternFill("solid", fgColor=HEAD)
+    c.alignment = Alignment(horizontal="left" if j == 1 else "right")
+    ws2.column_dimensions[get_column_letter(j)].width = w
+cats = [c for c in dict.fromkeys(v[0] for v in SEG.values())] + ["Ukupno"]
+for i, cat in enumerate(cats):
+    r = 4 + i
+    crit = f'"{cat}"' if cat != "Ukupno" else '"<>"'
+    staked = f'SUMIFS({rng("K")},{rng("C")},{crit},{rng("L")},"Dobijeno")+SUMIFS({rng("K")},{rng("C")},{crit},{rng("L")},"Izgubljeno")'
+    vals = [cat, f'=COUNTIFS({rng("C")},{crit})', f'=COUNTIFS({rng("C")},{crit},{rng("L")},"Dobijeno")',
+            f'=COUNTIFS({rng("C")},{crit},{rng("L")},"Izgubljeno")', f"={staked}", f'=SUMIFS({rng("M")},{rng("C")},{crit})',
+            f'=IFERROR(F{r}/E{r},"")']
+    for j, v in enumerate(vals, 1):
+        c = ws2.cell(row=r, column=j, value=v)
+        c.number_format = heads[j - 1][2]
+        c.font = font(bold=cat == "Ukupno")
+        c.border = Border(bottom=thin)
+        c.alignment = Alignment(horizontal="left" if j == 1 else "right")
 wb.save(OUT)
 if shutil.which("soffice"):
     with tempfile.TemporaryDirectory() as tmp:
@@ -129,4 +156,4 @@ if shutil.which("soffice"):
             shutil.move(done, OUT)
         else:
             print("LibreOffice recalculation failed, formulas without stored values:", r.stderr.decode()[-300:])
-print(f"{int(in_plan.sum())} plan bets, {int((~in_plan).sum())} outside the plan -> {OUT}")
+print(f"{int(in_plan.sum())} bets -> {OUT}")
