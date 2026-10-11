@@ -1,7 +1,8 @@
 """Opening and current (closing, once the match has started) home/away odds of every bookmaker Flashscore lists, for
 matches in the fs_results.py page cache (or the daily fixtures feed). One GraphQL request per match and region.
 
-usage: fs_odds.py OUT_DIR TOUR [GEO=GB] [--fixtures DAYS]
+usage: fs_odds.py OUT_DIR TOUR [GEO=GB] [--fixtures DAYS | --done DAYS_BACK]
+  --done N: finished singles of today and the N days before (daily results feeds) with their result -> {tour}_fs_done_odds_{geo}.parquet
   without --fixtures: all matches in OUT_DIR/fs_cache_{tour} (results pages), for the history test
   --fixtures N: every scheduled singles match Flashscore lists, for paper trading: the daily feeds for today .. +N days
     plus the fixtures page of every tournament on the category pages (matches scheduled further ahead show up there)
@@ -23,6 +24,7 @@ from fs_common import Limiter, page_feed
 OUT, TOUR = sys.argv[1], sys.argv[2]
 GEO = sys.argv[3] if len(sys.argv) > 3 and not sys.argv[3].startswith("--") else "GB"
 FIX = int(sys.argv[sys.argv.index("--fixtures") + 1]) if "--fixtures" in sys.argv else 0
+DONE = int(sys.argv[sys.argv.index("--done") + 1]) if "--done" in sys.argv else -1
 UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36",
       "Origin": "https://www.flashscore.com", "Referer": "https://www.flashscore.com/", "x-fsign": "SW9D1eZo"}
 CATS = {"atp": ("ITF MEN - SINGLES", "CHALLENGER MEN - SINGLES", "ATP - SINGLES"),
@@ -46,7 +48,21 @@ def feed_records(text):
 
 
 matches = {}
-if FIX:
+if DONE >= 0:
+    # finished singles of today and the DONE days before (daily feeds), with opening and closing prices: replays of the
+    # paper rule on matches that are no longer listed as fixtures
+    FIX = -1  # never read or write the history cache
+    with ThreadPoolExecutor(16) as ex:
+        texts = list(ex.map(get, [f"https://www.flashscore.com/x/feed/f_2_{-off}_1_en_1" for off in range(0, DONE + 1)]))
+    for text in texts:
+        for head, d in feed_records(text):
+            if head["ZA"].split(":")[0].strip() in CATS and d.get("AB") == "3" and d["AA"] not in matches:
+                hs, as_ = int(d.get("AG", 0) or 0), int(d.get("AH", 0) or 0)
+                matches[d["AA"]] = {"fs_mid": d["AA"], "home_pid": d.get("JA"), "away_pid": d.get("JB"),
+                                    "home": d.get("WU", d.get("AE")), "away": d.get("WV", d.get("AF")),
+                                    "start": int(d["AD"]), "tournament": head["ZA"], "path": head.get("ZL", ""),
+                                    "round": d.get("ER", ""), "result": "void" if d.get("AC") != "3" else ("home" if hs > as_ else "away")}
+elif FIX:
     with ThreadPoolExecutor(16) as ex:
         texts = list(ex.map(get, [f"https://www.flashscore.com/x/feed/f_2_{off}_1_en_1" for off in range(0, FIX + 1)]))
         cats = list(ex.map(get, [f"https://www.flashscore.com/tennis/{c}/" for c in URLCATS]))
@@ -69,7 +85,7 @@ else:
                                 else d.get("AS") == "1"}
     lo = int(pd.Timestamp(os.environ.get("FROM", "2026-06-08")).timestamp())
     matches = {k: v for k, v in matches.items() if v["start"] >= lo}
-print(f"{TOUR}: {len(matches)} matches to price ({'fixtures' if FIX else 'history'}), region {GEO}", flush=True)
+print(f"{TOUR}: {len(matches)} matches to price ({'finished' if DONE >= 0 else 'fixtures' if FIX else 'history'}), region {GEO}", flush=True)
 
 
 CACHE = os.path.join(OUT, f"fs_odds_cache_{GEO}")
@@ -107,7 +123,7 @@ t0 = time.time()
 with ThreadPoolExecutor(int(os.environ.get("THREADS", "48"))) as ex:
     res = list(ex.map(odds, list(matches)))
 O = pd.DataFrame([r for rs in res for r in rs])
-name = f"{TOUR}_fs_fixture_odds_{GEO}" if FIX else f"{TOUR}_fs_odds_{GEO}"
+name = f"{TOUR}_fs_done_odds_{GEO}" if DONE >= 0 else f"{TOUR}_fs_fixture_odds_{GEO}" if FIX else f"{TOUR}_fs_odds_{GEO}"
 O.to_parquet(os.path.join(OUT, f"{name}.parquet"))
 print(f"{len(O)} bookmaker rows for {O.fs_mid.nunique() if len(O) else 0} matches in {time.time() - t0:.0f}s (rate reached {L.rate:.0f}/s); "
       f"books: {O.book.value_counts().head(12).to_dict() if len(O) else {}}", flush=True)

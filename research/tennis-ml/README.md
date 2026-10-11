@@ -625,12 +625,12 @@ Every 30 minutes (`paper_loop.sh`), in parallel where nothing depends on anythin
    written to the build. Fixtures are split into batches in which no player appears twice, each batch from the saved
    state, so one fixture's placeholder result can never reach another fixture's features.
 4. **Price and log**: production model (`train_final.py`: trained <= 2025, calibrated / early-stopped on 2026) ->
-   Shin blend per book -> for each rule, the book with the highest opening price whose **current price still equals
-   its opening price** and passes the rule is logged once per match as a 1-unit paper bet at that price.
+   Shin blend per book -> the book with the highest current price that passes the rule is logged once per match
+   (until 2026-10-11 evening: opening price, and only while the current price still equalled it).
 5. **Closing price and settlement**: while a logged match has not started, the book's latest price is stored as the
    closing price so far (CLV); finished matches are settled from the daily results feeds (walkover / cancelled = void).
-Ledger: `paper/ledger.csv` (copied into the repo by the loop). Rules logged in parallel: EV>15% odds<=5,
-EV>10% odds<=2, EV>5% odds<=5, EV>5% odds<=2.
+Ledger: `paper/ledger.csv` (copied into the repo by the loop). One rule: EV>5% odds<=5 (until 2026-10-11 four rules
+were logged in parallel: EV>15% odds<=5, EV>10% odds<=2, EV>5% odds<=5, EV>5% odds<=2).
 Bank rule for the Excel sheet (`ledger_xlsx.py` → `paper/opklade.xlsx`): start 100,000 dinars, stake = quarter Kelly
 × the bank at the moment the bet is logged, fixed from then on. The bank moves only when a bet is settled (the loop
 stores the time it first saw the result, `settled_at`), and the new bank applies only to bets logged after that.
@@ -656,55 +656,15 @@ below; the earlier "Van plana" bets joined it, so the bank and every later stake
 - limitation: results added by the loop have no point-by-point / box statistics yet, so the pbp features of a player
   use their matches up to 2026-10-10 only, until the loop also fetches statistics of new matches
 
-**Pending bets re-checked every run (from 2026-10-11 21:35 Belgrade)**: for every bet whose match has not started,
-the current model (fed with every result up to now) prices it again with the current prices of every book; the ledger
-stores `q_now`, `q_blend_now` (blend with the Shin fair price of the bet's book now), `ev_hold` (the bet already placed,
-at its entry odds, valued now), `best_now` / `book_now` / `ev_now` (best current price and its EV) and `enter_now`
-(would the rule log it now: EV>5%, odds<=5). The Excel sheet shows them in the last five columns (pending bets only).
-Paper bets are not cashed out: a UK book's cash-out price carries its margin, so leaving costs more than it saves
-unless the held bet is clearly negative now.
-
-First re-check (20 pending bets, 22:35 Belgrade):
-- held bet still positive at its entry odds: 19 of 20 (median +9.0%); one about zero (T. Paul 1.67, logged by the old
-  model: the new model gives him 61% instead of 69%, `ev_hold` -0.4%)
-- would be logged again now at the best current price: 13 of 20
-- the other 7: five because the price shortened since we took it (Wobker 1.33 → 1.13, Bernet 1.36 → 1.22, Blanchet
-  1.29 → 1.20, Lagutin 1.67 → 1.53, Gadamauri 2.29 → 2.24), i.e. we beat the market and the value is in our entry
-  price (`ev_hold` +7% .. +20%); two old-model bets the new model likes less (T. Paul, Shelbayh 1.91 `ev_hold` +3.5%)
-
-**One model only (2026-10-11 22:50 Belgrade, `rescore_ledger.py`)**: every bet logged by the old model, pending or
-settled, was priced again by the current model (`models_v3`) at its own opening price (entry odds, Shin price of that
-book's opening pair backed out of the logged blend) against the bet's rule threshold. Kept bets carry the current
-model's probabilities (the Excel stake is quarter Kelly of its estimate) and `model = novi`; the rest were deleted
-(ledger before the change kept in the data dir as `ledger.csv.bak-*`). Settled matches use their rows in the feature
-build (features from earlier matches only) plus `fx_live.features` on the whole table (the modules order rows by
-`order`, so each row sees only the matches before it).
-
-| old-model bet | odds | result | old EV | current model EV | |
-|---|---|---|---|---|---|
-| Van Emst | 1.95 | lost | +8.8% | +8.5% | kept |
-| Radivojević | 4.33 | pending | +7.0% | +10.0% | kept |
-| Sisková | 3.75 | pending | +10.2% | +10.4% | kept |
-| Arango | 1.95 | pending | +10.8% | +14.7% | kept |
-| Siniakov | 1.70 | pending | +6.5% | +8.9% | kept |
-| Wobker | 1.33 | pending | +8.4% | +6.4% | kept |
-| Bernet | 1.36 | pending | +5.7% | +5.4% | kept |
-| Kopřiva | 2.75 | pending | +5.0% | +5.1% | kept |
-| Blanchet | 1.29 | pending | +5.4% | +5.1% | kept |
-| Cakarević | 3.00 | won | +8.1% | +4.9% | deleted |
-| Nagy | 2.10 | won | +5.2% | +3.9% | deleted |
-| J. Paul | 1.95 | won | +5.1% | +3.1% | deleted |
-| Hesse | 2.60 | lost | +5.4% | -0.2% | deleted |
-| Jones | 2.60 | lost | +8.3% | +2.4% | deleted |
-| T. Paul | 1.67 | pending | +5.4% | -0.4% | deleted |
-| Shelbayh | 1.91 | pending | +5.1% | +3.5% | deleted |
-| Kučmová | 3.25 | pending | +5.1% | -1.6% | deleted |
-| Pigossi | 3.20 | pending | +7.9% | +1.4% | deleted |
-
-Plan after the change: 17 bets, 1 settled (Van Emst lost, stake 2,242), bank 97,758; the deleted settled bets had
-been 3 won / 2 lost. The Excel sheet is kept to the basics (kick-off, category, tournament, who we back, opponent, odds,
-bookmaker, stake, result, profit; summary and profit per category on top); every row is a bet of the current model.
-Stakes are computed in `ledger_xlsx.py` (same quarter-Kelly rule), profits and the summary are formulas.
+**Fresh start at current prices (2026-10-11 23:05 Belgrade)**: every earlier paper bet (both models, settled and
+pending) was deleted; the loop starts an empty ledger with the current model only (`models_v3`). From now on the rule
+looks at every book's **current** price for every listed fixture (today and as far ahead as Flashscore lists them):
+blend with the Shin fair price of that book's current pair, EV>5%, odds<=5, the best passing price logged once per
+match (`odds` = price taken, `open` = that book's opening price for reference). One rule only. Note: the whole-2026
+test priced the opening line; current prices later in the day are sharper, so the live edge can be smaller than the
+test's +15%. Excel (`ledger_xlsx.py`): sheet "Opklade" with the current state on top (bank, profit, ROI, bets,
+won-lost, pending) and one row per bet (kick-off, tournament, who we back, opponent, odds, stake, result, profit,
+bookmaker), colours for won / lost / pending; sheet "Po kategoriji" with the totals per category.
 
 ## Memory (15 GB machine): measured peaks and what changed (`peakmem.py`)
 `peakmem.py CMD ...` samples the summed PSS of a command's whole process tree every 0.2 s (PSS, not RSS: forked

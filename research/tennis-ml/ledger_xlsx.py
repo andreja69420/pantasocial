@@ -1,22 +1,17 @@
-"""Excel sheet of the paper bets, kept to the basics: summary on top (bank, profit, ROI, record), profit per category,
-then one row per bet: kick-off (Belgrade time), category, tournament, who we back, opponent, odds, bookmaker, stake,
-result, profit. Stake = quarter Kelly of the bank at the moment the bet was logged = starting bank + profit of every bet
-already settled then (settled = when the loop first saw the result), so a settled bet changes only the stakes of later
-bets. Stakes are computed here (values); profits and the summary are formulas. LibreOffice (if installed) stores the
-computed values for viewers that do not evaluate formulas.
+"""Excel sheet of the paper bets, kept to the basics. Sheet "Opklade": the current state on top (bank, profit, ROI,
+bets, won-lost, pending), then one row per bet: kick-off (Belgrade time), tournament, who we back, opponent, odds,
+stake, result, profit, bookmaker. Sheet "Po kategoriji": the same totals per Flashscore category.
+Stake = quarter Kelly of the bank at the moment the bet was logged = starting bank + profit of every bet already settled
+then (settled = when the loop first saw the result), so a settled bet changes only the stakes of later bets. All cells
+are values (computed here), so every viewer shows them.
 
 usage: ledger_xlsx.py LEDGER_CSV OUT_XLSX [BANK=100000]   (dinars)
 """
-import os
-import shutil
-import subprocess
 import sys
-import tempfile
 
 import numpy as np
 import pandas as pd
 from openpyxl import Workbook
-from openpyxl.formatting.rule import CellIsRule
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 
 from fs_common import player_name
@@ -28,15 +23,15 @@ SEG = {"ITF WOMEN - SINGLES": "Ženski ITF", "CHALLENGER MEN - SINGLES": "Muški
        "CHALLENGER WOMEN - SINGLES": "WTA 125", "WTA - SINGLES": "WTA Tour", "ATP - SINGLES": "ATP Tour"}
 
 L = pd.read_csv(SRC)
-# one row per match and side: the broadest rule that logged it (EV>5% odds<=5), stake sized by Kelly anyway
 L["thr"] = L.rule.str.extract(r"EV>(\d+)%").astype(float)[0]
 L = L.sort_values(["thr", "logged_at"]).drop_duplicates(["fs_mid", "side"])
-L = L[L.tournament.str.split(":").str[0].str.strip().isin(SEG)]
+L = L[L.tournament.str.split(":").str[0].str.strip().isin(SEG)].copy()
 now = pd.Timestamp.now("UTC").tz_localize(None)
-bg = lambda t: pd.Timestamp(t).tz_localize("UTC").tz_convert("Europe/Belgrade").tz_localize(None)
+bg = lambda t: pd.Timestamp(t).tz_localize("UTC").tz_convert("Europe/Belgrade").tz_localize(None).to_pydatetime()
 
 L["res"] = [{"void": "Povraćaj"}.get(str(r), "Dobijeno" if r == s else ("Izgubljeno" if str(r) in ("home", "away") else ""))
             for r, s in zip(L.result, L.side)]
+L["res"] = [r or ("U toku" if pd.Timestamp(s) <= now else "Čeka") for r, s in zip(L.res, L.start)]
 # settled before settlement times were recorded: kick-off + 3 h
 L["settled"] = [pd.Timestamp(a) if isinstance(a, str) and a else pd.Timestamp(st) + pd.Timedelta(hours=3)
                 for a, st in zip(L.get("settled_at", pd.Series(np.nan, index=L.index)), L.start)]
@@ -45,94 +40,125 @@ L["logged"] = pd.to_datetime(L.logged_at)
 stake, profit = {}, {}
 for i, b in L.sort_values("logged").iterrows():
     bank = BANK + sum(v for j, v in profit.items() if L.at[j, "settled"] <= b.logged)
-    p, o = float(b.q_blend), float(b.open)
+    p, o = float(b.q_blend), float(b.odds)
     stake[i] = round(bank * KELLY * max(0.0, (p * o - 1) / (o - 1)))
-    if b.res:
-        profit[i] = stake[i] * (o - 1) if b.res == "Dobijeno" else (-stake[i] if b.res == "Izgubljeno" else 0.0)
-L["stake"] = pd.Series(stake)
-L = L.sort_values("start")
+    if b.res in ("Dobijeno", "Izgubljeno", "Povraćaj"):
+        profit[i] = round(stake[i] * (o - 1)) if b.res == "Dobijeno" else (-stake[i] if b.res == "Izgubljeno" else 0)
+L["stake"], L["profit"] = pd.Series(stake), pd.Series(profit)
+L["cat"] = L.tournament.str.split(":").str[0].str.strip().map(SEG)
+L = L.sort_values(["start", "logged"])
 
-INK, MUTED, LINE, HEAD, BAND = "1F2933", "7B8794", "D9DEE3", "2F3B48", "F5F7F9"
+NAVY, INK, MUTED, LINE, BAND = "1B2A41", "1F2933", "7B8794", "E4E7EB", "F7F9FB"
+GREEN, GREEN_BG, RED, RED_BG, AMBER, AMBER_BG, BLUE_BG = "1E7B34", "E3F4E8", "B42318", "FDE8E7", "8A5A00", "FFF4D6", "E8EEF8"
 font = lambda **k: Font(**{"name": "Calibri", "size": 10, "color": INK, **k})
-thin = Side(style="thin", color=LINE)
-COLS = [("Početak", 13, "dd.mm. hh:mm"), ("Kategorija", 16, "@"), ("Turnir", 34, "@"), ("Igramo na", 22, "@"),
-        ("Protivnik", 22, "@"), ("Kvota", 7, "0.00"), ("Kladionica", 13, "@"), ("Ulog", 9, "#,##0"), ("Rezultat", 11, "@"),
-        ("Dobit", 10, "#,##0;[Red]-#,##0")]
-RIGHT = {"Kvota", "Ulog", "Dobit"}
+fill = lambda c: PatternFill("solid", fgColor=c)
+line = Border(bottom=Side(style="thin", color=LINE))
+STATUS = {"Dobijeno": (GREEN, GREEN_BG), "Izgubljeno": (RED, RED_BG), "Čeka": (AMBER, AMBER_BG), "U toku": (AMBER, AMBER_BG),
+          "Povraćaj": (MUTED, BAND)}
+
+
+def totals(g):
+    s = g[g.res.isin(["Dobijeno", "Izgubljeno"])]
+    staked = s.stake.sum()
+    return {"profit": g.profit.sum(), "roi": g.profit.sum() / staked if staked else None, "n": len(g),
+            "won": int((g.res == "Dobijeno").sum()), "lost": int((g.res == "Izgubljeno").sum()),
+            "open": int(g.res.isin(["Čeka", "U toku"]).sum())}
+
+
+def header(ws, row, names, widths, right):
+    for j, (c, w) in enumerate(zip(names, widths), 1):
+        cell = ws.cell(row=row, column=j, value=c)
+        cell.font, cell.fill = font(bold=True, color="FFFFFF"), fill(NAVY)
+        cell.alignment = Alignment(horizontal="right" if c in right else "left", vertical="center", indent=1)
+        ws.column_dimensions[cell.column_letter].width = w
+    ws.row_dimensions[row].height = 22
+
 
 wb = Workbook()
 ws = wb.active
 ws.title = "Opklade"
 ws.sheet_view.showGridLines = False
-r0 = 10
-last = r0 + max(len(L), 1) - 1
-col = lambda c: f"${c}${r0}:${c}${last}"
+T = totals(L)
 ws["A1"] = "Opklade"
-ws["A1"].font = font(size=14, bold=True)
-staked = f'(SUMIF({col("I")},"Dobijeno",{col("H")})+SUMIF({col("I")},"Izgubljeno",{col("H")}))'
-summary = [("Početna banka", BANK, "#,##0"), ("Banka sada", f"=A3+SUM({col('J')})", "#,##0"),
-           ("Dobit", f"=SUM({col('J')})", "#,##0;[Red]-#,##0"), ("ROI", f'=IFERROR(SUM({col("J")})/{staked},"")', "0.0%;[Red]-0.0%"),
-           ("Opklade", f"=COUNTA({col('D')})", "0"), ("Dobijeno", f'=COUNTIF({col("I")},"Dobijeno")', "0"),
-           ("Izgubljeno", f'=COUNTIF({col("I")},"Izgubljeno")', "0"),
-           ("Čeka", f'=COUNTIF({col("I")},"Čeka")+COUNTIF({col("I")},"U toku")', "0")]
-for j, (lab, v, fmt) in enumerate(summary, 1):
-    a, b = ws.cell(row=2, column=j, value=lab), ws.cell(row=3, column=j, value=v)
-    a.font, b.font = font(size=9, color=MUTED), font(size=12, bold=True)
+ws["A1"].font = font(size=16, bold=True, color=NAVY)
+ws["A1"].alignment = Alignment(vertical="center")
+ws.row_dimensions[1].height = 28
+pos = lambda v: GREEN if v and v > 0 else (RED if v and v < 0 else INK)
+cards = [("Banka", BANK + T["profit"], "#,##0", pos(T["profit"]), BLUE_BG),
+         ("Dobit", T["profit"], "+#,##0;-#,##0;0", pos(T["profit"]), GREEN_BG if T["profit"] > 0 else RED_BG if T["profit"] < 0 else BAND),
+         ("ROI", T["roi"], "+0.0%;-0.0%;0.0%", pos(T["roi"]), BAND),
+         ("Opklade", T["n"], "0", INK, BAND), ("Dobijeno – izgubljeno", f'{T["won"]} – {T["lost"]}', "@", INK, BAND),
+         ("Čeka", T["open"], "0", AMBER, AMBER_BG)]
+# cards: label in row 3, value in row 4, over the columns of the bet table (A-I)
+for (lab, v, fmt, color, bgc), (c0, c1) in zip(cards, [(1, 2), (3, 3), (4, 4), (5, 6), (7, 8), (9, 9)]):
+    for r in (3, 4):
+        if c1 > c0:
+            ws.merge_cells(start_row=r, start_column=c0, end_row=r, end_column=c1)
+        for c in range(c0, c1 + 1):
+            ws.cell(row=r, column=c).fill = fill(bgc)
+    a, b = ws.cell(row=3, column=c0, value=lab), ws.cell(row=4, column=c0, value=v if v is not None else "–")
+    a.font, b.font = font(size=9, color=MUTED), font(size=16, bold=True, color=color)
     b.number_format = fmt
-    a.alignment = b.alignment = Alignment(horizontal="left")
-# profit per category (rows 5-7): name, profit, ROI and record
-for j, cat in enumerate(SEG.values(), 1):
-    crit = f'{col("B")},"{cat}"'
-    won, lost = f'COUNTIFS({crit},{col("I")},"Dobijeno")', f'COUNTIFS({crit},{col("I")},"Izgubljeno")'
-    st = f'(SUMIFS({col("H")},{crit},{col("I")},"Dobijeno")+SUMIFS({col("H")},{crit},{col("I")},"Izgubljeno"))'
-    a = ws.cell(row=5, column=j, value=cat)
-    b = ws.cell(row=6, column=j, value=f'=SUMIFS({col("J")},{crit})')
-    c = ws.cell(row=7, column=j, value=f'=IF({st}>0,"ROI "&TEXT(SUMIFS({col("J")},{crit})/{st},"0.0%")&" · ","")'
-                                       f'&{won}&"–"&{lost}&" od "&COUNTIFS({crit})')
-    a.font, b.font, c.font = font(size=9, color=MUTED), font(size=12, bold=True), font(size=9, color=MUTED)
-    b.number_format = "#,##0;[Red]-#,##0"
-    for x in (a, b, c):
-        x.alignment = Alignment(horizontal="left", vertical="top", wrap_text=True)
-ws.row_dimensions[7].height = 26
+    a.alignment = Alignment(horizontal="left", vertical="bottom", indent=1)
+    b.alignment = Alignment(horizontal="left", vertical="center", indent=1)
+ws.row_dimensions[3].height, ws.row_dimensions[4].height = 18, 30
+ws.cell(row=5, column=1, value=f"Početna banka {BANK:,.0f} · četvrtina Kelly-ja · stanje {bg(now):%d.%m. %H:%M}".replace(",", "."))
+ws.cell(row=5, column=1).font = font(size=9, color=MUTED)
 
-for j, (c, w, _) in enumerate(COLS, 1):
-    cell = ws.cell(row=r0 - 1, column=j, value=c)
-    cell.font, cell.fill = font(bold=True, color="FFFFFF"), PatternFill("solid", fgColor=HEAD)
-    cell.alignment = Alignment(horizontal="right" if c in RIGHT else "left", vertical="center")
-    ws.column_dimensions[cell.column_letter].width = w
-ws.row_dimensions[r0 - 1].height = 20
+COLS = [("Početak", 13, "dd.mm. hh:mm"), ("Turnir", 34, "@"), ("Igramo na", 22, "@"), ("Protiv", 22, "@"), ("Kvota", 8, "0.00"),
+        ("Ulog", 10, "#,##0"), ("Rezultat", 12, "@"), ("Dobit", 11, "+#,##0;-#,##0;0"), ("Kladionica", 14, "@")]
+RIGHT = {"Kvota", "Ulog", "Dobit"}
+r0 = 8
+header(ws, r0 - 1, [c for c, _, _ in COLS], [w for _, w, _ in COLS], RIGHT)
 for i, b in enumerate(L.itertuples()):
     r = r0 + i
-    start = pd.Timestamp(b.start)
     pick, opp = (b.home, b.away) if b.side == "home" else (b.away, b.home)
-    vals = [bg(start).to_pydatetime(), SEG[b.tournament.split(":")[0].strip()], b.tournament.split(":", 1)[-1].strip(),
-            player_name({"WU": pick}, "h").title(), player_name({"WU": opp}, "h").title(), float(b.open), b.book, int(b.stake),
-            b.res or ("U toku" if start <= now else "Čeka"),
-            f'=IF(I{r}="Dobijeno",H{r}*(F{r}-1),IF(I{r}="Izgubljeno",-H{r},IF(I{r}="Povraćaj",0,"")))']
+    tname = b.tournament.split(":", 1)[-1].strip()
+    vals = [bg(b.start), tname, player_name({"WU": pick}, "h").title(), player_name({"WU": opp}, "h").title(), float(b.odds),
+            int(b.stake), b.res, None if np.isnan(b.profit) else int(b.profit), b.book]
     for j, v in enumerate(vals, 1):
         cell = ws.cell(row=r, column=j, value=v)
         cell.number_format = COLS[j - 1][2]
-        cell.font = font(color=MUTED) if j == 9 and not b.res else font()
-        cell.border = Border(bottom=thin)
-        cell.alignment = Alignment(horizontal="right" if COLS[j - 1][0] in RIGHT else "left", vertical="center")
+        cell.font = font(bold=j == 3)
+        cell.border = line
+        cell.alignment = Alignment(horizontal="right" if COLS[j - 1][0] in RIGHT else "left", vertical="center", indent=1)
         if i % 2:
-            cell.fill = PatternFill("solid", fgColor=BAND)
-    ws.row_dimensions[r].height = 18
-ws.conditional_formatting.add(f"J{r0}:J{last}", CellIsRule(operator="greaterThan", formula=["0"],
-                                                         font=Font(name="Calibri", size=10, color="1E7B34")))
+            cell.fill = fill(BAND)
+    fg, bgc = STATUS.get(b.res, (INK, BAND))
+    st = ws.cell(row=r, column=7)
+    st.font, st.fill = font(bold=True, color=fg), fill(bgc)
+    if not np.isnan(b.profit) and b.profit:
+        ws.cell(row=r, column=8).font = font(bold=True, color=GREEN if b.profit > 0 else RED)
+    ws.row_dimensions[r].height = 20
+last = r0 + max(len(L), 1) - 1
 ws.freeze_panes = ws.cell(row=r0, column=1)
-ws.auto_filter.ref = f"A{r0 - 1}:J{last}"
+ws.auto_filter.ref = f"A{r0 - 1}:I{last}"
 ws.page_setup.orientation = "landscape"
 ws.page_setup.fitToWidth, ws.page_setup.fitToHeight = 1, 0
 ws.sheet_properties.pageSetUpPr.fitToPage = True
+
+# per category
+wc = wb.create_sheet("Po kategoriji")
+wc.sheet_view.showGridLines = False
+wc["A1"] = "Po kategoriji"
+wc["A1"].font = font(size=16, bold=True, color=NAVY)
+wc.row_dimensions[1].height = 28
+names = ["Kategorija", "Opklade", "Dobijeno", "Izgubljeno", "Čeka", "Dobit", "ROI"]
+header(wc, 3, names, [20, 10, 10, 11, 8, 12, 9], set(names[1:]))
+rows = [(cat, totals(L[L.cat == cat])) for cat in SEG.values()] + [("Ukupno", T)]
+for i, (cat, t) in enumerate(rows):
+    r = 4 + i
+    vals = [cat, t["n"], t["won"], t["lost"], t["open"], t["profit"], t["roi"]]
+    for j, v in enumerate(vals, 1):
+        cell = wc.cell(row=r, column=j, value=v if v is not None else "–")
+        cell.number_format = {6: "+#,##0;-#,##0;0", 7: "+0.0%;-0.0%;0.0%"}.get(j, "0" if j > 1 else "@")
+        cell.font = font(bold=cat == "Ukupno" or j == 1, color=pos(v) if j in (6, 7) and v else INK)
+        cell.border = line
+        cell.alignment = Alignment(horizontal="left" if j == 1 else "right", vertical="center", indent=1)
+        if cat == "Ukupno":
+            cell.fill = fill(BLUE_BG)
+        elif i % 2:
+            cell.fill = fill(BAND)
+    wc.row_dimensions[r].height = 20
 wb.save(OUT)
-if shutil.which("soffice"):
-    with tempfile.TemporaryDirectory() as tmp:
-        r = subprocess.run(["soffice", f"-env:UserInstallation=file://{tmp}/profile", "--headless", "--calc",
-                            "--convert-to", "xlsx", "--outdir", tmp, os.path.abspath(OUT)], capture_output=True, timeout=180)
-        done = os.path.join(tmp, os.path.basename(OUT))
-        if r.returncode == 0 and os.path.exists(done):
-            shutil.move(done, OUT)
-        else:
-            print("LibreOffice recalculation failed, formulas without stored values:", r.stderr.decode()[-300:])
 print(f"{len(L)} bets -> {OUT}")
