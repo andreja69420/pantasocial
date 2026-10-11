@@ -2,11 +2,16 @@
 filled in as matches finish. Stakes compound: each bet is a quarter-Kelly share of the bank at the moment the bet was
 placed = starting bank + profit of every bet already settled then (settled = when the loop first saw the result;
 bets that are still open do not change it, and a settled bet changes only the stakes of bets placed after it). All of it is
-formulas, so changing the starting bank recomputes everything.
+formulas, so changing the starting bank recomputes everything. LibreOffice (if installed) recalculates and stores the
+values, because viewers that do not compute formulas (phone previews) otherwise show 0 or empty cells.
 
 usage: ledger_xlsx.py LEDGER_CSV OUT_XLSX [BANK=100000]   (dinars)
 """
+import os
+import shutil
+import subprocess
 import sys
+import tempfile
 
 import numpy as np
 import pandas as pd
@@ -101,4 +106,13 @@ s["A12"] = ("Pravilo: kvota se uzima samo dok je još početna; P = σ(0,44·log
             "igra se kad je P·kvota − 1 > 5% i kvota ≤ 5. Ulog = 1/4 Kelly = 0,25·(P·kvota − 1)/(kvota − 1) "
             "banke u trenutku opklade (početna banka + dobit svih opklada završenih do tada).")
 wb.save(OUT)
+if shutil.which("soffice"):
+    with tempfile.TemporaryDirectory() as tmp:
+        r = subprocess.run(["soffice", f"-env:UserInstallation=file://{tmp}/profile", "--headless", "--calc",
+                            "--convert-to", "xlsx", "--outdir", tmp, os.path.abspath(OUT)], capture_output=True, timeout=180)
+        done = os.path.join(tmp, os.path.basename(OUT))
+        if r.returncode == 0 and os.path.exists(done):
+            shutil.move(done, OUT)
+        else:
+            print("LibreOffice recalculation failed, formulas without stored values:", r.stderr.decode()[-300:])
 print(f"{len(L)} bets -> {OUT}")
