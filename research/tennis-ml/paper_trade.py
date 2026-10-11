@@ -16,7 +16,8 @@ Ledger: DATA_DIR/paper/ledger.csv. Summary printed per rule.
 usage: paper_trade.py DATA_DIR [DAYS_AHEAD=7]   (env SKIP_UPDATE=1: no results update)
 env LIVE_OUT=feature build dir (default out_live), MODELS=model dir (default models), NX=1: add the new-feature modules
 (fx_live.py) to the fixture rows, MODEL_TAG=label stored with each logged bet, GEO=Flashscore odds region (default GB),
-BOOKS=comma-separated bookmakers to bet with (default: every book of the region)
+BOOKS=comma-separated bookmakers to bet with (default: every book of the region), SKIP_CATS=comma-separated Flashscore
+categories not bet (e.g. ITF MEN - SINGLES,ITF WOMEN - SINGLES)
 """
 import os
 import pickle
@@ -42,6 +43,7 @@ NX = os.environ.get("NX") == "1"
 TAG = os.environ.get("MODEL_TAG", "")
 GEO = os.environ.get("GEO", "GB")  # Flashscore odds region
 BOOKS = [b for b in os.environ.get("BOOKS", "").split(",") if b]  # only these bookmakers (all of the region if empty)
+SKIP_CATS = [c for c in os.environ.get("SKIP_CATS", "").split(",") if c]  # Flashscore categories not bet, e.g. ITF MEN - SINGLES
 RULES = {"EV>5% odds<=5": (0.05, 5.0)}  # the plan rule only (whole-2026 test)
 lg = lambda p: np.log(np.clip(p, 1e-4, 1 - 1e-4) / (1 - np.clip(p, 1e-4, 1 - 1e-4)))
 
@@ -77,6 +79,8 @@ for tour in ("wta", "atp"):
     O = pd.read_parquet(os.path.join(D, "fs_raw", f"{tour}_fs_fixture_odds_{GEO}.parquet"))
     if BOOKS:
         O = O[O.book.isin(BOOKS)]
+    if SKIP_CATS:
+        O = O[~O.tournament.str.split(":").str[0].str.strip().isin(SKIP_CATS)]
     if O.empty:
         print(f"{tour}: no fixtures with odds yet")
         continue
@@ -181,6 +185,16 @@ if not ledger.empty and seen:
         if p:
             ledger.at[i, "close"] = p[0] if ledger.at[i, "side"] == "home" else p[1]
             ledger.at[i, "close_seen_at"] = str(pd.Timestamp.now('UTC').tz_localize(None))[:16]
+    # every book's latest price for our side while the match has not started (px_<book>, shown in the Excel sheet)
+    for bk in BOOKS:
+        c = f"px_{bk}"
+        if c not in ledger:
+            ledger[c] = np.nan
+        for i in ledger.index[ledger.result.fillna("") == ""]:
+            p = cur.get((ledger.at[i, "fs_mid"], bk))
+            if p:
+                v = p[0] if ledger.at[i, "side"] == "home" else p[1]
+                ledger.at[i, c] = v if v > 1 else np.nan
 # settle finished matches from the daily results feeds (today and the 3 days before)
 if not ledger.empty:
     done = {}

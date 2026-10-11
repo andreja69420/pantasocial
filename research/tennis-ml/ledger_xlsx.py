@@ -1,6 +1,7 @@
 """Excel sheet of the paper bets, kept to the basics. Sheet "Opklade": the current state on top (bank, profit, ROI,
 bets, won-lost, pending), then one row per bet: kick-off (Belgrade time), tournament, who we back, opponent, odds,
-stake, result, profit, bookmaker. Sheet "Po kategoriji": the same totals per Flashscore category.
+stake, result, profit, bookmaker. Sheet "Po kategoriji": the same totals per Flashscore category. Sheet "Sve kvote": every book's latest
+price for our side (px_<book> in the ledger), the best in green.
 Stake = quarter Kelly of the bank at the moment the bet was logged = starting bank + profit of every bet already settled
 then (settled = when the loop first saw the result), so a settled bet changes only the stakes of later bets. All cells
 are values (computed here), so every viewer shows them.
@@ -22,7 +23,8 @@ KELLY = 0.25
 SEG = {"ITF WOMEN - SINGLES": "Ženski ITF", "CHALLENGER MEN - SINGLES": "Muški Challenger", "ITF MEN - SINGLES": "Muški ITF",
        "CHALLENGER WOMEN - SINGLES": "WTA 125", "WTA - SINGLES": "WTA Tour", "ATP - SINGLES": "ATP Tour"}
 
-BOOK_NAMES = {"Mozzartbetrs": "MozzartBet", "Admiralbet.rs": "AdmiralBet", "SoccerBet": "SoccerBet", "bet365": "bet365"}
+BOOK_NAMES = {"bet365": "bet365", "Mozzartbetrs": "MozzartBet", "Admiralbet.rs": "AdmiralBet", "SoccerBet": "SoccerBet",
+              "Superbet.rs": "Superbet", "1xBet.rs": "1xBet"}
 
 L = pd.read_csv(SRC)
 L["thr"] = L.rule.str.extract(r"EV>(\d+)%").astype(float)[0]
@@ -162,5 +164,39 @@ for i, (cat, t) in enumerate(rows):
         elif i % 2:
             cell.fill = fill(BAND)
     wc.row_dimensions[r].height = 20
+# every book's latest price for our side (before kick-off), the best one in green
+wk = wb.create_sheet("Sve kvote")
+wk.sheet_view.showGridLines = False
+wk["A1"] = "Sve kvote"
+wk["A1"].font = font(size=16, bold=True, color=NAVY)
+wk.row_dimensions[1].height = 28
+wk["A2"] = "zadnja kvota pre početka meča za našu stranu · zeleno = najbolja"
+wk["A2"].font = font(size=9, color=MUTED)
+books = [b for b in BOOK_NAMES if f"px_{b}" in L]
+names = ["Početak", "Igramo na", "Protiv", "Uzeli smo"] + [BOOK_NAMES[b] for b in books]
+header(wk, 4, names, [13, 22, 22, 17] + [11] * len(books), set(names[3:]))
+for i, b in enumerate(L.itertuples()):
+    r = 5 + i
+    pick, opp = (b.home, b.away) if b.side == "home" else (b.away, b.home)
+    px = [float(L.at[b.Index, f"px_{bk}"]) for bk in books]
+    best = np.nanmax(px) if not all(np.isnan(px)) else None
+    vals = [bg(b.start), player_name({"WU": pick}, "h").title(), player_name({"WU": opp}, "h").title(),
+            f"{float(b.odds):.2f} {BOOK_NAMES.get(b.book, b.book)}"] + [None if np.isnan(v) else v for v in px]
+    for j, v in enumerate(vals, 1):
+        cell = wk.cell(row=r, column=j, value=v)
+        cell.number_format = "dd.mm. hh:mm" if j == 1 else ("0.00" if j > 4 else "@")
+        cell.font = font(bold=j == 2)
+        cell.border = line
+        cell.alignment = Alignment(horizontal="right" if j >= 4 else "left", vertical="center", indent=1)
+        if i % 2:
+            cell.fill = fill(BAND)
+        if j > 4 and v is not None and best is not None and abs(v - best) < 1e-9:
+            cell.font, cell.fill = font(bold=True, color=GREEN), fill(GREEN_BG)
+    wk.row_dimensions[r].height = 20
+wk.freeze_panes = wk.cell(row=5, column=1)
+for sh in (wc, wk):
+    sh.page_setup.orientation = "landscape"
+    sh.page_setup.fitToWidth, sh.page_setup.fitToHeight = 1, 0
+    sh.sheet_properties.pageSetUpPr.fitToPage = True
 wb.save(OUT)
 print(f"{len(L)} bets -> {OUT}")

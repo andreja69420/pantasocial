@@ -673,6 +673,12 @@ accept UK residents only. Check on the 14 bets of the UK run: Mozzart had 12, Ad
 at prices ~5% below the best UK price (EV>5% kept by 1 / 3 / 2 of them). The whole-2026 test at the Serbian prices
 (`fs_odds.py --matches` for region RS, `eval_levels2026.py --geo=RS`) follows.
 
+**Live from 2026-10-11 23:20 Belgrade: six Serbian-region books, no ITF** (ledger cleared again; `paper_loop.sh`
+defaults `GEO=RS`, `BOOKS=bet365,Mozzartbetrs,Admiralbet.rs,SoccerBet,Superbet.rs,1xBet.rs`,
+`SKIP_CATS=ITF MEN - SINGLES,ITF WOMEN - SINGLES`): the best current price of the six that passes the rule. For every
+pending bet the ledger keeps each book's latest price for our side (`px_<book>`); the Excel sheet "Sve kvote" shows
+them with the best one in green. First run: 11 bets (7 WTA 125, 4 men's Challenger).
+
 ### Whole 2026 at the Serbian books' prices (`fs_odds.py --matches` region RS, `eval_levels2026.py --geo=RS`, `eval_books.py`)
 Flashscore's Serbian region lists bet365, MozzartBet, AdmiralBet, SoccerBet, Superbet.rs and 1xBet.rs. Their 2026
 prices (opening and closing, 48k matches, 4 scrapers at 37/s = ~150/s in total, 1-2 short 429 pauses each) were
