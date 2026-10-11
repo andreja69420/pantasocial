@@ -631,3 +631,37 @@ Every 30 minutes (`paper_loop.sh`), in parallel where nothing depends on anythin
    closing price so far (CLV); finished matches are settled from the daily results feeds (walkover / cancelled = void).
 Ledger: `paper/ledger.csv` (copied into the repo by the loop). Rules logged in parallel: EV>15% odds<=5,
 EV>10% odds<=2, EV>5% odds<=5, EV>5% odds<=2.
+
+## Fresh test June-October 2026 at 20 UK books' opening prices (`eval_fs2026.py`)
+Matches 2026-06-08..2026-10-11 after the end of the Sackmann archive (Flashscore results, 22,127 matches with odds),
+results-only model trained <= 2024 and calibrated on 2025 (never saw 2026), Shin blend fitted on Bet365 2014-2024,
+both unchanged. Per book, flat 1 unit at the book's opening price; "void" = bets the book later moved >12 points
+against the opening fair probability refunded (stale-line worst case). Selected lines:
+
+| Book / rule | Bets | ROI at open | 90% lower | ROI at close | void stress | CLV |
+|---|---|---|---|---|---|---|
+| bet365 blend EV>5% odds<=2 | 197 | +3.6% | -5.7% | -0.5% | +2.4% | +3.2% |
+| bet365 blend EV>15% odds<=5 | 106 | +12.8% | -7.7% | +5.4% | +10.6% | +3.6% |
+| 7BetUK blend EV>10% odds<=2 | 367 | +7.5% | +0.6% | +0.7% | +5.3% | +6.1% |
+| Unibet UK blend EV>5% odds<=2 | 1,137 | +2.6% | -1.2% | -4.1% | +0.1% | +6.4% |
+| Betway blend EV>5% odds<=2 | 1,116 | +0.8% | -3.0% | -4.2% | -1.4% | +4.9% |
+| William Hill blend EV>5% odds<=2 | 945 | -0.2% | -4.3% | -5.9% | -1.2% | +5.9% |
+| Ladbrokes / Coral blend EV>5% odds<=2 | ~897 | -0.6% | -4.9% | -6.1% | -2.0% | +5.3% |
+| Midnite blend EV>5% odds<=2 | 841 | -3.4% | -7.8% | -6.3% | -4.6% | +3.0% |
+| SpreadEX blend EV>5% odds<=2 | 993 | -3.0% | -7.0% | -4.0% | -3.5% | +0.7% |
+| Skybet blend EV>15% odds<=5 | 220 | +17.2% | +3.5% | +7.8% | +12.2% | +7.8% |
+| Paddy Power blend EV>5% odds<=5 | 660 | +6.6% | -0.4% | -3.4% | +3.1% | +9.6% |
+| **Best opening price of all books**, blend EV>5% odds<=2 | 1,929 | **+8.5%** | +5.7% | -0.7% | +5.2% | +9.4% |
+| **Best opening price of all books**, blend EV>5% odds<=5 | 3,609 | **+8.8%** | +5.7% | -3.5% | +4.1% | +13.2% |
+
+Random sides lose the margin at every book (-5% to -7%), as they should. Reading:
+- **CLV is positive at every book** (+1% to +10%): the picks' prices shorten after opening, the signal that does not
+  depend on match outcomes. ROI at the closing price is negative almost everywhere: the edge is only at the opening.
+- At a single big UK book the result is about break-even to slightly positive; the margin of a UK book's tennis
+  opening (7-10%, vs ~5.5% at bet365) eats most of it. Positive at bet365, 7BetUK, Unibet, Skybet, Paddy Power;
+  negative at Midnite and SpreadEX.
+- Taking the best opening price across books gives +8.5% to +8.8% with lower bounds above +5%, and +4% to +5% even
+  under the void stress. That needs accounts at several books and assumes the best price was still available when
+  we bet - which is exactly what the live paper trading (bets logged only while the price still equals the opening)
+  measures.
+- By segment, men's ITF and Challenger now hold up as well as women's ITF; ATP tour is positive with few bets.
