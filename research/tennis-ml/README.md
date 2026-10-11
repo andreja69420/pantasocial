@@ -666,6 +666,26 @@ test's +15%. Excel (`ledger_xlsx.py`): sheet "Opklade" with the current state on
 won-lost, pending) and one row per bet (kick-off, tournament, who we back, opponent, odds, stake, result, profit,
 bookmaker), colours for won / lost / pending; sheet "Po kategoriji" with the totals per category.
 
+### bet365 only, and opening vs closing prices (whole 2026, `eval_levels2026.py --book=bet365 [--close]`)
+Same test as above (r6_v3, EV>5% odds<=5, flat 1 unit), at bet365's prices only, and at the closing price (last price
+before the start) instead of the opening one:
+
+| prices | bets | ROI | lower 90% | avg odds |
+|---|---|---|---|---|
+| best of ~20 UK books, opening | 6,174 | +15.5% | +13.2% | 2.23 |
+| best of UK books, opening, only matches bet365 lists | 994 | +18.0% | +12.4% | 2.18 |
+| **bet365 only, opening** | **477** | **+16.2%** | **+7.9%** | 2.18 |
+| bet365 only, opening, men / women | 233 / 244 | +22.5% / +10.1% | +10.2% / -0.9% | |
+| best of UK books, **closing** | 4,543 | +2.4% | -0.4% | 2.36 |
+| bet365 only, **closing** | 326 | -1.2% | -11.6% | 2.30 |
+
+- bet365 prices on Flashscore (GB) cover tour events, Grand Slams, 1000s, Challengers (33%) and WTA 125 (95%), but
+  no ITF match in 2026: bet365 only gives ~1.7 bets a day instead of ~22.
+- at bet365's opening price the edge holds (+16%, lower bound +8%), only a bit below the best-of-books price.
+- the edge is in the opening line: at the closing price it is about zero (all books +2.4%, bet365 -1.2%). Live
+  betting at current prices keeps the edge only while the current price is close to the opening one (soon after
+  the line appears).
+
 ## Memory (15 GB machine): measured peaks and what changed (`peakmem.py`)
 `peakmem.py CMD ...` samples the summed PSS of a command's whole process tree every 0.2 s (PSS, not RSS: forked
 workers share the parent's pages, RSS counted the 865k-row table once per worker and showed 19 GB for fx_live).
