@@ -673,6 +673,29 @@ accept UK residents only. Check on the 14 bets of the UK run: Mozzart had 12, Ad
 at prices ~5% below the best UK price (EV>5% kept by 1 / 3 / 2 of them). The whole-2026 test at the Serbian prices
 (`fs_odds.py --matches` for region RS, `eval_levels2026.py --geo=RS`) follows.
 
+### Whole 2026 at the Serbian books' prices (`fs_odds.py --matches` region RS, `eval_levels2026.py --geo=RS`, `eval_books.py`)
+Flashscore's Serbian region lists bet365, MozzartBet, AdmiralBet, SoccerBet, Superbet.rs and 1xBet.rs. Their 2026
+prices (opening and closing, 48k matches, 4 scrapers at 37/s = ~150/s in total, 1-2 short 429 pauses each) were
+fetched with the match list of the GB odds file. Same test (r6_v3, EV>5% odds<=5, best price among the books, flat
+1 unit; 284 days); full table in `paper/eval_books_rs2026.txt`.
+
+| books | competitions | bets | per day | ROI | lower 90% |
+|---|---|---|---|---|---|
+| bet365 + Mozzart + Admiral + SoccerBet, opening | all | 2,905 | 10.2 | +3.8% | +0.6% |
+| same four, opening | **without ITF** | 1,390 | 4.9 | **+13.8%** | +9.2% |
+| same four, closing | all | 2,278 | 8.0 | -2.5% | -6.2% |
+| all six RS books (+ Superbet, 1xBet), opening | all | 5,261 | 18.5 | +9.5% | +7.1% |
+| all six RS books, opening | **without ITF** | 1,869 | 6.6 | **+17.2%** | +13.2% |
+| all six RS books, closing | all | 3,137 | 11.0 | -2.0% | -5.2% |
+| bet365 alone, opening | (no ITF prices) | 472 | 1.7 | +15.5% | +7.2% |
+
+- ITF at the four books loses (men's ITF -10%: Admiral and SoccerBet ITF prices are too low); with Superbet and 1xBet
+  ITF turns small positive (men +3.8%, women +6.5%).
+- Challengers, WTA 125 and tour events stay clearly profitable at the Serbian prices (+13% .. +18%).
+- As at the UK books, the edge is in the early price: at the closing price every variant is about -2%.
+- Flashscore's Serbian prices look sound: no book pair below 100% (no impossible prices), typical margins bet365 5.7%,
+  1xBet 6.6%, Admiral 7.0%, SoccerBet 7.5%, Mozzart 8.0%, Superbet 8.1%.
+
 ### bet365 only, and opening vs closing prices (whole 2026, `eval_levels2026.py --book=bet365 [--close]`)
 Same test as above (r6_v3, EV>5% odds<=5, flat 1 unit), at bet365's prices only, and at the closing price (last price
 before the start) instead of the opening one:
