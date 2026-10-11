@@ -555,3 +555,14 @@ At 03:20 (Belgrade) BetExplorer responses slowed from ~0.3 s to 18-50 s while ot
 throttles this server after the earlier bursts (the adaptive limiter had climbed to ~480 requests/s, because slow
 responses are not errors). Scraping was stopped for the night; all scrapers now cap the rate at MAX_RATE
 (default 64/s).
+
+### Tournament-clustered bootstrap (`cluster_boot.py`, BetMGM 2025-26, retrained model)
+Bets in the same tournament are not independent, so whole tournaments are resampled (5,000 draws):
+| Rule | Bets | Tournaments | ROI | Clustered 90% CI | Without best tournament | Without best 5 |
+|---|---|---|---|---|---|---|
+| raw EV>5% odds<=2 | 6,585 | 1,420 | +3.7% | [+2.4%, +5.1%] | +3.7% | +3.4% |
+| blend EV>5% odds<=2 | 1,766 | 928 | +6.5% | [+3.8%, +9.2%] | +6.3% | +5.7% |
+| blend EV>5% odds<=5 | 2,626 | 1,123 | +9.0% | [+6.0%, +12.0%] | +8.8% | +8.1% |
+| blend EV>10% odds<=5 | 934 | 607 | +12.0% | [+6.0%, +18.0%] | +11.3% | +9.5% |
+The profit is spread over hundreds of tournaments: no single event carries it, and the clustered intervals stay
+clearly above zero.
