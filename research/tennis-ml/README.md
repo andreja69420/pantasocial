@@ -715,6 +715,21 @@ WTA 500 148 +11.3%, WTA 1000 56 +4.3%, women's Grand Slams 78 +28.5%. Quarter Ke
 | compounding, at most 20,000 per bet | 5,225,068 | 351,400 | 96,691 |
 | compounding without a cap (theory only: 47% largest drop, stakes far above book limits) | 260,872,954 | | |
 
+### Same plan at the price just before the start (six Serbian books, no ITF, whole 2026)
+Decision and bet at the closing price (last price Flashscore had before the start), blend with that price's Shin:
+
+| price | rule | bets | ROI | lower 90% |
+|---|---|---|---|---|
+| opening | EV>5% | 1,869 | +17.2% | +13.2% |
+| opening | EV>10% | 524 | +20.6% | +11.8% |
+| closing | EV>5% | 999 | +6.4% | +0.5% |
+| closing | EV>10% | 309 | +17.5% | +5.4% |
+| closing | EV>15% | 140 | +25.9% | +6.6% |
+
+Closing price, EV>5%, quarter Kelly of a fixed 100,000: 359,337 at 2026-10-10 (lowest 94,085, largest drop 48,271),
+against 1,026,333 at the opening price. Without ITF the closing price keeps a smaller edge (with ITF it was -2%);
+at the closing price a higher threshold (EV>10%) keeps most of it.
+
 ### bet365 only, and opening vs closing prices (whole 2026, `eval_levels2026.py --book=bet365 [--close]`)
 Same test as above (r6_v3, EV>5% odds<=5, flat 1 unit), at bet365's prices only, and at the closing price (last price
 before the start) instead of the opening one:
