@@ -690,13 +690,36 @@ def _run(i):
     return TASKS[i]()
 
 
+def _excluded(M):
+    """Rows (in 'order') that must not feed any state: self-play rows (winner_id == loser_id) and exact twins (same date,
+    winner, loser and score as an earlier row; the source files list some matches twice, so a twin would see its own
+    result as history). Returns (self-play mask, twin mask, position of the first copy for every row)."""
+    sp = M["winner_id"].values == M["loser_id"].values
+    key = pd.DataFrame({"d": M["date"].values, "w": M["winner_id"].values, "l": M["loser_id"].values,
+                        "s": M["score"].fillna("").astype(str).values})
+    code = key.groupby(["d", "w", "l", "s"], sort=False).ngroup().values
+    first = np.unique(code, return_index=True)[1][code]
+    return sp, (first != np.arange(len(M))) & ~sp, first
+
+
+def _with_exclusions(M, run):
+    """run(M_clean) -> frame; self-play rows get NaN, twins get the features of their first copy."""
+    sp, twin, first = _excluded(M)
+    if not (sp | twin).any():
+        return run(M)
+    F = run(M[~(sp | twin)]).reindex(M.index)
+    di = np.flatnonzero(twin)
+    F.iloc[di] = F.iloc[first[di]].values
+    return F
+
+
 def compute(M, workers=None):
-    """Features for every row of M (rows in 'order'); returns a float32 frame with M's index.
-    Self-play rows (winner_id == loser_id, a source data error) take no part in any state and get NaN."""
-    bad = M["winner_id"].values == M["loser_id"].values
-    if bad.any():
-        return _compute(M[~bad], workers).reindex(M.index)
-    return _compute(M, workers)
+    """Features for every row of M; returns a float32 frame with M's index (rows may come in any order, 'order' decides).
+    Self-play rows get NaN and exact twin rows take the features of their first copy, see _excluded."""
+    o = M["order"].values
+    if len(o) > 1 and not (np.diff(o) > 0).all():
+        return compute(M.iloc[np.argsort(o, kind="stable")], workers).loc[M.index]
+    return _with_exclusions(M, lambda X: _compute(X, workers))
 
 
 def _compute(M, workers=None):
@@ -719,7 +742,7 @@ def _compute(M, workers=None):
 
 
 if __name__ == "__main__":
-    cols = ["winner_id", "loser_id", "date", "surface", "tourney_level", "score", "retired", "main", "order"]
+    cols = ["winner_id", "loser_id", "date", "surface", "tourney_level", "score", "retired", "main", "order"]  # duplicates are found on date, ids, score
     F = compute(pd.read_parquet(sys.argv[1], columns=cols))
     F.to_parquet(sys.argv[2])
     print(F.shape, "->", sys.argv[2])

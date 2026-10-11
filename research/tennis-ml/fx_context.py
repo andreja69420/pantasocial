@@ -19,7 +19,8 @@ import numpy as np
 import pandas as pd
 
 EPOCH = np.datetime64("1960-01-01")
-TRAIN_END = int((np.datetime64("2020-01-01") - EPOCH).astype(np.int64))
+FILL_WTA = (5.2134, 7.2375, 15.9)  # (travel_km_log, dist_home_km_log, age_debut)
+FILL_ATP = (0.0, 6.7475, 17.4)
 CENSOR_DAY = int((np.datetime64("1990-01-01") - EPOCH).astype(np.int64))
 BIG = 1 << 17
 FINAL = 13.0
@@ -486,29 +487,50 @@ def player_rows(n, wta, ordv, W, L, td_m, est_m, ev, rord, load_m, isQ_m, isF_m,
     cs_t = np.concatenate(([0.0], np.cumsum(ttl)))
     out["ctx_titles_365d"] = cs_t[pos] - cs_t[lo_a]
 
-    # training medians for unknown values
-    tr = td_raw < TRAIN_END
+    # unknown values take fixed, label-free constants (medians of the 1960-2019 values per tour), so no value depends on the data span
+    fill = FILL_WTA if wta else FILL_ATP
 
-    def fill_med(v):
-        ok = ~np.isnan(v)
-        sel = tr & ok if (tr & ok).any() else ok
-        return np.where(ok, v, np.nanmedian(v[sel]) if sel.any() else 0.0)
+    def fill_med(v, c):
+        return np.where(np.isnan(v), c, v)
 
     del cty, kTD, kEST, gB, td, est, rord_s, load_s
-    out["ctx_travel_km_log"] = fill_med(travel)
-    out["ctx_dist_home_km_log"] = fill_med(dist_home)
-    out["ctx_age_debut"] = fill_med(debut)
+    out["ctx_travel_km_log"] = fill_med(travel, fill[0])
+    out["ctx_dist_home_km_log"] = fill_med(dist_home, fill[1])
+    out["ctx_age_debut"] = fill_med(debut, fill[2])
     return out, perm
 
 
+def _excluded(M):
+    """Rows (in 'order') that must not feed any state: self-play rows (winner_id == loser_id) and exact twins (same date,
+    winner, loser and score as an earlier row; the source files list some matches twice, so a twin would see its own
+    result as history). Returns (self-play mask, twin mask, position of the first copy for every row)."""
+    sp = M["winner_id"].values == M["loser_id"].values
+    key = pd.DataFrame({"d": M["date"].values, "w": M["winner_id"].values, "l": M["loser_id"].values,
+                        "s": M["score"].fillna("").astype(str).values})
+    code = key.groupby(["d", "w", "l", "s"], sort=False).ngroup().values
+    first = np.unique(code, return_index=True)[1][code]
+    return sp, (first != np.arange(len(M))) & ~sp, first
+
+
+def _with_exclusions(M, run):
+    """run(M_clean) -> frame; self-play rows get NaN, twins get the features of their first copy."""
+    sp, twin, first = _excluded(M)
+    if not (sp | twin).any():
+        return run(M)
+    F = run(M[~(sp | twin)]).reindex(M.index)
+    di = np.flatnonzero(twin)
+    F.iloc[di] = F.iloc[first[di]].values
+    return F
+
+
 def compute(M, wta=None):
-    """Self-play rows (winner_id == loser_id, a source data error) take no part in any state and get NaN."""
-    bad = M["winner_id"].values == M["loser_id"].values
-    if bad.any():
-        if wta is None:
-            wta = _is_wta(M)
-        return _compute(M[~bad], wta).reindex(M.index)
-    return _compute(M, wta)
+    """Self-play rows get NaN and exact twin rows take the features of their first copy, see _excluded."""
+    if wta is None:
+        wta = _is_wta(M)
+    o = M["order"].values
+    if len(o) > 1 and not (np.diff(o) > 0).all():
+        return compute(M.iloc[np.argsort(o, kind="stable")], wta).loc[M.index]
+    return _with_exclusions(M, lambda X: _compute(X, wta))
 
 
 def _compute(M, wta=None):

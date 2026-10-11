@@ -10,7 +10,7 @@ import sys
 import numpy as np
 import pandas as pd
 
-TRAIN_END = np.datetime64("2020-01-01")
+MIN_FIT = 5000
 FALLBACK = {"q1": (-1.66, 0.9), "q2": (1.66, 0.9), "p1set": (0.0, 1.0), "luck": (0.0, 7.0)}
 _TOK = re.compile(r"^\[?(\d+)-(\d+)\]?(?:\(\d+(?:-\d+)?\))?$")
 FIELDS = ["gw", "gl", "sw", "sl", "ncs", "mw", "ml", "load", "s1c", "s1w", "tbw", "tbl", "clw", "cll", "bfw", "bfl",
@@ -104,19 +104,40 @@ def elo_exp(W, L, ret):
     return out
 
 
-def fit_logit(x, y):
-    """p = sigmoid(a + b*x) for fractional y by Newton steps."""
+def fit_logit(x, y, w=None):
+    """p = sigmoid(a + b*x) for fractional y (optionally weighted) by Newton steps."""
+    w0 = np.ones(len(x)) if w is None else w
     a = b = 0.0
     for _ in range(30):
         p = 1 / (1 + np.exp(-(a + b * x)))
-        w = p * (1 - p) + 1e-9
-        g = np.array([(y - p).sum(), ((y - p) * x).sum()])
-        H = np.array([[w.sum(), (w * x).sum()], [(w * x).sum(), (w * x * x).sum()]])
+        h = w0 * p * (1 - p) + 1e-9
+        g = np.array([(w0 * (y - p)).sum(), (w0 * (y - p) * x).sum()])
+        H = np.array([[h.sum(), (h * x).sum()], [(h * x).sum(), (h * x * x).sum()]])
         d = np.linalg.solve(H, g)
         a, b = a + d[0], b + d[1]
         if np.abs(d).max() < 1e-8:
             break
     return a, b
+
+
+def causal_logit(x, y, mask, year, name, step):
+    """Per-row (a, b) of p = sigmoid(a + b*x), each calendar year fitted only on masked rows of strictly earlier years
+    (x binned to `step`, so the fit runs on cumulative bin counts); FALLBACK[name] until MIN_FIT rows exist."""
+    ya, yi = np.unique(year, return_inverse=True)
+    bi = np.round(x / step).astype(np.int64)
+    b0 = int(bi[mask].min()) if mask.any() else 0
+    bi = np.clip(bi - b0, 0, None)
+    nb = int(bi.max()) + 1
+    cell = (yi * nb + bi)[mask]
+    cnt = np.bincount(cell, minlength=len(ya) * nb).reshape(len(ya), nb).astype(np.float64)
+    sy = np.bincount(cell, weights=y[mask].astype(np.float64), minlength=len(ya) * nb).reshape(len(ya), nb)
+    cc, cs = np.cumsum(cnt, 0) - cnt, np.cumsum(sy, 0) - sy
+    xc = (np.arange(nb) + b0) * step
+    ab = np.empty((len(ya), 2))
+    for k in range(len(ya)):
+        ok = cc[k] > 0
+        ab[k] = fit_logit(xc[ok], cs[k][ok] / cc[k][ok], cc[k][ok]) if cc[k].sum() >= MIN_FIT else FALLBACK[name]
+    return ab[yi, 0], ab[yi, 1]
 
 
 def sigmoid(z):
@@ -204,14 +225,37 @@ def sr(x, n, p0, m):
     return (x + m * p0) / (n + m)
 
 
+def _excluded(M):
+    """Rows (in 'order') that must not feed any state: self-play rows (winner_id == loser_id) and exact twins (same date,
+    winner, loser and score as an earlier row; the source files list some matches twice, so a twin would see its own
+    result as history). Returns (self-play mask, twin mask, position of the first copy for every row)."""
+    sp = M["winner_id"].values == M["loser_id"].values
+    key = pd.DataFrame({"d": M["date"].values, "w": M["winner_id"].values, "l": M["loser_id"].values,
+                        "s": M["score"].fillna("").astype(str).values})
+    code = key.groupby(["d", "w", "l", "s"], sort=False).ngroup().values
+    first = np.unique(code, return_index=True)[1][code]
+    return sp, (first != np.arange(len(M))) & ~sp, first
+
+
+def _with_exclusions(M, run):
+    """run(M_clean) -> frame; self-play rows get NaN, twins get the features of their first copy."""
+    sp, twin, first = _excluded(M)
+    if not (sp | twin).any():
+        return run(M)
+    F = run(M[~(sp | twin)]).reindex(M.index)
+    di = np.flatnonzero(twin)
+    F.iloc[di] = F.iloc[first[di]].values
+    return F
+
+
 def compute(M, women=None):
-    """Self-play rows (winner_id == loser_id, a source data error) take no part in any state and get NaN."""
-    bad = M["winner_id"].values == M["loser_id"].values
-    if bad.any():
-        if women is None:
-            women = bool(M["tourney_level"].isin(["P", "PM", "I", "T1"]).any())
-        return _compute(M[~bad], women).reindex(M.index)
-    return _compute(M, women)
+    """Self-play rows get NaN and exact twin rows take the features of their first copy, see _excluded."""
+    if women is None:
+        women = bool(M["tourney_level"].isin(["P", "PM", "I", "T1"]).any())
+    o = M["order"].values
+    if len(o) > 1 and not (np.diff(o) > 0).all():  # the Elo recursion walks the rows, so they must be in 'order'
+        return compute(M.iloc[np.argsort(o, kind="stable")], women).loc[M.index]
+    return _with_exclusions(M, lambda X: _compute(X, women))
 
 
 def _compute(M, women=None):
@@ -274,21 +318,16 @@ def _compute(M, women=None):
     dayL = two(day, day)
     e_row = two(e_w, 1 - e_w)
     own_elo, opp_elo = np.r_[elo[:, 0], elo[:, 1]], np.r_[elo[:, 1], elo[:, 0]]
-    tr = two(M["date"].values < TRAIN_END, M["date"].values < TRAIN_END)
+    yr_m = pd.DatetimeIndex(M["date"]).year.values
+    yrL = two(yr_m, yr_m)
     wom = np.full(2 * n, women)
     ch2, itf2, tour2 = two(ch, ch), two(itf, itf), two(tour, tour)
     ct2 = ch2 | tour2
 
-    def coef(name, x, y, mask):
-        mk = mask & tr
-        if mk.sum() < 5000:
-            return FALLBACK[name]
-        return fit_logit(x[mk].astype(float), y[mk].astype(float))
-
     lg = logit(e_row)
-    a1, b1 = coef("q1", lg, won, (s1c == 1) & (s1won == 0))
-    a2, b2 = coef("q2", lg, won, (s1c == 1) & (s1won == 1))
-    a3, b3 = coef("p1set", lg, s1won, s1c == 1)
+    a1, b1 = causal_logit(lg, won, (s1c == 1) & (s1won == 0), yrL, "q1", 0.02)
+    a2, b2 = causal_logit(lg, won, (s1c == 1) & (s1won == 1), yrL, "q2", 0.02)
+    a3, b3 = causal_logit(lg, s1won, s1c == 1, yrL, "p1set", 0.02)
     q1, q2, p1s = sigmoid(a1 + b1 * lg), sigmoid(a2 + b2 * lg), sigmoid(a3 + b3 * lg)
 
     out = Out()
@@ -327,8 +366,7 @@ def _compute(M, women=None):
     nm = nwin(40)
     w40 = sr(GP.sum(won, 40), nm, 0.5, 4)
     g40 = sr(GP.sum(gw, 40), GP.sum(games, 40), 0.5, 40)
-    ok = (nm >= 5) & tr
-    la, lb = fit_logit(g40[ok].astype(float) - 0.5, w40[ok].astype(float)) if ok.sum() >= 5000 else FALLBACK["luck"]
+    la, lb = causal_logit(g40.astype(float) - 0.5, w40, nm >= 5, yrL, "luck", 0.004)
     out["luck_match_40"] = np.where(nm >= 5, w40 - sigmoid(la + lb * (g40 - 0.5)), 0.0)
     sset = sr(GP.sum(sw, 40), GP.sum(cs_all, 40), 0.5, 8)
     out["luck_set_40"] = np.where(nm >= 5, sset - np.clip(0.5 + 1.7 * (g40 - 0.5), 0, 1), 0.0)
