@@ -730,6 +730,18 @@ Closing price, EV>5%, quarter Kelly of a fixed 100,000: 359,337 at 2026-10-10 (l
 against 1,026,333 at the opening price. Without ITF the closing price keeps a smaller edge (with ITF it was -2%);
 at the closing price a higher threshold (EV>10%) keeps most of it.
 
+### Higher edge thresholds at the opening price (six Serbian books, no ITF, whole 2026, 283 days, flat 1 unit)
+
+| rule | bets | a day | ROI | lower 90% | avg odds | units | Challenger + WTA 125 | tour events |
+|---|---|---|---|---|---|---|---|---|
+| EV>5% | 1,869 | 6.6 | +17.2% | +13.2% | 2.08 | +321 | 1,186 +17.3% | 683 +17.0% |
+| EV>10% | 524 | 1.9 | +20.6% | +11.8% | 2.38 | +108 | 319 +25.1% | 205 +13.5% |
+| EV>15% | 190 | 0.7 | +22.5% | +6.3% | 2.65 | +43 | 101 +16.8% | 89 +29.1% |
+| EV>20% | 94 | 0.3 | +37.0% | +13.0% | 2.75 | +35 | 39 +50.3% | 55 +27.6% |
+
+A higher threshold raises ROI per bet only a little but cuts the number of bets 3-10 times, so total profit falls:
+EV>5% stays the plan at the opening price.
+
 ### bet365 only, and opening vs closing prices (whole 2026, `eval_levels2026.py --book=bet365 [--close]`)
 Same test as above (r6_v3, EV>5% odds<=5, flat 1 unit), at bet365's prices only, and at the closing price (last price
 before the start) instead of the opening one:
