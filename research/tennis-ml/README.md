@@ -677,3 +677,15 @@ women 869 -> 502, men 1,497 -> 876 (the rest mostly real newcomers; a few doubtf
 Iva Ivanovic). The first ledger was discarded (`ledger_before_name_fix.csv` kept aside); until the rebuilt base is in
 place the paper loop skips fixtures involving an unlinked id. The June-October fresh test above used the split ids
 and is re-run on the rebuilt base.
+
+### 2026 from January: 100,000 dinars, quarter Kelly compounding, ~1-2 bets a day (`kelly_2026.py`, preliminary)
+Plan segments only. Jan 4 - May 13 at BetMGM.us opening prices (full model), Jun 8 - Oct 11 at the best UK opening
+price (results-only model; this part still on the base with split identities, re-run pending). Each day the bets with
+the highest blend EV (EV>5%), stakes = 0.25 x Kelly of the bank at the start of the day.
+| Selection | Bets | Flat ROI (void stress) | As backtested | Void stress + max 10,000 din a bet | Max drawdown |
+|---|---|---|---|---|---|
+| best 1 a day, odds<=5 | 182 | +22.4% (+10.3%) | 635,264 | 244,410 | 49% / 29% |
+| best 2 a day, odds<=5 | 336 | +16.7% (+6.9%) | 543,627 | 197,694 | 49% / 40% |
+| best 1 a day, odds<=2 | 167 | +10.3% (+2.9%) | 223,955 | 128,234 | 40% / 37% |
+Almost all of it comes from January-May at BetMGM (+24% to +36% flat on the top picks); June-October at the UK books
+is +1% to +6% flat. Quarter Kelly on these EVs stakes 4.7-6.2% of the bank per bet, hence the 40-50% drawdowns.
