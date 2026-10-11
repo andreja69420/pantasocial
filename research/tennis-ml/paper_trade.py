@@ -15,7 +15,8 @@ Ledger: DATA_DIR/paper/ledger.csv. Summary printed per rule.
 
 usage: paper_trade.py DATA_DIR [DAYS_AHEAD=7]   (env SKIP_UPDATE=1: no results update)
 env LIVE_OUT=feature build dir (default out_live), MODELS=model dir (default models), NX=1: add the new-feature modules
-(fx_live.py) to the fixture rows, MODEL_TAG=label stored with each logged bet
+(fx_live.py) to the fixture rows, MODEL_TAG=label stored with each logged bet, GEO=Flashscore odds region (default GB),
+BOOKS=comma-separated bookmakers to bet with (default: every book of the region)
 """
 import os
 import pickle
@@ -39,6 +40,8 @@ LIVE_OUT = os.environ.get("LIVE_OUT", "out_live")
 MODELS = os.environ.get("MODELS", "models")
 NX = os.environ.get("NX") == "1"
 TAG = os.environ.get("MODEL_TAG", "")
+GEO = os.environ.get("GEO", "GB")  # Flashscore odds region
+BOOKS = [b for b in os.environ.get("BOOKS", "").split(",") if b]  # only these bookmakers (all of the region if empty)
 RULES = {"EV>5% odds<=5": (0.05, 5.0)}  # the plan rule only (whole-2026 test)
 lg = lambda p: np.log(np.clip(p, 1e-4, 1 - 1e-4) / (1 - np.clip(p, 1e-4, 1 - 1e-4)))
 
@@ -56,7 +59,7 @@ def shin(a, b):
 
 t0 = time.time()
 # in parallel: odds of all upcoming fixtures for both tours, and the results update of the feature build
-jobs = {t: subprocess.Popen([sys.executable, os.path.join(HERE, "fs_odds.py"), os.path.join(D, "fs_raw"), t, "GB", "--fixtures", str(DAYS)],
+jobs = {t: subprocess.Popen([sys.executable, os.path.join(HERE, "fs_odds.py"), os.path.join(D, "fs_raw"), t, GEO, "--fixtures", str(DAYS)],
                             stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True) for t in ("wta", "atp")}
 if not os.environ.get("SKIP_UPDATE"):
     jobs["update"] = subprocess.Popen([sys.executable, os.path.join(HERE, "fs_update.py"), D, "3"],
@@ -71,7 +74,9 @@ for tour in ("wta", "atp"):
     if not os.path.exists(model_path):
         print(f"{tour}: no production model yet ({model_path})")
         continue
-    O = pd.read_parquet(os.path.join(D, "fs_raw", f"{tour}_fs_fixture_odds_GB.parquet"))
+    O = pd.read_parquet(os.path.join(D, "fs_raw", f"{tour}_fs_fixture_odds_{GEO}.parquet"))
+    if BOOKS:
+        O = O[O.book.isin(BOOKS)]
     if O.empty:
         print(f"{tour}: no fixtures with odds yet")
         continue

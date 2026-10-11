@@ -22,6 +22,8 @@ KELLY = 0.25
 SEG = {"ITF WOMEN - SINGLES": "Ženski ITF", "CHALLENGER MEN - SINGLES": "Muški Challenger", "ITF MEN - SINGLES": "Muški ITF",
        "CHALLENGER WOMEN - SINGLES": "WTA 125", "WTA - SINGLES": "WTA Tour", "ATP - SINGLES": "ATP Tour"}
 
+BOOK_NAMES = {"Mozzartbetrs": "MozzartBet", "Admiralbet.rs": "AdmiralBet", "SoccerBet": "SoccerBet", "bet365": "bet365"}
+
 L = pd.read_csv(SRC)
 L["thr"] = L.rule.str.extract(r"EV>(\d+)%").astype(float)[0]
 L = L.sort_values(["thr", "logged_at"]).drop_duplicates(["fs_mid", "side"])
@@ -115,7 +117,7 @@ for i, b in enumerate(L.itertuples()):
     pick, opp = (b.home, b.away) if b.side == "home" else (b.away, b.home)
     tname = b.tournament.split(":", 1)[-1].strip()
     vals = [bg(b.start), tname, player_name({"WU": pick}, "h").title(), player_name({"WU": opp}, "h").title(), float(b.odds),
-            int(b.stake), b.res, None if np.isnan(b.profit) else int(b.profit), b.book]
+            int(b.stake), b.res, None if np.isnan(b.profit) else int(b.profit), BOOK_NAMES.get(b.book, b.book)]
     for j, v in enumerate(vals, 1):
         cell = ws.cell(row=r, column=j, value=v)
         cell.number_format = COLS[j - 1][2]

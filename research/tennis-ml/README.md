@@ -666,6 +666,13 @@ test's +15%. Excel (`ledger_xlsx.py`): sheet "Opklade" with the current state on
 won-lost, pending) and one row per bet (kick-off, tournament, who we back, opponent, odds, stake, result, profit,
 bookmaker), colours for won / lost / pending; sheet "Po kategoriji" with the totals per category.
 
+**Only books available from Serbia (2026-10-11 23:40 Belgrade)**: the ledger was cleared again and the loop now reads
+Flashscore's Serbian odds region (`GEO=RS`) and bets only with bet365, MozzartBet, AdmiralBet and SoccerBet
+(`BOOKS=...`, defaults in `paper_loop.sh`): same rule (current price, EV>5%, odds<=5, best of the four). UK books
+accept UK residents only. Check on the 14 bets of the UK run: Mozzart had 12, Admiral 11, SoccerBet 6 of the 14 matches,
+at prices ~5% below the best UK price (EV>5% kept by 1 / 3 / 2 of them). The whole-2026 test at the Serbian prices
+(`fs_odds.py --matches` for region RS, `eval_levels2026.py --geo=RS`) follows.
+
 ### bet365 only, and opening vs closing prices (whole 2026, `eval_levels2026.py --book=bet365 [--close]`)
 Same test as above (r6_v3, EV>5% odds<=5, flat 1 unit), at bet365's prices only, and at the closing price (last price
 before the start) instead of the opening one:

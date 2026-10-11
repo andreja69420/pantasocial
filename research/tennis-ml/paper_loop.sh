@@ -5,6 +5,8 @@
 D=${1:?DATA_DIR}; INTERVAL=${INTERVAL:-1800}
 # production setup: base v2 build (out_live2, clean game counts) + the new-feature modules, models trained with them
 export LIVE_OUT=${LIVE_OUT:-out_live2} MODELS=${MODELS:-models_v3} NX=${NX:-1} F2_CLEAN_GAMES=${F2_CLEAN_GAMES:-1} MODEL_TAG=${MODEL_TAG:-novi}
+# books the user can bet with from Serbia (Flashscore region RS)
+export GEO=${GEO:-RS} BOOKS=${BOOKS:-bet365,Mozzartbetrs,Admiralbet.rs,SoccerBet}
 HERE=$(cd "$(dirname "$0")" && pwd)
 mkdir -p "$D/paper" "$HERE/paper"
 while true; do
