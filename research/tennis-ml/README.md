@@ -766,4 +766,21 @@ Men (123,575 matches, 54 min at 150 requests/s):
 
 Challenger has a full box score for every match, so the full model (serve statistics) can run live for men's
 Challenger; ITF gets serve features from the point-by-point log where it exists. Output:
-`DATA_DIR/fs_raw/stats/{wta,atp}_fs_stats.parquet`, next step joining them to the build's matches.
+`DATA_DIR/fs_raw/stats/{wta,atp}_fs_stats.parquet`.
+
+### Joined into a copy of the raw data (`fs_join.py RAW_IN RAW_OUT STATS_DIR`)
+Matched on (winner id, loser id), Flashscore date 3 days before .. 21 days after the tournament date. The box score fills
+only rows without serve statistics (the 2026 Flashscore-sourced rows: 5,687 men's, 1,447 women's); point-by-point
+counts go to separate `w_pbp_*` / `l_pbp_*` columns (no aces or first serves, so they would corrupt the box features),
+about 60,000 ITF matches 2023-2026. Surface normalised (Sackmann's 2025 ITF files have lowercase `clay`/`carpet`,
+2,132 matches that features2 treated as Hard and a separate surface rating bucket).
+
+Check against Sackmann's ITF 2025 box scores (11,663 women's, 10,949 men's matches with both):
+
+| | women | men |
+|---|---|---|
+| service points (incl. tiebreak) exact / within 2 | 82% / 90% | 81% / 91% |
+| service points won within 2 | 92% | 92% |
+| service games exact | 93% | 93% |
+| break points faced exact (winner) | 90% | 91% |
+| correlation of service points won share | 0.918 | 0.928 |
