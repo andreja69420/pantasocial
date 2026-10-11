@@ -71,7 +71,7 @@ def rep(lab, b):
           f"void {b.pv.mean():+6.2%}  CLV {b.clv.mean():+5.2%} | {segs}")
 
 
-for book in ["bet365", "BetMGM.uk", "William Hill", "Unibetuk", "Betfair", "Pinnacle"]:
+for book in ["bet365", "7BetUK", "Midnite", "Unibetuk", "SpreadEX", "Betway", "William Hill", "Ladbrokes", "Coral", "BetMGM.uk", "Skybet", "Paddy Power"]:
     B_ = S[S.book == book]
     if B_.mi.nunique() < 200:
         continue

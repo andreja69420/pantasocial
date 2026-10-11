@@ -107,7 +107,8 @@ if FIX:
             if head["ZA"].split(":")[0].strip() in CATS and d.get("AB") == "1":
                 matches[d["AA"]] = {"fs_mid": d["AA"], "home_pid": d.get("JA"), "away_pid": d.get("JB"),
                                     "home": d.get("WU", d.get("AE")), "away": d.get("WV", d.get("AF")),
-                                    "start": int(d["AD"]), "tournament": head["ZA"]}
+                                    "start": int(d["AD"]), "tournament": head["ZA"], "path": head.get("ZL", ""),
+                                    "round": d.get("ER", "")}
 else:
     for f in glob.glob(os.path.join(OUT, f"fs_cache_{TOUR}", "*.html")):
         page = open(f, encoding="utf-8").read()

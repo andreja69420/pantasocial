@@ -13,6 +13,8 @@ Every feature of a row depends only on earlier rows of the same player / pair / 
 rebuild (verified in README) as long as the new matches are later than the ones already built.
 
 usage: features_incr.py RAW_DIR OUT_DIR TOUR NEW_CSV [NEW_CSV ...]
+env DRY_OUT=path: compute the rows (e.g. tomorrow's fixtures with placeholder results) and write them to that
+parquet without changing the base build.
 """
 import os
 import pickle
@@ -39,7 +41,8 @@ for f in NEW:
     new.append(d)
 new = pd.concat(new, ignore_index=True)
 key = lambda d: d.tourney_date.astype(int).astype(str) + "|" + d.winner_id.astype(int).astype(str) + "|" + d.loser_id.astype(int).astype(str)
-new = new[~key(new).isin(set(key(base)))]
+if not os.environ.get("DRY_OUT"):
+    new = new[~key(new).isin(set(key(base)))]
 if new.empty:
     print("nothing new")
     sys.exit(0)
@@ -76,6 +79,15 @@ ctx = new[["date", "surface", "tourney_level", "rord", "best_of", "draw_size", "
 for c in ("odds_w", "odds_l", "agree"):
     ctx[c] = np.nan if c != "agree" else False
 rows = W.add_prefix("w_").join(Lo.add_prefix("l_")).join(ctx)
+
+if os.environ.get("DRY_OUT"):
+    out = rows[f2.columns].copy()
+    for c in ("winner_id", "loser_id", "winner_name", "loser_name", "fs_mid"):
+        if c in new:
+            out[c] = new[c].values
+    out.to_parquet(os.environ["DRY_OUT"])
+    print(f"{TOUR}: features for {len(out)} rows (dry run) in {time.time() - t0:.1f}s -> {os.environ['DRY_OUT']}", flush=True)
+    sys.exit(0)
 
 # 4. append and save the new state
 f2 = pd.concat([f2, rows[f2.columns]])
