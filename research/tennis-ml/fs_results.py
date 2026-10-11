@@ -62,6 +62,14 @@ for cat in CATS:
         T = T[~T.tourney_level.astype(str).isin(["D", "O"])]
         s |= {re.sub(r"[^a-z0-9]+", "-", unicodedata.normalize("NFKD", n).encode("ascii", "ignore").decode().lower()).strip("-")
               for n in T.tourney_name.dropna().unique()}
+    if cat == "challenger-women-singles":  # WTA 125: Flashscore lists only the current events; guess the rest from the
+        # archive's names ("Antalya 125 2" -> antalya, antalya-2, ...), a missing page costs one 404
+        T = pd.concat(pd.read_csv(f, usecols=["tourney_name", "tourney_level"], low_memory=False)
+                      for f in glob.glob(f"{RAW}/sackmann_raw/{TOUR}__{TOUR}_matches_qual_itf_202[456].csv"))
+        for n in T[T.tourney_level.astype(str) == "C"].tourney_name.dropna().unique():
+            n = re.sub(r"\b(125|indoor|outdoor|wta|\d)\b", " ", unicodedata.normalize("NFKD", n).encode("ascii", "ignore").decode().lower())
+            base = re.sub(r"[^a-z0-9]+", "-", n).strip("-")
+            s |= {base} | {f"{base}-{k}" for k in range(2, 5)}
     s = {x for x in s if not re.search(r"-\d{4}$", x) and x not in ("results", "fixtures", "standings", "archive", "draw")}
     slugs += [(cat, x) for x in sorted(s)]
     print(f"{cat}: {len(s)} tournament slugs", flush=True)

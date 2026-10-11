@@ -870,3 +870,37 @@ WTA 125 have no Flashscore opening prices in this test, so log-loss only.
 
 Log-loss is lower at every level except WTA 125 (equal) and Davis / BJK Cup (149 matches). ROI per level rests on
 50-700 bets, so single levels move by chance (W100: 47 bets); the ITF levels and ATP 250/500 gain the most.
+
+### Whole 2026 per tournament level, incl. Grand Slams, 1000s and WTA 125 (`eval_levels2026.py`)
+The June-October test above had no Grand Slam / 1000 / WTA 125 prices because Flashscore results were scraped from
+2026-06-08 only, and Flashscore labels every tour event P / A. Now: `fs_results.py` from 2026-01-01 (WTA 125 slugs
+guessed from the archive's event names: 1,770 instead of 110 matches), `fs_odds.py` for all of them (19,679 women's /
+28,325 men's matches with UK opening prices), Sackmann rows matched to their Flashscore match on the two player ids
+within 3 days before .. 21 days after tourney_date, Flashscore tour events given their archive level by name.
+Same 2026 predictions (model trained <= 2024, calibrated on 2025), best opening price, blend EV>5% odds<=5:
+
+| level | matches with odds | log-loss v2 -> new | bets, ROI base v2 | bets, ROI + new features (lower 90% bound) |
+|---|---|---|---|---|
+| men Grand Slam | 516 | 0.5601 -> 0.5556 | 61 +21.7% | 58 +15.2% (-11.1%) |
+| Masters 1000 | 803 | 0.6174 -> 0.6163 | 88 +37.8% | 79 +42.7% (+20.6%) |
+| ATP 250/500 | 1,687 | 0.5988 -> 0.5983 | 232 +25.5% | 221 +24.7% (+12.4%) |
+| Challenger | 9,362 | 0.5848 -> 0.5845 | 1,334 +22.4% | 1,281 +25.0% (+20.3%) |
+| M25 | 5,432 | 0.5336 -> 0.5329 | 574 +11.4% | 537 +14.6% (+6.6%) |
+| M15 | 8,831 | 0.5565 -> 0.5537 | 1,388 +5.1% | 1,306 +7.2% (+1.9%) |
+| **men all** | | | 3,705 +14.7% | 3,510 +16.9% (+13.9%) |
+| women Grand Slam | 504 | 0.5267 -> 0.5239 | 73 +27.7% | 72 +25.1% (+4.5%) |
+| WTA 1000 | 758 | 0.5965 -> 0.5928 | 79 +9.6% | 83 +5.9% (-11.8%) |
+| WTA 500 | 1,034 | 0.5988 -> 0.5976 | 181 +19.6% | 171 +23.4% (+9.7%) |
+| WTA 250 | 638 | 0.5731 -> 0.5706 | 116 +20.0% | 117 +21.5% (+6.5%) |
+| WTA 125 | 979 | 0.5529 -> 0.5530 | 160 +27.2% | 166 +26.6% (+14.0%) |
+| W100 | 598 | 0.6138 -> 0.6108 | 74 +7.4% | 70 -4.2% (-23.9%) |
+| W75 | 1,368 | 0.5701 -> 0.5684 | 141 +10.1% | 126 +2.0% (-13.9%) |
+| W50 | 1,576 | 0.5691 -> 0.5664 | 203 +10.8% | 213 +14.1% (+2.1%) |
+| W35 | 3,920 | 0.5331 -> 0.5317 | 524 +10.2% | 501 +12.8% (+4.4%) |
+| W15 | 6,413 | 0.5345 -> 0.5305 | 1,190 +10.7% | 1,139 +11.4% (+5.7%) |
+| **women all** | | | 2,747 +13.0% | 2,664 +13.6% (+10.0%) |
+
+Every level is positive except W100 (and W75 near zero); the lower bound is above zero for Masters 1000, ATP 250/500,
+Challenger, M25, M15, women's Grand Slams, WTA 500 / 250 / 125, W50, W35 and W15. Tour-level rows rest on 60-230 bets
+each, so their ROI is wide. These are Flashscore's first recorded prices; whether they can be taken in practice is
+what the paper test measures. Full table (also odds<=2): `paper/eval_levels2026.txt`.
