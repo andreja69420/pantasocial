@@ -5,7 +5,8 @@ events from Flashscore (all labelled P / A there) get the level of the same even
 
 usage: eval_levels2026.py DATA_DIR FS_DIR TAG:OUT_SUBDIR [TAG:OUT_SUBDIR ...]
   e.g. eval_levels2026.py $B $B/fs_full r6_v2:out_fx r6_v3:out_v3
-  --bets=PATH: also save every side at its best opening price (tour, tag, level, model q, odds, blend EV, P&L)
+  --bets=PATH: also save every side at its best opening price (tour, tag, level, model q, odds, blend EV, P&L,
+    plus fs_mid, start (unix seconds) and book of the best price so a match can be joined to its per-book prices)
   --book=NAME[,NAME..]: those bookmakers' prices only (best of them); --close: closing prices (last before the start) instead of opening
   --geo=XX: the odds file of another Flashscore region ({tour}_fs_odds_XX.parquet, fs_odds.py --matches)
   FS_DIR: fs_results.py / fs_odds.py output for 2026-01-01.. ({tour}__{tour}_matches_fs_2026.csv, {tour}_fs_odds_GB.parquet)
@@ -103,6 +104,7 @@ for tour in [t for t in ("atp", "wta") if not TOURS or t in TOURS]:
             q = np.where((pJ.y.values == 1) == won, pJ.p.values, 1 - pJ.p.values)
             o, oo = (ow, ol) if won else (ol, ow)
             R.append(pd.DataFrame({"lvl": J.lvl.values, "mi": J["index"].values, "q": q, "o": o, "oo": oo, "won": won,
+                                   "fs_mid": J.fs_mid.values, "start": J.start.values, "book": J.book.values,
                                    "pnl": np.where(pJ.stands.values, np.where(won, o - 1, -1.0), 0.0)}))
         S = pd.concat(R, ignore_index=True)
         S = S[(S.o > 1) & (S.oo > 1)].copy()

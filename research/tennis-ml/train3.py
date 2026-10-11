@@ -3,6 +3,9 @@ Y-1, and predicts Y's tour-level matches that have Bet365 odds. Odds are never f
 
 usage: train3.py DATA_DIR TOUR MODEL TAG [--holdout] [--only=REGEX]
   MODEL in {xgb, lgbm, ens}; dev = test years 2014-2024, --holdout = test 2025-2026 (run once, at the end)
+  optional: --calib-years=N validate/calibrate on the N years before Y (train ends N+1 years before Y; default 1),
+  --refit retrain on train+validation years with the iteration counts scaled up, same Platt calibrator,
+  --save-va also write the raw validation predictions (..._va.parquet) so other calibrators can be fitted post hoc
 Every run appends one line per betting rule to experiments.csv, so the number of things tried stays visible.
 """
 import os
@@ -34,6 +37,9 @@ if YEARS:
 LR_MULT = float(next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--lr-mult=")), 1.0))
 TREES = int(next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--trees=")), 1500))
 PATIENCE = int(next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--patience=")), 60))
+CALIB_YEARS = int(next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--calib-years=")), 1))
+REFIT = "--refit" in sys.argv
+SAVE_VA = "--save-va" in sys.argv
 LOG = os.path.join(os.path.dirname(os.path.abspath(__file__)), "experiments.csv")
 
 df = load_f2(f"{D}/out/{TOUR}_f2.parquet", ONLY, f"{TRAIN_FROM}-01-01")
@@ -53,35 +59,50 @@ year = df.year.values
 print(f"{TOUR} {MODEL} {TAG}: {len(FEATS)} features, rows {len(X)}", flush=True)
 
 
-def fit_predict(tr, va, te, Y):
-    preds_va, preds_te = [], []
+def fit_raw(tr, va, te, Y, fixed=None):
+    """Raw ensemble predictions on va and te. fixed = {model: n_trees} (a refit): no early stopping, va unused."""
+    preds_va, preds_te, its = [], [], {}
     sw = 0.5 ** ((Y - year[tr]) / HALFLIFE) if HALFLIFE > 0 else np.ones(len(tr))
     if MODEL in ("xgb", "ens"):
-        m = xgb.XGBClassifier(n_estimators=TREES, learning_rate=0.06 * LR_MULT, max_depth=6, min_child_weight=50, subsample=0.8,
-                              colsample_bytree=0.4, reg_lambda=5.0, tree_method="hist", max_bin=64, n_jobs=2,
-                              early_stopping_rounds=PATIENCE, eval_metric="logloss")
-        m.fit(take(X, tr), y[tr], sample_weight=sw, eval_set=[(take(X, va), y[va])], verbose=False)
-        preds_va.append(m.predict_proba(take(X, va))[:, 1]); preds_te.append(m.predict_proba(take(X, te))[:, 1])
-        print(f"    xgb best iteration {m.best_iteration}", flush=True)
+        m = xgb.XGBClassifier(n_estimators=TREES if fixed is None else fixed["xgb"], learning_rate=0.06 * LR_MULT, max_depth=6,
+                              min_child_weight=50, subsample=0.8, colsample_bytree=0.4, reg_lambda=5.0, tree_method="hist",
+                              max_bin=64, n_jobs=2, early_stopping_rounds=PATIENCE if fixed is None else None, eval_metric="logloss")
+        m.fit(take(X, tr), y[tr], sample_weight=sw, **({"eval_set": [(take(X, va), y[va])]} if fixed is None else {}), verbose=False)
+        if fixed is None:
+            preds_va.append(m.predict_proba(take(X, va))[:, 1]); its["xgb"] = m.best_iteration + 1
+        preds_te.append(m.predict_proba(take(X, te))[:, 1])
+        print(f"    xgb best iteration {m.best_iteration}" if fixed is None else f"    xgb refit {fixed['xgb']} trees", flush=True)
     if MODEL in ("lgbm", "ens"):
-        m = lgb.LGBMClassifier(n_estimators=TREES, learning_rate=0.05 * LR_MULT, num_leaves=48, min_child_samples=100,
-                               subsample=0.8, subsample_freq=1, colsample_bytree=0.4, reg_lambda=5.0, max_bin=63,
-                               n_jobs=2, verbose=-1)
-        m.fit(take(X, tr), y[tr], sample_weight=sw, eval_set=[(take(X, va), y[va])], callbacks=[lgb.early_stopping(PATIENCE, verbose=False)])
-        preds_va.append(m.predict_proba(take(X, va))[:, 1]); preds_te.append(m.predict_proba(take(X, te))[:, 1])
-        print(f"    lgbm best iteration {m.best_iteration_}", flush=True)
+        m = lgb.LGBMClassifier(n_estimators=TREES if fixed is None else fixed["lgbm"], learning_rate=0.05 * LR_MULT, num_leaves=48,
+                               min_child_samples=100, subsample=0.8, subsample_freq=1, colsample_bytree=0.4, reg_lambda=5.0,
+                               max_bin=63, n_jobs=2, verbose=-1)
+        m.fit(take(X, tr), y[tr], sample_weight=sw,
+              **({"eval_set": [(take(X, va), y[va])], "callbacks": [lgb.early_stopping(PATIENCE, verbose=False)]} if fixed is None else {}))
+        if fixed is None:
+            preds_va.append(m.predict_proba(take(X, va))[:, 1]); its["lgbm"] = m.best_iteration_ or TREES
+        preds_te.append(m.predict_proba(take(X, te))[:, 1])
+        print(f"    lgbm best iteration {m.best_iteration_}" if fixed is None else f"    lgbm refit {fixed['lgbm']} trees", flush=True)
     if MODEL == "ens":
         # simple, well-calibrated anchor: logistic regression on the rating/Markov probabilities
         cols = [c for c in FEATS if c.startswith(("prob_", "mk_match"))]
         lg = lambda p: np.log(np.clip(p, 1e-4, 1 - 1e-4) / (1 - np.clip(p, 1e-4, 1 - 1e-4)))
         Z = lambda idx: np.nan_to_num(lg(take(X, idx)[cols].values.astype(float)))
         m = LogisticRegression(C=1.0, max_iter=500).fit(Z(tr), y[tr], sample_weight=sw)
-        preds_va.append(m.predict_proba(Z(va))[:, 1]); preds_te.append(m.predict_proba(Z(te))[:, 1])
-    pv, pt = np.mean(preds_va, axis=0), np.mean(preds_te, axis=0)
-    # Platt scaling on the validation year (isotonic on a single year overfit in round 3)
+        if fixed is None:
+            preds_va.append(m.predict_proba(Z(va))[:, 1])
+        preds_te.append(m.predict_proba(Z(te))[:, 1])
+    return (np.mean(preds_va, axis=0) if fixed is None else None), np.mean(preds_te, axis=0), its
+
+
+def fit_predict(tr, va, te, Y):
+    pv, pt, its = fit_raw(tr, va, te, Y)
+    # Platt scaling on the validation year(s) (isotonic on a single year overfit in round 3)
     lg = lambda p: np.log(np.clip(p, 1e-4, 1 - 1e-4) / (1 - np.clip(p, 1e-4, 1 - 1e-4)))[:, None]
     cal = LogisticRegression(C=1e4).fit(lg(pv), y[va])
-    return pt, cal.predict_proba(lg(pt))[:, 1]
+    if REFIT:  # the calibrator stays the one fitted on out-of-sample validation predictions; trees scale with the extra rows
+        k = (len(tr) + len(va)) / len(tr)
+        _, pt, _ = fit_raw(np.concatenate([tr, va]), None, te, Y, {m: max(1, round(n * k)) for m, n in its.items()})
+    return pt, cal.predict_proba(lg(pt))[:, 1], pv
 
 
 def stands(score, retired):
@@ -92,27 +113,34 @@ def stands(score, retired):
 
 
 t0 = time.time()
-rows = []
+rows, va_rows = [], []
 for Y in TEST_YEARS[::STEP]:
-    tr = (year >= TRAIN_FROM) & (year <= Y - 2)
+    tr = (year >= TRAIN_FROM) & (year <= Y - CALIB_YEARS - 1)
     if NO_FUTURES:
         tr &= ~futures
-    va = year == Y - 1
+    va = (year >= Y - CALIB_YEARS) & (year <= Y - 1)
     te = (year >= Y) & (year < Y + STEP) & (year <= max(TEST_YEARS)) & has_odds
     if te.sum() == 0:
         continue
-    raw, cal = fit_predict(np.flatnonzero(tr), np.flatnonzero(va), np.flatnonzero(te), Y)
+    raw, cal, pv = fit_predict(np.flatnonzero(tr), np.flatnonzero(va), np.flatnonzero(te), Y)
     sub = df.iloc[np.flatnonzero(te)]
     o1 = np.where(flip[te], sub.odds_l, sub.odds_w)
     o2 = np.where(flip[te], sub.odds_w, sub.odds_l)
     rows.append(pd.DataFrame({"year": year[te], "p_raw": raw, "p": cal, "y": y[te], "o1": o1, "o2": o2,
                               "stands": [stands(s, r) for s, r in zip(sub.score, sub.retired)]}, index=sub.index))
+    if SAVE_VA:
+        rows[-1]["tourney_level"] = lvl.values[te]
+        va_rows.append(pd.DataFrame({"test_year": Y, "year": year[va], "p_raw": pv, "y": y[va], "tourney_level": lvl.values[va]},
+                                    index=df.index[va]))
     print(f"  {Y}: trained in {time.time() - t0:.0f}s", flush=True)
 P = pd.concat(rows)
 inv = 1 / P.o1 + 1 / P.o2
 P["p_mkt"] = (1 / P.o1) / inv
 split = "holdout" if HOLDOUT else ((("te" if "--odds-file=te_odds" in sys.argv else "lower")) if LOWER else "dev")
-P.to_parquet(f"{D}/out/preds3_{TOUR}_{MODEL}_{TAG}_{split}{'_' + YEARS.replace(',', '-') if YEARS else ''}.parquet")
+OUT = f"{D}/out/preds3_{TOUR}_{MODEL}_{TAG}_{split}{'_' + YEARS.replace(',', '-') if YEARS else ''}"
+P.to_parquet(OUT + ".parquet")
+if SAVE_VA:  # one block per test year (test_year column): consecutive test years share validation rows
+    pd.concat(va_rows).to_parquet(OUT + "_va.parquet")
 
 
 def ll(q):
