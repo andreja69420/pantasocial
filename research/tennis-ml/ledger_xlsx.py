@@ -83,15 +83,19 @@ def sheet(ws, L, title):
             # helpers for the formulas, hidden
             ("Kelly", 8, "0.00%"), ("Upisano", 13, "dd.mm. hh:mm"), ("Obračunato", 13, "dd.mm. hh:mm"),
             # which production model logged the bet
-            ("Model", 8, "@")]
+            ("Model", 8, "@"),
+            # pending bets re-priced by the current model at the current prices (paper_trade.py)
+            ("Najbolja kvota sada", 12, "0.00"), ("Kladionica sada", 13, "@"), ("Prednost na našoj kvoti sada", 14, "0.0%;[Red]-0.0%"),
+            ("Prednost na kvoti sada", 12, "0.0%;[Red]-0.0%"), ("Ušao bi sad", 10, "@")]
     for j, (c, w, _) in enumerate(cols, 1):
         cell = ws.cell(row=r0 - 1, column=j, value=c)
         cell.font, cell.fill = font(bold=True, color="FFFFFF"), PatternFill("solid", fgColor=HEAD)
-        cell.alignment = Alignment(horizontal="right" if 8 <= j <= 17 else "left", vertical="center")
+        cell.alignment = Alignment(horizontal="right" if 8 <= j <= 17 or 19 <= j <= 21 else "left", vertical="center",
+                                   wrap_text=True)
         ws.column_dimensions[get_column_letter(j)].width = w
     for j in (15, 16, 17):
         ws.column_dimensions[get_column_letter(j)].hidden = True
-    ws.row_dimensions[r0 - 1].height = 20
+    ws.row_dimensions[r0 - 1].height = 30
 
     for i, b in enumerate(L.itertuples()):
         r = r0 + i
@@ -111,19 +115,25 @@ def sheet(ws, L, title):
                 f'=IF(L{r}="Dobijeno",K{r}*(H{r}-1),IF(L{r}="Izgubljeno",-K{r},IF(L{r}="Povraćaj",0,"")))',
                 f'=$B$3+SUMIFS({col("M")},{col("Q")},"<="&P{r})', kelly, bg(b.logged_at), settled,
                 "novi" if getattr(b, "model", "") == "novi" else "stari"]
+        recheck = not res and start > now and isinstance(getattr(b, "enter_now", None), str)
+        vals += [float(b.best_now), b.book_now, float(b.ev_hold), float(b.ev_now), "DA" if b.enter_now == "yes" else "NE"] \
+            if recheck else [None] * 5
         for j, v in enumerate(vals, 1):
             cell = ws.cell(row=r, column=j, value=v)
             cell.number_format = cols[j - 1][2]
             cell.font = font(color=MUTED) if j == 12 and not res else font()
             cell.border = Border(bottom=thin)
-            cell.alignment = Alignment(horizontal="right" if 8 <= j <= 17 else "left", vertical="center")
+            cell.alignment = Alignment(horizontal="right" if 8 <= j <= 17 or 19 <= j <= 21 else "left", vertical="center")
             if i % 2:
                 cell.fill = PatternFill("solid", fgColor=BAND)
         ws.row_dimensions[r].height = 18
     green = Font(name="Calibri", size=10, color="1E7B34")
     ws.conditional_formatting.add(f"M{r0}:M{last}", CellIsRule(operator="greaterThan", formula=["0"], font=green))
     ws.freeze_panes = ws.cell(row=r0, column=1)
-    ws.auto_filter.ref = f"A{r0 - 1}:R{last}"
+    red = Font(name="Calibri", size=10, color="B42318")
+    ws.conditional_formatting.add(f"W{r0}:W{last}", CellIsRule(operator="equal", formula=['"DA"'], font=green))
+    ws.conditional_formatting.add(f"W{r0}:W{last}", CellIsRule(operator="equal", formula=['"NE"'], font=red))
+    ws.auto_filter.ref = f"A{r0 - 1}:W{last}"
     ws.page_setup.orientation = "landscape"
     ws.page_setup.fitToWidth, ws.page_setup.fitToHeight = 1, 0
     ws.sheet_properties.pageSetUpPr.fitToPage = True

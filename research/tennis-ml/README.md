@@ -656,6 +656,22 @@ below; the earlier "Van plana" bets joined it, so the bank and every later stake
 - limitation: results added by the loop have no point-by-point / box statistics yet, so the pbp features of a player
   use their matches up to 2026-10-10 only, until the loop also fetches statistics of new matches
 
+**Pending bets re-checked every run (from 2026-10-11 21:35 Belgrade)**: for every bet whose match has not started,
+the current model (fed with every result up to now) prices it again with the current prices of every book; the ledger
+stores `q_now`, `q_blend_now` (blend with the Shin fair price of the bet's book now), `ev_hold` (the bet already placed,
+at its entry odds, valued now), `best_now` / `book_now` / `ev_now` (best current price and its EV) and `enter_now`
+(would the rule log it now: EV>5%, odds<=5). The Excel sheet shows them in the last five columns (pending bets only).
+Paper bets are not cashed out: a UK book's cash-out price carries its margin, so leaving costs more than it saves
+unless the held bet is clearly negative now.
+
+First re-check (20 pending bets, 22:35 Belgrade):
+- held bet still positive at its entry odds: 19 of 20 (median +9.0%); one about zero (T. Paul 1.67, logged by the old
+  model: the new model gives him 61% instead of 69%, `ev_hold` -0.4%)
+- would be logged again now at the best current price: 13 of 20
+- the other 7: five because the price shortened since we took it (Wobker 1.33 → 1.13, Bernet 1.36 → 1.22, Blanchet
+  1.29 → 1.20, Lagutin 1.67 → 1.53, Gadamauri 2.29 → 2.24), i.e. we beat the market and the value is in our entry
+  price (`ev_hold` +7% .. +20%); two old-model bets the new model likes less (T. Paul, Shelbayh 1.91 `ev_hold` +3.5%)
+
 ## Memory (15 GB machine): measured peaks and what changed (`peakmem.py`)
 `peakmem.py CMD ...` samples the summed PSS of a command's whole process tree every 0.2 s (PSS, not RSS: forked
 workers share the parent's pages, RSS counted the 865k-row table once per worker and showed 19 GB for fx_live).

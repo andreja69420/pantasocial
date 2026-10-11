@@ -142,15 +142,18 @@ for tour in ("wta", "atp"):
     p = M["cal"].predict_proba(lg(p)[:, None])[:, 1]
     p_home = pd.Series(np.where(flip, 1 - p, p), index=Fx.fs_mid.values)
     for r in O[O.fs_mid.isin(p_home.index)].itertuples():
-        for side, o, oo, cur in (("home", r.open_h, r.open_a, r.cur_h), ("away", r.open_a, r.open_h, r.cur_a)):
+        for side, o, oo, cur, cuo in (("home", r.open_h, r.open_a, r.cur_h, r.cur_a), ("away", r.open_a, r.open_h, r.cur_a, r.cur_h)):
             if not (o > 1 and oo > 1):
                 continue
             q = p_home[r.fs_mid] if side == "home" else 1 - p_home[r.fs_mid]
             qb = 1 / (1 + np.exp(-(0.44 * lg(q) + 0.64 * lg(shin(np.array([1 / o]), np.array([1 / oo]))[0]))))
             new_bets.append({"fs_mid": r.fs_mid, "tour": tour, "tournament": r.tournament, "home": r.home, "away": r.away,
                              "start": pd.Timestamp(int(r.start), unit="s"), "side": side, "book": r.book, "open": o, "current": cur,
-                             "at_open": abs(cur - o) < 1e-9, "q_model": q, "q_blend": qb, "ev": qb * o - 1, "model": TAG})
+                             "at_open": abs(cur - o) < 1e-9, "q_model": q, "q_blend": qb, "ev": qb * o - 1, "model": TAG,
+                             "cur_other": cuo})
 C = pd.DataFrame(new_bets)
+ALL = C.copy()  # every book's price, also the ones that moved since opening (re-check of pending bets below)
+C = C.drop(columns="cur_other", errors="ignore")
 logged = 0
 if not C.empty:
     C = C[C.at_open]
@@ -176,6 +179,30 @@ if not ledger.empty and seen:
         if p:
             ledger.at[i, "close"] = p[0] if ledger.at[i, "side"] == "home" else p[1]
             ledger.at[i, "close_seen_at"] = str(pd.Timestamp.now('UTC').tz_localize(None))[:16]
+# pending bets re-priced now: the current model (fed with every result up to now) and the current prices of every book.
+# q_blend_now: blend with the Shin fair price of the bet's book now (the median over books if it no longer lists it);
+# ev_hold: what the bet already placed at its entry odds is worth now; best_now / ev_now / enter_now: would the rule
+# log this side now at the best current price (EV>5%, odds<=5; the opening-price condition left out)
+if not ledger.empty and not ALL.empty:
+    A = ALL[(ALL.current > 1) & (ALL.cur_other > 1)].copy()
+    A["qb_now"] = 1 / (1 + np.exp(-(0.44 * lg(A.q_model.values) + 0.64 * lg(shin(1 / A.current.values, 1 / A.cur_other.values)))))
+    for c in ("q_now", "q_blend_now", "ev_hold", "best_now", "book_now", "ev_now", "enter_now", "rechecked_at"):
+        if c not in ledger:
+            ledger[c] = np.nan
+    for c in ("book_now", "enter_now", "rechecked_at"):
+        ledger[c] = ledger[c].astype(object)
+    started = pd.to_datetime(ledger.start) <= pd.Timestamp.now("UTC").tz_localize(None)
+    for i in ledger.index[(ledger.result.fillna("") == "") & ~started]:
+        a = A[(A.fs_mid == ledger.at[i, "fs_mid"]) & (A.side == ledger.at[i, "side"])]
+        if a.empty:
+            continue
+        own = a[a.book == ledger.at[i, "book"]]
+        qb = float(own.qb_now.iloc[0]) if len(own) else float(a.qb_now.median())
+        best = a.sort_values("current", ascending=False).iloc[0]
+        ev_now = qb * best.current - 1
+        ledger.loc[i, ["q_now", "q_blend_now", "ev_hold", "best_now", "book_now", "ev_now", "enter_now", "rechecked_at"]] = [
+            float(a.q_model.iloc[0]), qb, qb * ledger.at[i, "open"] - 1, float(best.current), best.book, ev_now,
+            "yes" if ev_now > 0.05 and best.current <= 5 else "no", str(pd.Timestamp.now("UTC").tz_localize(None))[:16]]
 # settle finished matches from the daily results feeds (today and the 3 days before)
 if not ledger.empty:
     done = {}
