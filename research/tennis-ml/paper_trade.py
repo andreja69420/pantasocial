@@ -14,6 +14,8 @@ Each run (meant to run every 30 min, so opening lines are caught while they stil
 Ledger: DATA_DIR/paper/ledger.csv. Summary printed per rule.
 
 usage: paper_trade.py DATA_DIR [DAYS_AHEAD=7]   (env SKIP_UPDATE=1: no results update)
+env LIVE_OUT=feature build dir (default out_live), MODELS=model dir (default models), NX=1: add the new-feature modules
+(fx_live.py) to the fixture rows, MODEL_TAG=label stored with each logged bet
 """
 import os
 import pickle
@@ -33,6 +35,10 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 PAPER = os.path.join(D, "paper")
 os.makedirs(PAPER, exist_ok=True)
 LEDGER = os.path.join(PAPER, "ledger.csv")
+LIVE_OUT = os.environ.get("LIVE_OUT", "out_live")
+MODELS = os.environ.get("MODELS", "models")
+NX = os.environ.get("NX") == "1"
+TAG = os.environ.get("MODEL_TAG", "")
 RULES = {"EV>15% odds<=5": (0.15, 5.0), "EV>10% odds<=2": (0.10, 2.0), "EV>5% odds<=5": (0.05, 5.0), "EV>5% odds<=2": (0.05, 2.0)}
 lg = lambda p: np.log(np.clip(p, 1e-4, 1 - 1e-4) / (1 - np.clip(p, 1e-4, 1 - 1e-4)))
 
@@ -61,7 +67,7 @@ for name, j in jobs.items():
 ledger = pd.read_csv(LEDGER) if os.path.exists(LEDGER) else pd.DataFrame()
 new_bets, seen = [], []
 for tour in ("wta", "atp"):
-    model_path = os.path.join(D, "models", f"{tour}_final.pkl")
+    model_path = os.path.join(D, MODELS, f"{tour}_final.pkl")
     if not os.path.exists(model_path):
         print(f"{tour}: no production model yet ({model_path})")
         continue
@@ -71,7 +77,7 @@ for tour in ("wta", "atp"):
         continue
     seen.append(O.assign(tour=tour))
     O = O[O.start > time.time()]  # not started
-    base = pd.read_parquet(os.path.join(D, "out_live", f"{tour}_matches.parquet"))
+    base = pd.read_parquet(os.path.join(D, LIVE_OUT, f"{tour}_matches.parquet"))
     ids = NameIds()
     for c in ("winner", "loser"):
         ids.add(base[f"{c}_name"].map(key), base[f"{c}_id"], base.tourney_date.astype(float).values)
@@ -108,13 +114,23 @@ for tour in ("wta", "atp"):
     fcsv = os.path.join(PAPER, f"{tour}__{tour}_matches_fs_fixtures.csv")
     pd.DataFrame(rows).to_csv(fcsv, index=False)
     fout = os.path.join(PAPER, f"{tour}_fixture_features.parquet")
-    env = dict(os.environ, DRY_OUT=fout)
-    r = subprocess.run([sys.executable, os.path.join(HERE, "features_incr.py"), os.path.join(D, "live_raw"), os.path.join(D, "out_live"),
+    fnew = os.path.join(PAPER, f"{tour}_fixture_rows.parquet")
+    env = dict(os.environ, DRY_OUT=fout, DRY_MATCHES=fnew)
+    r = subprocess.run([sys.executable, os.path.join(HERE, "features_incr.py"), os.path.join(D, "live_raw"), os.path.join(D, LIVE_OUT),
                         tour, fcsv], env=env, capture_output=True, text=True)
     if r.returncode:
         print(f"{tour}: features_incr failed\n{r.stderr[-1500:]}")
         continue
     Fx = pd.read_parquet(fout)
+    if NX:
+        fnx = os.path.join(PAPER, f"{tour}_fixture_nx.parquet")
+        r = subprocess.run([sys.executable, os.path.join(HERE, "fx_live.py"), os.path.join(D, LIVE_OUT), tour, fnew, fnx],
+                           capture_output=True, text=True)
+        if r.returncode:
+            print(f"{tour}: fx_live failed\n{r.stderr[-1500:]}")
+            continue
+        print(r.stdout.strip().splitlines()[-1], flush=True)
+        Fx = Fx.join(pd.read_parquet(fnx))
     sys.path.insert(0, HERE)
     from design import build_X
     M = pickle.load(open(model_path, "rb"))
@@ -133,7 +149,7 @@ for tour in ("wta", "atp"):
             qb = 1 / (1 + np.exp(-(0.44 * lg(q) + 0.64 * lg(shin(np.array([1 / o]), np.array([1 / oo]))[0]))))
             new_bets.append({"fs_mid": r.fs_mid, "tour": tour, "tournament": r.tournament, "home": r.home, "away": r.away,
                              "start": pd.Timestamp(int(r.start), unit="s"), "side": side, "book": r.book, "open": o, "current": cur,
-                             "at_open": abs(cur - o) < 1e-9, "q_model": q, "q_blend": qb, "ev": qb * o - 1})
+                             "at_open": abs(cur - o) < 1e-9, "q_model": q, "q_blend": qb, "ev": qb * o - 1, "model": TAG})
 C = pd.DataFrame(new_bets)
 logged = 0
 if not C.empty:

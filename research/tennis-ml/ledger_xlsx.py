@@ -66,11 +66,13 @@ def sheet(ws, L, title):
             ("Prednost", 9, "0.0%"), ("Ulog", 9, "#,##0"), ("Rezultat", 11, "@"), ("Dobit", 9, "#,##0;[Red]-#,##0"),
             ("Banka pri opkladi", 19, "#,##0"),
             # helpers for the formulas, hidden
-            ("Kelly", 8, "0.00%"), ("Upisano", 13, "dd.mm. hh:mm"), ("Obračunato", 13, "dd.mm. hh:mm")]
+            ("Kelly", 8, "0.00%"), ("Upisano", 13, "dd.mm. hh:mm"), ("Obračunato", 13, "dd.mm. hh:mm"),
+            # which production model logged the bet
+            ("Model", 8, "@")]
     for j, (c, w, _) in enumerate(cols, 1):
         cell = ws.cell(row=r0 - 1, column=j, value=c)
         cell.font, cell.fill = font(bold=True, color="FFFFFF"), PatternFill("solid", fgColor=HEAD)
-        cell.alignment = Alignment(horizontal="right" if j >= 8 else "left", vertical="center")
+        cell.alignment = Alignment(horizontal="right" if 8 <= j <= 17 else "left", vertical="center")
         ws.column_dimensions[get_column_letter(j)].width = w
     for j in (15, 16, 17):
         ws.column_dimensions[get_column_letter(j)].hidden = True
@@ -92,20 +94,21 @@ def sheet(ws, L, title):
                 player_name({"WU": pick}, "h").title(), player_name({"WU": opp}, "h").title(), b.book, o, p, p * o - 1,
                 f"=ROUND(N{r}*O{r},0)", res or ("U toku" if start <= now else "Čeka"),
                 f'=IF(L{r}="Dobijeno",K{r}*(H{r}-1),IF(L{r}="Izgubljeno",-K{r},IF(L{r}="Povraćaj",0,"")))',
-                f'=$B$3+SUMIFS({col("M")},{col("Q")},"<="&P{r})', kelly, bg(b.logged_at), settled]
+                f'=$B$3+SUMIFS({col("M")},{col("Q")},"<="&P{r})', kelly, bg(b.logged_at), settled,
+                "novi" if getattr(b, "model", "") == "novi" else "stari"]
         for j, v in enumerate(vals, 1):
             cell = ws.cell(row=r, column=j, value=v)
             cell.number_format = cols[j - 1][2]
             cell.font = font(color=MUTED) if j == 12 and not res else font()
             cell.border = Border(bottom=thin)
-            cell.alignment = Alignment(horizontal="right" if j >= 8 else "left", vertical="center")
+            cell.alignment = Alignment(horizontal="right" if 8 <= j <= 17 else "left", vertical="center")
             if i % 2:
                 cell.fill = PatternFill("solid", fgColor=BAND)
         ws.row_dimensions[r].height = 18
     green = Font(name="Calibri", size=10, color="1E7B34")
     ws.conditional_formatting.add(f"M{r0}:M{last}", CellIsRule(operator="greaterThan", formula=["0"], font=green))
     ws.freeze_panes = ws.cell(row=r0, column=1)
-    ws.auto_filter.ref = f"A{r0 - 1}:N{last}"
+    ws.auto_filter.ref = f"A{r0 - 1}:R{last}"
     ws.page_setup.orientation = "landscape"
     ws.page_setup.fitToWidth, ws.page_setup.fitToHeight = 1, 0
     ws.sheet_properties.pageSetUpPr.fitToPage = True

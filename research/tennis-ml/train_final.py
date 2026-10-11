@@ -12,17 +12,23 @@ import time
 import lightgbm as lgb
 import numpy as np
 import pandas as pd
+import pyarrow.parquet as pq
 import xgboost as xgb
 from sklearn.linear_model import LogisticRegression
 
-from design import build_X
+from design import RATINGS, build_X
 
 D, TOUR, OUT = sys.argv[1:4]
 ONLY = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--only=")), None)
 TRAIN_TO = int(next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--train-to=")), 2025))
 t0 = time.time()
-df = pd.read_parquet(f"{D}/out/{TOUR}_f2.parquet")
-df = df[df.date.dt.year >= 2010]
+# read only the 2010+ rows and the columns the selected features (and build_X's derived ones) need: with ~630 columns the
+# whole file does not fit next to the training in memory
+names = pq.read_schema(f"{D}/out/{TOUR}_f2.parquet").names
+need = {c[2:] for c in names if c.startswith("w_") and (not ONLY or any(re.search(ONLY, f"{p}_{c[2:]}") for p in ("p1", "p2", "d")))}
+need |= set(RATINGS) | {"venue_sv_won", "sv_won_30", "rt_won_30", "sv_won_10", "rt_won_10", "surf_sv_won_30", "surf_rt_won_30"}
+cols = [c for c in names if not c.startswith(("w_", "l_", "__")) or c[2:] in need]
+df = pd.read_parquet(f"{D}/out/{TOUR}_f2.parquet", columns=cols, filters=[("date", ">=", pd.Timestamp("2010-01-01"))])
 levels = sorted(df.tourney_level.astype(str).unique())
 X, y, _ = build_X(df, TOUR)
 if ONLY:

@@ -14,7 +14,7 @@ rebuild (verified in README) as long as the new matches are later than the ones 
 
 usage: features_incr.py RAW_DIR OUT_DIR TOUR NEW_CSV [NEW_CSV ...]
 env DRY_OUT=path: compute the rows (e.g. upcoming fixtures with placeholder results) and write them to that
-parquet without changing the base build. Rows are split into batches in which no player appears twice and each batch
+parquet without changing the base build (DRY_MATCHES=path also writes the prepared rows with their batch number). Rows are split into batches in which no player appears twice and each batch
 starts from the saved state, so one fixture's placeholder result never reaches another fixture's features.
 """
 import os
@@ -110,6 +110,11 @@ if DRY:
         if c in new:
             out[c] = new[c].values
     out.to_parquet(DRY)
+    if os.environ.get("DRY_MATCHES"):  # the prepared rows themselves (matches-table format), for fx_live.py
+        nm = new.drop(columns=[c for c in new.columns if new[c].dtype == object and c not in F2.KEEP_OBJ | {"fs_mid"}])
+        for c in (F2.KEEP_OBJ | {"fs_mid"}) & set(nm.columns):
+            nm[c] = nm[c].astype(str).replace("nan", np.nan)
+        nm.assign(batch=batch).to_parquet(os.environ["DRY_MATCHES"])
     print(f"{TOUR}: features for {len(out)} rows (dry run) in {time.time() - t0:.1f}s -> {DRY}", flush=True)
     sys.exit(0)
 

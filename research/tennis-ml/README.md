@@ -635,6 +635,22 @@ Bank rule for the Excel sheet (`ledger_xlsx.py` → `paper/opklade.xlsx`): start
 × the bank at the moment the bet is logged, fixed from then on. The bank moves only when a bet is settled (the loop
 stores the time it first saw the result, `settled_at`), and the new bank applies only to bets logged after that.
 
+**Production setup from 2026-10-11 evening: base v2 + the 158 new features** (`paper_loop.sh` defaults):
+- feature build `out_live2` = the base v2 build (`fx_raw`, `F2_CLEAN_GAMES=1`) caught up with every result the loop had
+  added since (deduplicated by Flashscore match id; afterwards it holds exactly the same 680,392 / 865,301 matches as
+  the old live build); the results update and the fixture features run on it with `F2_CLEAN_GAMES=1`
+- fixture rows: `features_incr.py` dry run also writes the prepared rows (`DRY_MATCHES`), `fx_live.py` appends each
+  batch to the whole match table and runs the four modules (ratings / score / context / pbp in parallel processes,
+  about 2 min per tour), keeping only the fixture rows. Check: the 16 women's matches of the last day, removed from the
+  table and recomputed this way, equal the full-table module output in all 316 columns (largest difference 0)
+- models `models_v3` (`train_final.py`, same regex as r6_v3, 798 model columns, trained <= 2025, calibrated on 2026);
+  `train_final.py` now reads only the 2010+ rows and the columns the selected features need (same 798 columns and
+  values, checked) because the whole 631-column file does not fit next to the training in 15 GB
+- every logged bet stores `model` (`novi`); the Excel sheet shows it in the last column, bets logged before the switch
+  show `stari`
+- limitation: results added by the loop have no point-by-point / box statistics yet, so the pbp features of a player
+  use their matches up to 2026-10-10 only, until the loop also fetches statistics of new matches
+
 ## Fresh test June-October 2026 at 20 UK books' opening prices (`eval_fs2026.py`)
 Matches 2026-06-08..2026-10-11 after the end of the Sackmann archive (Flashscore results, 22,127 matches with odds),
 results-only model trained <= 2024 and calibrated on 2025 (never saw 2026), Shin blend fitted on Bet365 2014-2024,
