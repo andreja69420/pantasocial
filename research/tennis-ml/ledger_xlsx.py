@@ -1,6 +1,7 @@
 """Excel sheet of the paper bets for following along: one row per match, kick-off in Belgrade time, result and profit
 filled in as matches finish. Stakes compound: each bet is a quarter-Kelly share of the bank at the moment the bet was
-placed = starting bank + profit of every bet already finished then (finish estimated as kick-off + 3 h). All of it is
+placed = starting bank + profit of every bet already settled then (settled = when the loop first saw the result;
+bets that are still open do not change it, and a settled bet changes only the stakes of bets placed after it). All of it is
 formulas, so changing the starting bank recomputes everything.
 
 usage: ledger_xlsx.py LEDGER_CSV OUT_XLSX [BANK=100000]   (dinars)
@@ -39,10 +40,11 @@ bold, head_fill = Font(bold=True), PatternFill("solid", fgColor="DDEBF7")
 ws["A1"], ws["B1"] = "Početna banka (din)", BANK
 ws["A1"].font = bold
 ws["B1"].fill = PatternFill("solid", fgColor="FFF2CC")
-ws["C1"] = "<- početni kapital; svaka opklada je 1/4 Kelly procenat banke u trenutku opklade (banka raste i pada)"
+ws["C1"] = ("<- početni kapital; ulog = 1/4 Kelly procenat banke u trenutku opklade; banka se menja tek kad se opklada "
+            "obračuna (dobijena/izgubljena) i to samo za opklade upisane posle toga")
 cols = ["#", "Početak (Beograd)", "Kategorija", "U planu", "Turnir", "Igramo na", "Protivnik", "Kladionica", "Kvota (početna)",
         "Model %", "Prednost (EV)", "1/4 Kelly % banke", "Ulog (din)", "Kvota sada / pred meč", "Rezultat (W/L/V)", "Dobit (din)",
-        "Status", "Upisano (Beograd)", "Banka pri opkladi", "Kraj (procena)"]
+        "Status", "Upisano (Beograd)", "Banka pri opkladi", "Obračunato (Beograd)"]
 for j, c in enumerate(cols, 1):
     cell = ws.cell(row=3, column=j, value=c)
     cell.font, cell.fill, cell.alignment = bold, head_fill, Alignment(wrap_text=True, vertical="center")
@@ -57,12 +59,15 @@ for i, b in enumerate(L.itertuples()):
     res = {"void": "V"}.get(str(b.result), "W" if b.result == b.side else ("L" if str(b.result) in ("home", "away") else ""))
     status = "završen" if res else ("u toku / počeo" if start <= now else "čeka")
     close = getattr(b, "close", np.nan)
+    s_at = getattr(b, "settled_at", np.nan)
     bg = lambda t: pd.Timestamp(t).tz_localize("UTC").tz_convert("Europe/Belgrade").tz_localize(None).to_pydatetime()
+    # settled before settlement times were recorded: kick-off + 3 h
+    settled = (bg(s_at) if isinstance(s_at, str) and s_at else bg(start) + pd.Timedelta(hours=3)) if res else None
     vals = [i + 1, bg(start), cat, plan,
             b.tournament.split(":", 1)[-1].strip(), player_name({"WU": pick}, "h").title(), player_name({"WU": opp}, "h").title(),
             b.book, o, p, p * o - 1, kelly, f"=ROUND(S{r}*L{r},0)", None if pd.isna(close) else float(close), res,
             f'=IF(O{r}="W",M{r}*(I{r}-1),IF(O{r}="L",-M{r},IF(O{r}="V",0,"")))', status, bg(b.logged_at),
-            f'=$B$1+SUMIFS($P${r0}:$P${r0 + len(L) - 1},$T${r0}:$T${r0 + len(L) - 1},"<="&R{r})', f"=B{r}+3/24"]
+            f'=$B$1+SUMIFS($P${r0}:$P${r0 + len(L) - 1},$T${r0}:$T${r0 + len(L) - 1},"<="&R{r})', settled]
     for j, v in enumerate(vals, 1):
         ws.cell(row=r, column=j, value=v)
     for j in (2, 18, 20):

@@ -175,10 +175,13 @@ if not ledger.empty:
         except Exception as e:
             print("settlement feed error", e)
     open_bets = ledger.result.fillna("") == ""
+    # when the loop first saw the result: from then on the bank includes this bet (stakes of later bets only)
+    ledger["settled_at"] = ledger["settled_at"].astype(object) if "settled_at" in ledger else pd.Series(index=ledger.index, dtype=object)
     for i in ledger.index[open_bets]:
         res = done.get(ledger.at[i, "fs_mid"])
         if res:
             ledger.at[i, "result"] = res
+            ledger.at[i, "settled_at"] = pd.Timestamp.now("UTC").strftime("%Y-%m-%d %H:%M:%S")
             ledger.at[i, "pnl"] = 0.0 if res == "void" else (ledger.at[i, "open"] - 1 if res == ledger.at[i, "side"] else -1.0)
     ledger.to_csv(LEDGER, index=False)
 if seen:
