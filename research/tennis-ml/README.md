@@ -845,3 +845,28 @@ scores are missing and the new ratings / score / pbp features carry most informa
 unchanged. Single books are mixed (bet365 lower, most UK books slightly higher), the best-price result is higher in all
 three plan segments except Challenger (flat). Full output: `paper/eval_fs2026_v3.txt`. Next: the production model and
 the live loop with these features.
+
+Per tournament level (`seg_compare.py`, `paper/seg_compare_v2_v3.txt`): log-loss base v2 -> + new features on every
+2026 match, and best opening price blend EV>5% odds<=5 (bets, ROI). Grand Slams, Masters / WTA 1000, WTA 250 and
+WTA 125 have no Flashscore opening prices in this test, so log-loss only.
+
+| level | matches | log-loss | ROI odds<=5 |
+|---|---|---|---|
+| men M15 | 9,228 | 0.5565 -> 0.5537 | 757 +4.1% -> 688 +8.0% |
+| men M25 | 5,553 | 0.5336 -> 0.5329 | 339 +12.1% -> 326 +17.8% |
+| Challenger | 9,629 | 0.5848 -> 0.5845 | 605 +19.6% -> 559 +19.0% |
+| ATP 250/500 | 2,325 | 0.6020 -> 0.6013 | 191 +13.8% -> 173 +23.9% |
+| Masters 1000 | 596 | 0.6006 -> 0.5987 | - |
+| men Grand Slam | 362 | 0.5555 -> 0.5496 | - |
+| women W15 | 6,670 | 0.5345 -> 0.5305 | 669 +10.5% -> 627 +12.4% |
+| W35 | 4,034 | 0.5331 -> 0.5317 | 270 +9.3% -> 250 +12.4% |
+| W50 | 1,601 | 0.5691 -> 0.5664 | 135 +2.1% -> 134 +5.5% |
+| W75 | 1,451 | 0.5701 -> 0.5684 | 70 -5.1% -> 59 -4.4% |
+| W100 | 613 | 0.6138 -> 0.6108 | 47 +11.9% -> 47 -0.1% |
+| WTA 125 | 1,287 | 0.5529 -> 0.5530 | - |
+| WTA 500 | 1,746 | 0.5769 -> 0.5754 | 253 +16.3% -> 248 +16.8% |
+| WTA 1000 | 677 | 0.5956 -> 0.5914 | - |
+| women Grand Slam | 365 | 0.5488 -> 0.5477 | - |
+
+Log-loss is lower at every level except WTA 125 (equal) and Davis / BJK Cup (149 matches). ROI per level rests on
+50-700 bets, so single levels move by chance (W100: 47 bets); the ITF levels and ATP 250/500 gain the most.
