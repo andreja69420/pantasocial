@@ -59,8 +59,8 @@ OC MHL 7.1 171.2 12|HAW 21.3 -157.9 -10
 """
 _ALIAS = {"DEU": "GER", "NLD": "NED", "GRC": "GRE", "BGR": "BUL", "CHL": "CHI", "PRY": "PAR", "LVA": "LAT", "CRI": "CRC",
           "PHL": "PHI", "TWN": "TPE", "SIN": "SGP", "KWT": "KUW", "BHS": "BAH", "SAU": "KSA", "ZWE": "ZIM", "NGA": "NGR",
-          "AGO": "ANG", "COG": "CGO", "CAR": "CAF", "NIC": "NCA", "LIB": "LBN", "ECA": "ESA", "BRU": "BRN", "MNG": "MGL",
-          "ISR": "ISR"}
+          "AGO": "ANG", "COG": "CGO", "CAR": "CAF", "NIC": "NCA", "LIB": "LBN", "ECA": "ESA", "MNG": "MGL",
+          "GTM": "GUA", "NPL": "NEP", "PRI": "PUR", "BWA": "BOT", "MDG": "MAD", "TRI": "TTO", "TGO": "TOG", "BHR": "BRN"}
 _CONT = {"EU": 0, "AS": 1, "AF": 2, "NA": 3, "SA": 4, "OC": 5}
 LVL_RANK = {"10": 1, "15": 1, "20": 1, "25": 2, "S": 2, "CC": 2, "35": 3, "35+H": 3, "40": 3, "50": 4, "50+H": 4, "60": 5,
             "75": 5, "80": 5, "100": 6, "C": 7, "P": 9, "A": 9, "W": 9, "I": 9, "D": 9, "T2": 9, "T3": 9, "T4": 9,
