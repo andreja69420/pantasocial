@@ -9,6 +9,7 @@ Time windows use the running maximum of 'date', so a row dated before an earlier
 usage: fx_ratings.py MATCHES_PARQUET OUT_PARQUET
 """
 import multiprocessing as mp
+from concurrent.futures import ProcessPoolExecutor
 import os
 import re
 import sys
@@ -698,8 +699,8 @@ def compute(M, workers=None):
     _std_elo(_G)
     workers = workers or int(os.environ.get("FX_WORKERS", min(3, os.cpu_count() or 1)))
     if workers > 1:
-        with mp.get_context("fork").Pool(workers) as pool:
-            parts = pool.map(_run, range(len(TASKS)), chunksize=1)
+        with ProcessPoolExecutor(workers, mp_context=mp.get_context("fork")) as pool:
+            parts = list(pool.map(_run, range(len(TASKS))))
     else:
         parts = [_run(i) for i in range(len(TASKS))]
     cols = {}

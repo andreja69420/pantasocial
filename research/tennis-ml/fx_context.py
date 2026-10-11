@@ -316,7 +316,7 @@ def player_rows(n, wta, ordv, W, L, td_m, est_m, ev, rord, load_m, isQ_m, isF_m,
     r_title = (won[rlast] > 0) & isF[rlast]
     r_estl = est[rlast]
     den = r_rf - FINAL
-    r_depth = np.where(r_rl >= FINAL, 1.0, np.where(den < 0, np.clip((r_rf - r_rl) / np.where(den < 0, den, -1), 0, 1), 0.0))
+    r_depth = np.where(r_rl >= FINAL, 1.0, np.where(den < 0, np.clip((r_rf - r_rl) / np.where(den < 0, den, -1), 0, 1) + 0.0, 0.0))
     nr = len(rfirst)
 
     # country change / travel / time zones
