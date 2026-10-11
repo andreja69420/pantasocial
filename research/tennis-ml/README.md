@@ -784,3 +784,12 @@ Check against Sackmann's ITF 2025 box scores (11,663 women's, 10,949 men's match
 | service games exact | 93% | 93% |
 | break points faced exact (winner) | 90% | 91% |
 | correlation of service points won share | 0.918 | 0.928 |
+
+### Serve features from point-by-point counts (`fx_pbp.py`)
+20 per-player features (× p1/p2/diff), from the player's last 10 / 30 earlier matches *that have point-by-point data*:
+service and return points won, their sum (SPW+RPW), dominance, hold, break, break points saved / converted,
+tiebreak points won, break points faced per service game, plus how many such matches there were. Ratios are shrunk
+toward the pre-2025 mean. A brute-force recount over 400 random player-matches gives the same values (only earlier
+matches used). Univariate, ITF 2025-26, both players with ≥5 earlier pbp matches (73% of matches): the player with the
+higher SPW+RPW (30) wins 63.5% (women's ITF, 22,313) / 66.8% (men's ITF, 17,653); tiebreak points won carries
+almost nothing (50.7% / 53.7%). Whether it adds anything over Elo is the model test after the rebuild.
