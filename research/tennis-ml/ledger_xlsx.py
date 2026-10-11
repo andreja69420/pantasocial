@@ -24,7 +24,7 @@ from fs_common import player_name
 SRC, OUT = sys.argv[1], sys.argv[2]
 BANK = float(sys.argv[3]) if len(sys.argv) > 3 else 100000.0
 KELLY = 0.25
-# every competition is in the plan since 2026-10-11 evening (one bank); the second sheet sums the bets per category
+# every competition is in the plan since 2026-10-11 evening (one bank, one sheet; rows 5-7 sum the bets per category)
 SEG = {"ITF WOMEN - SINGLES": ("Ženski ITF", "DA"), "CHALLENGER MEN - SINGLES": ("Muški Challenger", "DA"),
        "ITF MEN - SINGLES": ("Muški ITF", "DA"), "CHALLENGER WOMEN - SINGLES": ("WTA 125", "DA"),
        "WTA - SINGLES": ("WTA Tour", "DA"), "ATP - SINGLES": ("ATP Tour", "DA")}
@@ -45,7 +45,7 @@ thin = Side(style="thin", color=LINE)
 def sheet(ws, L, title):
     ws.sheet_view.showGridLines = False
     # summary block: row 2 labels, row 3 values from column B (B3 = starting bank, editable)
-    r0 = 6
+    r0 = 10
     last = r0 + max(len(L), 1) - 1
     col = lambda c: f"${c}${r0}:${c}${last}"
     ws["A1"] = title
@@ -60,6 +60,21 @@ def sheet(ws, L, title):
         a.font, b.font = font(size=9, color=MUTED), font(size=12, bold=True)
         b.number_format = fmt
         a.alignment = b.alignment = Alignment(horizontal="left")
+    # per category (rows 5-7): name, profit, then ROI and record, from the bet rows below
+    ws.cell(row=5, column=1, value="")
+    for j, cat in enumerate(dict.fromkeys(v[0] for v in SEG.values()), 2):
+        crit = f'{col("C")},"{cat}"'
+        won, lost = f'COUNTIFS({crit},{col("L")},"Dobijeno")', f'COUNTIFS({crit},{col("L")},"Izgubljeno")'
+        staked = f'(SUMIFS({col("K")},{crit},{col("L")},"Dobijeno")+SUMIFS({col("K")},{crit},{col("L")},"Izgubljeno"))'
+        a = ws.cell(row=5, column=j, value=cat)
+        b = ws.cell(row=6, column=j, value=f'=SUMIFS({col("M")},{crit})')
+        c = ws.cell(row=7, column=j, value=f'=IF({staked}>0,"ROI "&TEXT(SUMIFS({col("M")},{crit})/{staked},"0.0%")&" · ","")'
+                                             f'&{won}&"–"&{lost}&" od "&COUNTIFS({crit})')
+        a.font, b.font, c.font = font(size=9, color=MUTED), font(size=12, bold=True), font(size=9, color=MUTED)
+        b.number_format = "#,##0;[Red]-#,##0"
+        for x in (a, b, c):
+            x.alignment = Alignment(horizontal="left", vertical="top", wrap_text=True)
+    ws.row_dimensions[7].height = 26
 
     cols = [("#", 4, "0"), ("Početak", 13, "dd.mm. hh:mm"), ("Kategorija", 15, "@"), ("Turnir", 42, "@"), ("Igramo na", 22, "@"),
             ("Protivnik", 22, "@"), ("Kladionica", 13, "@"), ("Kvota", 7, "0.00"), ("Verovatnoća", 11, "0.0%"),
@@ -118,34 +133,6 @@ wb = Workbook()
 ws = wb.active
 ws.title = "Opklade"
 sheet(ws, L[in_plan], "Opklade")
-# per category: bets, won, lost, profit, ROI, from the bet rows' formulas
-ws2 = wb.create_sheet("Po kategorijama")
-ws2.sheet_view.showGridLines = False
-ws2["A1"] = "Po kategorijama"
-ws2["A1"].font = font(size=14, bold=True)
-last = 6 + max(int(in_plan.sum()), 1) - 1
-rng = lambda c: f"Opklade!${c}$6:${c}${last}"
-heads = [("Kategorija", 20, "@"), ("Opklade", 10, "0"), ("Dobijeno", 10, "0"), ("Izgubljeno", 10, "0"),
-         ("Uloženo", 12, "#,##0"), ("Dobit", 12, "#,##0;[Red]-#,##0"), ("ROI", 9, "0.0%;[Red]-0.0%")]
-for j, (h, w, _) in enumerate(heads, 1):
-    c = ws2.cell(row=3, column=j, value=h)
-    c.font, c.fill = font(bold=True, color="FFFFFF"), PatternFill("solid", fgColor=HEAD)
-    c.alignment = Alignment(horizontal="left" if j == 1 else "right")
-    ws2.column_dimensions[get_column_letter(j)].width = w
-cats = [c for c in dict.fromkeys(v[0] for v in SEG.values())] + ["Ukupno"]
-for i, cat in enumerate(cats):
-    r = 4 + i
-    crit = f'"{cat}"' if cat != "Ukupno" else '"<>"'
-    staked = f'SUMIFS({rng("K")},{rng("C")},{crit},{rng("L")},"Dobijeno")+SUMIFS({rng("K")},{rng("C")},{crit},{rng("L")},"Izgubljeno")'
-    vals = [cat, f'=COUNTIFS({rng("C")},{crit})', f'=COUNTIFS({rng("C")},{crit},{rng("L")},"Dobijeno")',
-            f'=COUNTIFS({rng("C")},{crit},{rng("L")},"Izgubljeno")', f"={staked}", f'=SUMIFS({rng("M")},{rng("C")},{crit})',
-            f'=IFERROR(F{r}/E{r},"")']
-    for j, v in enumerate(vals, 1):
-        c = ws2.cell(row=r, column=j, value=v)
-        c.number_format = heads[j - 1][2]
-        c.font = font(bold=cat == "Ukupno")
-        c.border = Border(bottom=thin)
-        c.alignment = Alignment(horizontal="left" if j == 1 else "right")
 wb.save(OUT)
 if shutil.which("soffice"):
     with tempfile.TemporaryDirectory() as tmp:

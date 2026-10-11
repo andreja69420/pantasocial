@@ -637,9 +637,8 @@ stores the time it first saw the result, `settled_at`), and the new bank applies
 
 **Every competition in the plan from 2026-10-11 evening** (after the whole-2026 test per level): one bank, same rule
 (EV>5% odds<=5 at the opening price, quarter Kelly), all six Flashscore categories (women's / men's ITF, Challenger,
-WTA 125, WTA and ATP tour incl. Grand Slams). The sheet `Opklade` holds all bets (the earlier "Van plana" bets
-joined it, so the bank and later stakes are recomputed with them); `Po kategorijama` sums bets, won, lost, staked,
-profit and ROI per category with formulas.
+WTA 125, WTA and ATP tour incl. Grand Slams). One sheet, `Opklade`: overall summary (rows 2-3), per category profit, ROI and record (rows 5-7) and all bets
+below; the earlier "Van plana" bets joined it, so the bank and every later stake are recomputed with them.
 
 **Production setup from 2026-10-11 evening: base v2 + the 158 new features** (`paper_loop.sh` defaults):
 - feature build `out_live2` = the base v2 build (`fx_raw`, `F2_CLEAN_GAMES=1`) caught up with every result the loop had
