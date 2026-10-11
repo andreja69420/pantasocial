@@ -654,13 +654,14 @@ stores the time it first saw the result, `settled_at`), and the new bank applies
 ## Memory (15 GB machine): measured peaks and what changed (`peakmem.py`)
 `peakmem.py CMD ...` samples the summed PSS of a command's whole process tree every 0.2 s (PSS, not RSS: forked
 workers share the parent's pages, RSS counted the 865k-row table once per worker and showed 19 GB for fx_live).
-Every change gives the same output as before, checked as noted.
+Every change gives the same output as before, checked as noted. The loop's peak went from ~9 GB to ~5 GB, so a
+training run (~6 GB) and the loop now fit side by side.
 
 | step | before | after | how | check |
 |---|---|---|---|---|
 | `features_incr.py` append (loop, every 30 min, per tour; men, 66 rows) | 5.55 GB, 31 s | **1.36 GB, 10 s** | reads only the 16 rating columns of the build; new rows go to `{tour}_f2_parts/<first row>.parquet` instead of reading and rewriting the whole 630 MB file; `design.read_f2` / `load_f2` read build + parts; >200 parts are merged | new rows, matches table and rating state identical |
 | `fx_live.py` (loop, per tour; men, 107 fixtures) | 9.02 GB, 64 s | **5.01 GB, 60 s** | the match table loaded with only the columns the modules read (each module gets its own subset); 2 worker processes (ratings / score + context + pbp in turn) instead of 4 | all 316 columns identical |
-| `train_final.py` / `train3.py` (631-column build) | ~10.3 GB RSS, OOM-killed twice next to the loop | see below | `design.load_f2`: only 2010+ rows (index restored after the filtered read) and only the columns the selected features need; `build_X` fills one preallocated float32 matrix (before: dict of float64 columns -> DataFrame copy -> astype copy, about 3x X), builds only the selected columns (`keep=`), contiguous row ranges are sliced without a copy (`design.take`) | X bit-identical to the old build_X (all 955 columns and the 798 selected, 60k rows per tour) |
+| `train_final.py` / `train3.py` (631-column build; women's production model) | ~10.3 GB RSS, 690 s, OOM-killed twice next to the loop | **5.84 GB, 434 s** | `design.load_f2`: only 2010+ rows (index restored after the filtered read) and only the columns the selected features need; `build_X` fills one preallocated float32 matrix (before: dict of float64 columns -> DataFrame copy -> astype copy, about 3x X), builds only the selected columns (`keep=`), contiguous row ranges are sliced without a copy (`design.take`) | X bit-identical to the old build_X (all 955 columns and the 798 selected, 60k rows per tour); the retrained model is identical (same validation log-loss 0.548255, XGB and LGBM predictions differ by 0.0) |
 
 Not changed: a full `features2.py` rebuild (~8 GB) still runs alone; casting its frames to float32 while building
 would change the stored values of the 306 double columns, so it would no longer reproduce the current features.
