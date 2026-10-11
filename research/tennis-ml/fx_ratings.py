@@ -691,7 +691,15 @@ def _run(i):
 
 
 def compute(M, workers=None):
-    """Features for every row of M (rows in 'order'); returns a float32 frame with M's index."""
+    """Features for every row of M (rows in 'order'); returns a float32 frame with M's index.
+    Self-play rows (winner_id == loser_id, a source data error) take no part in any state and get NaN."""
+    bad = M["winner_id"].values == M["loser_id"].values
+    if bad.any():
+        return _compute(M[~bad], workers).reindex(M.index)
+    return _compute(M, workers)
+
+
+def _compute(M, workers=None):
     perm = np.argsort(M["order"].values, kind="stable")
     Ms = M.iloc[perm] if (perm != np.arange(len(M))).any() else M
     _G.clear()

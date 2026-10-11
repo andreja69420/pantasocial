@@ -205,6 +205,16 @@ def sr(x, n, p0, m):
 
 
 def compute(M, women=None):
+    """Self-play rows (winner_id == loser_id, a source data error) take no part in any state and get NaN."""
+    bad = M["winner_id"].values == M["loser_id"].values
+    if bad.any():
+        if women is None:
+            women = bool(M["tourney_level"].isin(["P", "PM", "I", "T1"]).any())
+        return _compute(M[~bad], women).reindex(M.index)
+    return _compute(M, women)
+
+
+def _compute(M, women=None):
     n = len(M)
     order = M["order"].values.astype(np.int64)
     if women is None:

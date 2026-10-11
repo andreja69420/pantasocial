@@ -502,6 +502,16 @@ def player_rows(n, wta, ordv, W, L, td_m, est_m, ev, rord, load_m, isQ_m, isF_m,
 
 
 def compute(M, wta=None):
+    """Self-play rows (winner_id == loser_id, a source data error) take no part in any state and get NaN."""
+    bad = M["winner_id"].values == M["loser_id"].values
+    if bad.any():
+        if wta is None:
+            wta = _is_wta(M)
+        return _compute(M[~bad], wta).reindex(M.index)
+    return _compute(M, wta)
+
+
+def _compute(M, wta=None):
     n = len(M)
     N = 2 * n
     if wta is None:
