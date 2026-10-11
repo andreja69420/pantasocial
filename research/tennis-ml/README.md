@@ -753,4 +753,17 @@ points faced/saved, tiebreak points). Share of finished singles matches with eac
 | 2026 | 14,665 | 0% | 52% (52%) | 96% | 100% |
 
 ITF women never have a box score on Flashscore, but most matches from 2024 on have the point-by-point log, from which
-the same serve statistics are counted exactly. Men: scrape running.
+the same serve statistics are counted exactly.
+
+Men (123,575 matches, 54 min at 150 requests/s):
+
+| Year | Men's ITF matches | box | point by point (with point scores) | Challenger box | ATP tour box |
+|---|---|---|---|---|---|
+| 2023 | 17,541 | 0% | 37% (24%) | 100% | 97% |
+| 2024 | 18,409 | 0% | 54% (54%) | 100% | 97% |
+| 2025 | 19,544 | 0% | 68% (67%) | 100% | 96% |
+| 2026 | 15,184 | 0% | 36% (36%) | 100% | 96% |
+
+Challenger has a full box score for every match, so the full model (serve statistics) can run live for men's
+Challenger; ITF gets serve features from the point-by-point log where it exists. Output:
+`DATA_DIR/fs_raw/stats/{wta,atp}_fs_stats.parquet`, next step joining them to the build's matches.
