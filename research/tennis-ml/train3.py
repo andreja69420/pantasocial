@@ -162,4 +162,5 @@ for thr in [0.02, 0.05, 0.10]:
                          "tag": TAG, "split": split, "n_features": len(FEATS), "rule": rule, "bets": len(v),
                          "roi": round(v.mean(), 4), "ci90_lo": round(lo, 4), "years_pos": f"{pos}/{len(yrs)}",
                          "logloss_model": round(ll(P.p), 5), "logloss_market": round(ll(P.p_mkt), 5), "pass": ok})
-pd.DataFrame(log_rows).to_csv(LOG, mode="a", header=not os.path.exists(LOG), index=False)
+if "--no-log" not in sys.argv:  # prediction-only runs (placeholder odds) are not experiments
+    pd.DataFrame(log_rows).to_csv(LOG, mode="a", header=not os.path.exists(LOG), index=False)
