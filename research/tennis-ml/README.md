@@ -590,3 +590,15 @@ the night, so no new scraping was done after 03:20.
 | blend EV>12% odds<=5 | 653 | 1.32 | +13.8% (+6.3%) | +5.2% | +90 | 12 | 48% | 2.40 | +11.7% / +21.0% |
 High thresholds lean more on the big opening-line corrections (the void-stress column falls to roughly 40-45% of the
 headline ROI), so the realistic expectation for one bet a day is nearer +4% (odds<=2) to +9% (odds<=5).
+
+## Up to date: Flashscore results to October 2026 (`fs_results.py`)
+Each Flashscore tournament results page embeds its full results feed (round, players with full-name slugs, games
+per set, status, surface in the header); tournament slugs come from Flashscore plus the cached BetExplorer lists
+(same company, same slugs) and slugified Sackmann tour-level names. Adaptive rate with 128 parallel connections:
+it climbed to 128 requests/s with zero errors and zero slow answers (5,000+ pages in ~4 minutes in total).
+| Tour | Matches 2026-06-08..2026-10-11 | By level | Names matched to Sackmann ids |
+|---|---|---|---|
+| WTA | 8,525 | W15 3,494, W35 1,891, WTA tour 1,371, W50 937, W75 556, W100 276 | 95% |
+| ATP | 13,788 | M15 4,875, Challenger 4,452, M25 3,027, ATP tour 1,434 | 95% |
+Walkovers and cancelled matches are skipped; retirements kept as "RET". These files extend the Sackmann archive
+(which ends in June 2026) in a separate raw dir, and the feature tables are being rebuilt from them.

@@ -155,6 +155,12 @@ for cat in CATS:
                 s |= set(re.findall(rf'href="/tennis/{cat}/([a-z0-9\-]+)/"', r.read().decode("utf-8", "ignore")))
         except Exception as e:
             print(f"  BetExplorer slug list for {cat} unavailable ({e}); using Flashscore's current list only", flush=True)
+    if cat in ("atp-singles", "wta-singles"):  # plus slugified names of recent Sackmann tour-level events
+        T = pd.concat(pd.read_csv(f, usecols=["tourney_name", "tourney_level"], low_memory=False)
+                      for f in glob.glob(f"{RAW}/sackmann_raw/{TOUR}__{TOUR}_matches_202[456].csv"))
+        T = T[~T.tourney_level.astype(str).isin(["D", "O"])]
+        s |= {re.sub(r"[^a-z0-9]+", "-", unicodedata.normalize("NFKD", n).encode("ascii", "ignore").decode().lower()).strip("-")
+              for n in T.tourney_name.dropna().unique()}
     s = {x for x in s if not re.search(r"-\d{4}$", x) and x not in ("results", "fixtures", "standings", "archive", "draw")}
     slugs += [(cat, x) for x in sorted(s)]
     print(f"{cat}: {len(s)} tournament slugs", flush=True)
@@ -190,8 +196,8 @@ for (cat, slug), page in zip(slugs, pages):
         if not sets:
             skipped["status"] += 1
             continue
-        hname = d.get("WU", d.get("AE", "")).replace("-", " ")
-        aname = d.get("WV", d.get("AF", "")).replace("-", " ")
+        hname = re.sub(r"(\s\d+)+$", "", d.get("WU", d.get("AE", "")).replace("-", " "))  # slugs carry "-2000" style suffixes
+        aname = re.sub(r"(\s\d+)+$", "", d.get("WV", d.get("AF", "")).replace("-", " "))
         w, l = (hname, aname) if hw else (aname, hname)
         wid, lid = ids.get(key(w)), ids.get(key(l))
         unmapped += (wid is None) + (lid is None)
