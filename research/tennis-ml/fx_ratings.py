@@ -90,7 +90,7 @@ def _std_elo(G):
 def _split(prefix_pairs):
     out = {}
     for name, (a, b) in prefix_pairs.items():
-        out["w_" + name] = np.asarray(a); out["l_" + name] = np.asarray(b)
+        out["w_" + name] = np.asarray(a, dtype=np.float32); out["l_" + name] = np.asarray(b, dtype=np.float32)
     return out
 
 
@@ -538,7 +538,7 @@ def _task_long():
 
     def put(name, v, lng=L):
         u = lng.back(v)
-        out["w_" + name], out["l_" + name] = u[:n], u[n:]
+        out["w_" + name], out["l_" + name] = u[:n].astype(np.float32), u[n:].astype(np.float32)
 
     cnt20 = np.minimum(pos, 20)
     prov = L.rows((L.g(oppn_u) < 5).astype(float), 20) / np.maximum(cnt20, 1)
@@ -651,14 +651,14 @@ def _task_long():
     Lp = Long(pk, np.arange(n), day)
     Ls = Long(pk * 4 + G["surf"], np.arange(n), day)
     h2h = Lp.back(Lp.excl(Lp.g(r_lo)) / (Lp.pos + 2.0))
-    out["w_h2h_resid"], out["l_h2h_resid"] = np.where(wl_, h2h, -h2h), np.where(wl_, -h2h, h2h)
+    out["w_h2h_resid"], out["l_h2h_resid"] = np.where(wl_, h2h, -h2h).astype(np.float32), np.where(wl_, -h2h, h2h).astype(np.float32)
     lam = log(1.25) / 365.25
     o_ = np.ones(n)
     sa = Ls.back(Ls.wdsum(Ls.g(won_lo), lam)); ss = Ls.back(Ls.wdsum(Ls.g(o_), lam))
     aa = Lp.back(Lp.wdsum(Lp.g(won_lo), lam)); sw_ = Lp.back(Lp.wdsum(Lp.g(o_), lam))
     p_lo = (0.6 * aa + 0.4 * sa + 0.5) / (0.6 * sw_ + 0.4 * ss + 1.0)
     pwin = np.where(wl_, p_lo, 1 - p_lo)
-    out["w_h2h_decay_shrunk"], out["l_h2h_decay_shrunk"] = pwin, 1 - pwin
+    out["w_h2h_decay_shrunk"], out["l_h2h_decay_shrunk"] = pwin.astype(np.float32), (1 - pwin).astype(np.float32)
     return out
 
 
@@ -678,7 +678,7 @@ def _task_sim():
         if c >= 5:
             val[q] = res[s][m].sum() / (c + 5.0)
     u = L.back(val)
-    return {"w_sim_opp_resid": u[:n], "l_sim_opp_resid": u[n:]}
+    return {"w_sim_opp_resid": u[:n].astype(np.float32), "l_sim_opp_resid": u[n:].astype(np.float32)}
 
 
 TASKS = [_task_g2, _task_co, _task_pr, _task_ts_lvl, _task_cs_layoff_mf, _task_long, _task_hind, _task_sim]
@@ -704,7 +704,7 @@ def compute(M, workers=None):
     cols = {}
     for p in parts:
         cols.update(p)
-    out = pd.DataFrame({k: np.asarray(v, dtype=np.float32) for k, v in cols.items()}, index=Ms.index)
+    out = pd.DataFrame(cols, index=Ms.index)
     return out.loc[M.index] if Ms is not M else out
 
 
