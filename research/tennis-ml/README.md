@@ -570,3 +570,14 @@ clearly above zero.
 ### Monthly profile (BetMGM 2025-26, retrained model, flat 1 unit)
 EV>5% odds<=2: ~100 bets/month, median +8.7 units/month, worst month -3.9, best +20.5, 4 of 15 months negative.
 EV>5% odds<=5: ~150 bets/month, median +12.5 units/month, worst -1.7, best +53.3, 2 of 16 months negative.
+
+### Bet365 opening 2025, blend fitted on 2014-2024 only, by segment
+| Segment | Blend EV>5% odds<=2 | Blend EV>5% odds<=5 | Raw EV>5% odds<=2 |
+|---|---|---|---|
+| Women's ITF | 1,278 bets **+7.8%** (lo +4.7%), void +4.6% | 1,771 **+9.2%** (lo +5.5%) | 3,190 +5.1% |
+| Challenger | 183 +10.5% (lo +1.8%), void +0.8% | 284 +11.1% (lo +0.9%) | 1,113 -0.3% |
+| WTA125 | 76 +7.3% | 96 +13.8% | 325 -1.3% |
+| WTA Tour | 90 -5.1% | 151 +9.7% | 354 -0.7% |
+Women's ITF is the core of the edge (largest and steadiest in every test); Challenger and men's ITF are positive but
+noisier; WTA125 / WTA Tour samples are too small to rely on. BetExplorer stayed throttled (20-60 s per page) through
+the night, so no new scraping was done after 03:20.

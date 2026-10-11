@@ -3,7 +3,9 @@
 Sažetak svega što je testirano (detalji i brojevi su u `README.md`). Ovo je plan za probu, ne garancija zarade.
 
 ## 1. Šta se igra
-- **Da:** ženski ITF (W15–W100), WTA125, WTA Tour, muški Challenger, muški ITF — samo pobednik meča.
+- **Glavno:** ženski ITF (W15–W100) — najveća i najstabilnija prednost u svakom testu.
+- **Dodatno:** muški Challenger i muški ITF (u plusu, ali sa više variranja). WTA125 i WTA Tour imaju premalo
+  opklada da bi se na njih računalo. Samo pobednik meča.
 - **Ne:** ATP Tour (nema prednosti), totali gemova, NBA i Evroliga (testirano, gubi).
 
 ## 2. Kada
