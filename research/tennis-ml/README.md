@@ -793,3 +793,18 @@ toward the pre-2025 mean. A brute-force recount over 400 random player-matches g
 matches used). Univariate, ITF 2025-26, both players with ≥5 earlier pbp matches (73% of matches): the player with the
 higher SPW+RPW (30) wins 63.5% (women's ITF, 22,313) / 66.8% (men's ITF, 17,653); tiebreak points won carries
 almost nothing (50.7% / 53.7%). Whether it adds anything over Elo is the model test after the rebuild.
+
+### Base v2 (`fx_raw` + `F2_CLEAN_GAMES=1`): same 324 results-only features, fresh 2026 test
+Rebuilt from the raw copy with Flashscore statistics, normalised surface and clean game counts (features2 4 min women,
+12 min men), same model and training (2026 predicted by a model that never saw 2026), same 2026 matches:
+
+| | old base | base v2 |
+|---|---|---|
+| log-loss women (18,639 matches): all / ITF / WTA 125 / tour | 0.5531 / 0.5444 / 0.5942 / 0.5784 | 0.5536 / 0.5449 / 0.5951 / 0.5788 |
+| log-loss men (27,816): all / ITF / Challenger / tour | 0.5662 / 0.5479 / 0.5849 / 0.5928 | 0.5661 / 0.5479 / 0.5849 / 0.5924 |
+| best opening price, blend EV>5% odds<=2 | 1,829 bets +9.78% (lo +6.9%) | 1,809 bets +9.82% (lo +7.0%) |
+| best opening price, blend EV>5% odds<=5 | 3,345 bets +10.56% (lo +7.4%) | 3,333 bets +10.76% (lo +7.6%) |
+
+The fixes change nothing measurable (the results-only set does not use serve statistics; the surface and retirement
+fixes touch about 0.3% / 2.6% of matches). Base v2 is the base for the new-feature test. Full per-book output:
+`paper/eval_fs2026_basev2.txt`.
