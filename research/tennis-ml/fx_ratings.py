@@ -4,6 +4,7 @@ Every value for a match is recorded before that match touches any state and only
 'order' (vectorised parts use exclusive per-group cumulative sums over (group, order); loops record first, then update).
 Columns are w_<name> / l_<name> = value for the match winner / loser (float32), same index as the input.
 Needs columns: winner_id loser_id date surface tourney_level score retired main order (rows sorted by order).
+Time windows use the running maximum of 'date', so a row dated before an earlier row (live tail) counts as that later day.
 
 usage: fx_ratings.py MATCHES_PARQUET OUT_PARQUET
 """
@@ -50,16 +51,16 @@ def parse_score(s):
 
 def _prep(M):
     n = len(M)
-    codes, _ = pd.factorize(np.r_[M.winner_id.values, M.loser_id.values])
-    d = M["date"]
+    codes, ids = pd.factorize(np.r_[M.winner_id.values, M.loser_id.values])
+    day = np.maximum.accumulate(M["date"].values.astype("datetime64[D]").astype(np.int64))  # live tail rows can be out of date order
     lvl = M["tourney_level"].astype(str)
     sc_codes, uniq = pd.factorize(M["score"].fillna("").astype(str))
     ps = np.array([parse_score(s) for s in uniq], dtype=float).reshape(-1, 4)[sc_codes]
     gtot = ps[:, 0] + ps[:, 1]
-    md = pd.DatetimeIndex(d)
+    md = pd.DatetimeIndex(day.astype("datetime64[D]"))
     G = dict(
-        n=n, nP=int(codes.max()) + 1, w=codes[:n], l=codes[n:],
-        day=d.values.astype("datetime64[D]").astype(np.int64),
+        n=n, nP=int(codes.max()) + 1, w=codes[:n], l=codes[n:], ids=np.asarray(ids),
+        day=day,
         surf=M["surface"].astype(str).str.capitalize().map(SURF).fillna(0).astype(int).values,
         lg=np.where(lvl.isin(LG1), 0, np.where(lvl.isin(LG2), 1, np.where(lvl == "C", 2, 3))),
         ret=M["retired"].values.astype(bool), main=M["main"].values.astype(int),
@@ -320,8 +321,8 @@ def _task_cs_layoff_mf():
     ewl, ell = G["ew"].tolist(), G["el"].tolist()
     CS = [None] * nP
     LO, llast, loff, since = [None] * nP, [-1] * nP, [False] * nP, [99] * nP
-    rng = np.random.default_rng(0)
-    U, Vv = rng.normal(0, 0.1, (nP, 4)), rng.normal(0, 0.1, (nP, 4))
+    init = np.array([np.random.default_rng((7, int(p))).normal(0, 0.1, 8) for p in G["ids"]])  # keyed by player id, not data span
+    U, Vv = np.ascontiguousarray(init[:, :4]), np.ascontiguousarray(init[:, 4:])
     cm = log(10.0) / 400.0
     C = np.zeros((n, 2)); Lo = np.zeros((n, 2)); F = np.zeros(n)
     for i in range(n):
@@ -695,7 +696,7 @@ def compute(M, workers=None):
     _G.clear()
     _G.update(_prep(Ms))
     _std_elo(_G)
-    workers = workers or int(os.environ.get("FX_WORKERS", min(4, os.cpu_count() or 1)))
+    workers = workers or int(os.environ.get("FX_WORKERS", min(3, os.cpu_count() or 1)))
     if workers > 1:
         with mp.get_context("fork").Pool(workers) as pool:
             parts = pool.map(_run, range(len(TASKS)), chunksize=1)
