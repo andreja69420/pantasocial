@@ -531,3 +531,18 @@ Same blend (Bet365 2014-2024), same data; only the 2025/2026 model predictions c
 | blend EV>10% odds<=5 | 907 +13.0% | 934 +12.0% |
 A small, consistent improvement at the main rules (2026 alone, odds<=5: +8.9% -> +10.3%). The new setting is the
 default for future training (6x slower).
+
+### Results-only model: can it run on data we can scrape every day? (`results_only_features.regex`)
+The Sackmann archive ends in June 2026, so a live model must be fed from a daily source such as BetExplorer, which
+gives players, round, set scores and dates but no serve statistics, rankings, seedings, entry status or durations.
+Model retrained (default boosting setting) on the 324 of 481 features computable from such data (dropped: all serve /
+return statistics and Markov point models, ranking/points/seeding/entry, match minutes, draw size):
+| BetMGM 2025-26, same blend | Full model (481) | Results-only (324) |
+|---|---|---|
+| raw EV>5% odds<=2 | 6,478 +3.35% (lo +1.9%) | 6,174 **+3.42% (lo +1.9%)** |
+| blend EV>5% odds<=2 | 1,695 +5.73% | 1,599 +5.30% |
+| blend EV>10% odds<=2 | 446 +9.65% | 391 +10.87% |
+| blend EV>5% odds<=5 | 2,526 +8.92% (lo +5.8%) | 2,430 **+8.50% (lo +5.2%)**, void +3.5% |
+| blend EV>10% odds<=5 | 907 +13.0% | 861 +13.2% |
+The edge survives almost intact without serve statistics or rankings: a live version can be built on daily
+BetExplorer results alone (plus static player bio data for age, height, handedness, nationality).

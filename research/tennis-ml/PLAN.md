@@ -50,8 +50,9 @@ Brojevi su za model treniran sa manjim learning rate-om (malo bolji od prvobitno
 - **Drift modela:** model se mora ponovo trenirati svake godine (walk-forward, kao u testovima).
 
 ## 8. Šta još treba napraviti pre pravog novca
-1. **Svež izvor rezultata:** Sackmann podaci kasne, a model mora da zna jučerašnje mečeve (Elo, forma, umor).
-   Treba dnevno skidati rezultate (npr. BetExplorer/TennisExplorer) i preračunavati feature-e.
+1. **Svež izvor rezultata:** Sackmann arhiva se završava u junu 2026, a model mora da zna jučerašnje mečeve (Elo,
+   forma, umor). Provereno: model samo sa rezultatima (324 feature-a, bez statistike servisa i rang-liste) zadržava
+   skoro istu prednost (+8,5% naspram +8,9%), pa je dovoljno dnevno skidati rezultate sa BetExplorera.
 2. **Dnevna skripta:** raspored mečeva + početne kvote → feature-i → `q` → `P` → lista opklada.
 3. **Probni period 4–8 nedelja bez novca:** beležiti opklade po početnoj kvoti i proveriti da je prosečan pad kvote
    (CLV) na našim stranama pozitivan, kao u testovima (+5–10%). Tek onda mali ulozi.
