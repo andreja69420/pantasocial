@@ -8,7 +8,8 @@ table ({tour}_matches.parquet). For the new rows this script
      involved plus earlier matches at the same venues (venue speed features) - with those rows' stored pre-match
      ratings,
   3. runs the unchanged vectorized feature engine on that subset only, keeps the new rows,
-  4. appends them to {tour}_f2.parquet / {tour}_matches.parquet and saves the new rating state.
+  4. appends them ({tour}_f2_parts/<first row>.parquet next to {tour}_f2.parquet, so the build is never read or
+     rewritten whole; design.read_f2 / load_f2 read both) and {tour}_matches.parquet, and saves the new rating state.
 Every feature of a row depends only on earlier rows of the same player / pair / venue, so the result equals a full
 rebuild (verified in README) as long as the new matches are later than the ones already built.
 
@@ -31,6 +32,7 @@ import pyarrow.parquet as pq
 RAW, OUT, TOUR, NEW = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4:]
 sys.argv = [sys.argv[0], RAW, OUT, TOUR, "1991"]
 import features2 as F2  # noqa: E402
+from design import f2_parts, read_f2  # noqa: E402
 
 t0 = time.time()
 st = pickle.load(open(f"{OUT}/{TOUR}_state.pkl", "rb"))
@@ -38,10 +40,12 @@ base = pd.read_parquet(f"{OUT}/{TOUR}_matches.parquet")
 DRY = os.environ.get("DRY_OUT")
 NAMES = ["elo", "selo", "felo", "gelo", "melo", "welo", "wselo", "wsetelo"]
 RCOLS = [f"{s}_{n}" for n in NAMES for s in ("w", "l")]
-F2COLS = pq.read_schema(f"{OUT}/{TOUR}_f2.parquet").names
+F2PATH = f"{OUT}/{TOUR}_f2.parquet"
+F2COLS = pq.read_schema(F2PATH).names
 F2COLS = [c for c in F2COLS if not c.startswith("__")]
-# a dry run only needs the stored ratings of the history subset: read 16 columns instead of the whole build
-f2 = pd.read_parquet(f"{OUT}/{TOUR}_f2.parquet", columns=RCOLS if DRY else None)
+# only the stored ratings of the history subset are needed: read 16 columns instead of the whole build; appended rows
+# go to a small file in {tour}_f2_parts/ instead of rewriting the build (memory ~0.3 GB instead of several GB)
+f2 = read_f2(F2PATH, RCOLS)
 new = []
 for f in NEW:
     d = pd.read_csv(f, low_memory=False)
@@ -119,8 +123,16 @@ if DRY:
     sys.exit(0)
 
 # 4. append and save the new state
-f2 = pd.concat([f2, rows[F2COLS]])
-f2.to_parquet(f"{OUT}/{TOUR}_f2.parquet")
+PARTS = F2PATH[:-len(".parquet")] + "_parts"
+os.makedirs(PARTS, exist_ok=True)
+rows = rows[F2COLS].rename_axis(f2.index.name)
+rows.to_parquet(f"{PARTS}/{first_mi:09d}.parquet")
+parts = f2_parts(F2PATH)
+if len(parts) > 200:  # merge the small files now and then (they hold only the appended rows); names keep the order
+    pd.concat([pd.read_parquet(f) for f in parts]).to_parquet(f"{PARTS}/merge.tmp")
+    for f in parts:
+        os.remove(f)
+    os.rename(f"{PARTS}/merge.tmp", parts[0])
 nt = new.drop(columns=[c for c in new.columns if new[c].dtype == object and c not in F2.KEEP_OBJ])
 for c in F2.KEEP_OBJ & set(nt.columns):
     nt[c] = nt[c].astype(str).replace("nan", np.nan)
@@ -128,4 +140,4 @@ pd.concat([base, nt[[c for c in base.columns if c in nt.columns]]]).to_parquet(f
 with open(f"{OUT}/{TOUR}_state.pkl", "wb") as f:
     pickle.dump({"ratings": [dict(d) for d in F2.ratings.state], "wcmap": st["wcmap"], "last_order": int(new.order.max())}, f)
 print(f"{TOUR}: +{len(new)} matches (history subset {n_sub} of {len(base)} rows) in {time.time() - t0:.1f}s; "
-      f"features now {len(f2)} rows up to {f2.date.max():%Y-%m-%d}", flush=True)
+      f"features now {len(f2) + len(rows)} rows up to {new.date.max():%Y-%m-%d}", flush=True)

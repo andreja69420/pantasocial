@@ -16,7 +16,7 @@ import pandas as pd
 import xgboost as xgb
 from sklearn.linear_model import LogisticRegression
 
-from design import build_X
+from design import build_X, load_f2, take
 
 D, TOUR, MODEL, TAG = sys.argv[1:5]
 HOLDOUT = "--holdout" in sys.argv
@@ -36,12 +36,9 @@ TREES = int(next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--trees=
 PATIENCE = int(next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--patience=")), 60))
 LOG = os.path.join(os.path.dirname(os.path.abspath(__file__)), "experiments.csv")
 
-df = pd.read_parquet(f"{D}/out/{TOUR}_f2.parquet")
+df = load_f2(f"{D}/out/{TOUR}_f2.parquet", ONLY, f"{TRAIN_FROM}-01-01")
 df["year"] = df.date.dt.year
-df = df[df.year >= TRAIN_FROM].copy()
-X, y, flip = build_X(df, TOUR)
-if ONLY:
-    X = X[[c for c in X.columns if re.search(ONLY, c)]]
+X, y, flip = build_X(df, TOUR, keep=(lambda c: re.search(ONLY, c)) if ONLY else None)
 FEATS = list(X.columns)
 lvl = df.tourney_level.astype(str)
 futures = (lvl.str.match(r"^\d") | (lvl == "S")).values
@@ -63,21 +60,21 @@ def fit_predict(tr, va, te, Y):
         m = xgb.XGBClassifier(n_estimators=TREES, learning_rate=0.06 * LR_MULT, max_depth=6, min_child_weight=50, subsample=0.8,
                               colsample_bytree=0.4, reg_lambda=5.0, tree_method="hist", max_bin=64, n_jobs=2,
                               early_stopping_rounds=PATIENCE, eval_metric="logloss")
-        m.fit(X.iloc[tr], y[tr], sample_weight=sw, eval_set=[(X.iloc[va], y[va])], verbose=False)
-        preds_va.append(m.predict_proba(X.iloc[va])[:, 1]); preds_te.append(m.predict_proba(X.iloc[te])[:, 1])
+        m.fit(take(X, tr), y[tr], sample_weight=sw, eval_set=[(take(X, va), y[va])], verbose=False)
+        preds_va.append(m.predict_proba(take(X, va))[:, 1]); preds_te.append(m.predict_proba(take(X, te))[:, 1])
         print(f"    xgb best iteration {m.best_iteration}", flush=True)
     if MODEL in ("lgbm", "ens"):
         m = lgb.LGBMClassifier(n_estimators=TREES, learning_rate=0.05 * LR_MULT, num_leaves=48, min_child_samples=100,
                                subsample=0.8, subsample_freq=1, colsample_bytree=0.4, reg_lambda=5.0, max_bin=63,
                                n_jobs=2, verbose=-1)
-        m.fit(X.iloc[tr], y[tr], sample_weight=sw, eval_set=[(X.iloc[va], y[va])], callbacks=[lgb.early_stopping(PATIENCE, verbose=False)])
-        preds_va.append(m.predict_proba(X.iloc[va])[:, 1]); preds_te.append(m.predict_proba(X.iloc[te])[:, 1])
+        m.fit(take(X, tr), y[tr], sample_weight=sw, eval_set=[(take(X, va), y[va])], callbacks=[lgb.early_stopping(PATIENCE, verbose=False)])
+        preds_va.append(m.predict_proba(take(X, va))[:, 1]); preds_te.append(m.predict_proba(take(X, te))[:, 1])
         print(f"    lgbm best iteration {m.best_iteration_}", flush=True)
     if MODEL == "ens":
         # simple, well-calibrated anchor: logistic regression on the rating/Markov probabilities
         cols = [c for c in FEATS if c.startswith(("prob_", "mk_match"))]
         lg = lambda p: np.log(np.clip(p, 1e-4, 1 - 1e-4) / (1 - np.clip(p, 1e-4, 1 - 1e-4)))
-        Z = lambda idx: np.nan_to_num(lg(X.iloc[idx][cols].values.astype(float)))
+        Z = lambda idx: np.nan_to_num(lg(take(X, idx)[cols].values.astype(float)))
         m = LogisticRegression(C=1.0, max_iter=500).fit(Z(tr), y[tr], sample_weight=sw)
         preds_va.append(m.predict_proba(Z(va))[:, 1]); preds_te.append(m.predict_proba(Z(te))[:, 1])
     pv, pt = np.mean(preds_va, axis=0), np.mean(preds_te, axis=0)

@@ -651,6 +651,20 @@ stores the time it first saw the result, `settled_at`), and the new bank applies
 - limitation: results added by the loop have no point-by-point / box statistics yet, so the pbp features of a player
   use their matches up to 2026-10-10 only, until the loop also fetches statistics of new matches
 
+## Memory (15 GB machine): measured peaks and what changed (`peakmem.py`)
+`peakmem.py CMD ...` samples the summed PSS of a command's whole process tree every 0.2 s (PSS, not RSS: forked
+workers share the parent's pages, RSS counted the 865k-row table once per worker and showed 19 GB for fx_live).
+Every change gives the same output as before, checked as noted.
+
+| step | before | after | how | check |
+|---|---|---|---|---|
+| `features_incr.py` append (loop, every 30 min, per tour; men, 66 rows) | 5.55 GB, 31 s | **1.36 GB, 10 s** | reads only the 16 rating columns of the build; new rows go to `{tour}_f2_parts/<first row>.parquet` instead of reading and rewriting the whole 630 MB file; `design.read_f2` / `load_f2` read build + parts; >200 parts are merged | new rows, matches table and rating state identical |
+| `fx_live.py` (loop, per tour; men, 107 fixtures) | 9.02 GB, 64 s | **5.01 GB, 60 s** | the match table loaded with only the columns the modules read (each module gets its own subset); 2 worker processes (ratings / score + context + pbp in turn) instead of 4 | all 316 columns identical |
+| `train_final.py` / `train3.py` (631-column build) | ~10.3 GB RSS, OOM-killed twice next to the loop | see below | `design.load_f2`: only 2010+ rows (index restored after the filtered read) and only the columns the selected features need; `build_X` fills one preallocated float32 matrix (before: dict of float64 columns -> DataFrame copy -> astype copy, about 3x X), builds only the selected columns (`keep=`), contiguous row ranges are sliced without a copy (`design.take`) | X bit-identical to the old build_X (all 955 columns and the 798 selected, 60k rows per tour) |
+
+Not changed: a full `features2.py` rebuild (~8 GB) still runs alone; casting its frames to float32 while building
+would change the stored values of the 306 double columns, so it would no longer reproduce the current features.
+
 ## Fresh test June-October 2026 at 20 UK books' opening prices (`eval_fs2026.py`)
 Matches 2026-06-08..2026-10-11 after the end of the Sackmann archive (Flashscore results, 22,127 matches with odds),
 results-only model trained <= 2024 and calibrated on 2025 (never saw 2026), Shin blend fitted on Bet365 2014-2024,
