@@ -581,3 +581,12 @@ EV>5% odds<=5: ~150 bets/month, median +12.5 units/month, worst -1.7, best +53.3
 Women's ITF is the core of the edge (largest and steadiest in every test); Challenger and men's ITF are positive but
 noisier; WTA125 / WTA Tour samples are too small to rely on. BetExplorer stayed throttled (20-60 s per page) through
 the night, so no new scraping was done after 03:20.
+
+### About one bet a day with the blend (BetMGM 2025-26, retrained model, 493 days)
+| Rule | Bets | Per day | ROI (90% lo) | Void >12pt | Units | Max DD | Win rate | Mean odds | 2025 / 2026 |
+|---|---|---|---|---|---|---|---|---|---|
+| blend EV>10% odds<=2 | 458 | 0.93 | +9.1% (+3.4%) | +3.9% | +42 | 10 | 66% | 1.61 | +9.6% / +6.6% |
+| blend EV>15% odds<=5 | 439 | 0.89 | +20.1% (+10.4%) | +8.9% | +88 | 10 | 46% | 2.57 | +16.5% / +32.4% |
+| blend EV>12% odds<=5 | 653 | 1.32 | +13.8% (+6.3%) | +5.2% | +90 | 12 | 48% | 2.40 | +11.7% / +21.0% |
+High thresholds lean more on the big opening-line corrections (the void-stress column falls to roughly 40-45% of the
+headline ROI), so the realistic expectation for one bet a day is nearer +4% (odds<=2) to +9% (odds<=5).
