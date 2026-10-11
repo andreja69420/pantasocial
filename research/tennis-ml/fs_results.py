@@ -86,7 +86,8 @@ L = Limiter(float(os.environ.get("RATE", "16")))
 
 def fetch(url, cache=True):
     path = os.path.join(CACHE, re.sub(r"[^A-Za-z0-9]+", "_", url.split(".com/")[1])[:180] + ".html")
-    if cache and os.path.exists(path):
+    # cached pages older than MAX_AGE_H hours are refetched, so tournaments in progress pick up new results
+    if cache and os.path.exists(path) and time.time() - os.path.getmtime(path) < 3600 * float(os.environ.get("MAX_AGE_H", "6")):
         return open(path, encoding="utf-8").read()
     for attempt in range(5):
         L.wait()
