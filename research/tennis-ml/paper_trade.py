@@ -1,46 +1,40 @@
 """Paper trading (simulation without money) of the opening-odds strategy on upcoming matches.
 
-Each run:
-  1. upcoming singles fixtures with every UK bookmaker's opening and current home/away odds (fs_odds.py --fixtures)
+Each run (meant to run every 30 min, so opening lines are caught while they still stand):
+  0. results of the last days appended to the feature build in seconds (fs_update.py)
+  1. every scheduled singles match Flashscore lists (today and as many days ahead as are published) with every UK
+     bookmaker's opening and current home/away odds (fs_odds.py --fixtures)
   2. fixture rows in Sackmann format (players mapped to ids, bio from their latest match) -> features in seconds
      with features_incr.py (dry run, the base build is not changed)
   3. production model (train_final.py) -> P(home); betting-stage blend with the Shin fair opening price
   4. for every rule, the best book whose CURRENT price still equals its OPENING price and passes the rule is logged
      once per match as a 1-unit paper bet at that price
-  5. earlier paper bets are settled from Flashscore's daily results feed
+  5. pending bets: the book's latest price before the start is kept as the closing price (CLV); finished matches are
+     settled from Flashscore's daily results feed
 Ledger: DATA_DIR/paper/ledger.csv. Summary printed per rule.
 
-usage: paper_trade.py DATA_DIR [DAYS_AHEAD=1]
+usage: paper_trade.py DATA_DIR [DAYS_AHEAD=7]   (env SKIP_UPDATE=1: no results update)
 """
-import json
 import os
-import re
+import pickle
 import subprocess
 import sys
 import time
-import unicodedata
 import urllib.request
 
 import numpy as np
 import pandas as pd
 
+from fs_common import CATS, UA, key, level, player_name, records, round_code, tournament
+
 D = sys.argv[1]
-DAYS = int(sys.argv[2]) if len(sys.argv) > 2 else 1
+DAYS = int(sys.argv[2]) if len(sys.argv) > 2 else 7
 HERE = os.path.dirname(os.path.abspath(__file__))
 PAPER = os.path.join(D, "paper")
 os.makedirs(PAPER, exist_ok=True)
 LEDGER = os.path.join(PAPER, "ledger.csv")
 RULES = {"EV>15% odds<=5": (0.15, 5.0), "EV>10% odds<=2": (0.10, 2.0), "EV>5% odds<=5": (0.05, 5.0), "EV>5% odds<=2": (0.05, 2.0)}
-SEGMENTS = {"ITF WOMEN - SINGLES": ("wta", "itf"), "CHALLENGER WOMEN - SINGLES": ("wta", "P"), "WTA - SINGLES": ("wta", "P"),
-            "ITF MEN - SINGLES": ("atp", "itf"), "CHALLENGER MEN - SINGLES": ("atp", "C"), "ATP - SINGLES": ("atp", "A")}
-UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36",
-      "x-fsign": "SW9D1eZo"}
 lg = lambda p: np.log(np.clip(p, 1e-4, 1 - 1e-4) / (1 - np.clip(p, 1e-4, 1 - 1e-4)))
-
-
-def key(name):
-    s = unicodedata.normalize("NFKD", str(name)).encode("ascii", "ignore").decode().lower()
-    return " ".join(sorted(re.sub(r"[^a-z]+", " ", s).split()))
 
 
 def shin(a, b):
@@ -54,33 +48,28 @@ def shin(a, b):
     return f((lo + hi) / 2, a)
 
 
-def feed(day):
-    with urllib.request.urlopen(urllib.request.Request(f"https://www.flashscore.com/x/feed/f_2_{day}_1_en_1", headers=UA), timeout=30) as r:
-        text = r.read().decode("utf-8", "ignore")
-    head = None
-    for rec in text.split("~"):
-        d = dict(x.split("÷", 1) for x in rec.split("¬") if "÷" in x)
-        if "ZA" in d:
-            head = d
-        elif "AA" in d and head is not None:
-            yield head, d
-
-
 t0 = time.time()
+# in parallel: odds of all upcoming fixtures for both tours, and the results update of the feature build
+jobs = {t: subprocess.Popen([sys.executable, os.path.join(HERE, "fs_odds.py"), os.path.join(D, "fs_raw"), t, "GB", "--fixtures", str(DAYS)],
+                            stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True) for t in ("wta", "atp")}
+if not os.environ.get("SKIP_UPDATE"):
+    jobs["update"] = subprocess.Popen([sys.executable, os.path.join(HERE, "fs_update.py"), D, "3"],
+                                      stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+for name, j in jobs.items():
+    out = j.communicate()[0].strip()
+    print(f"[{name}] " + (out.splitlines()[-1] if j.returncode == 0 and name != "update" else out[-800:]), flush=True)
 ledger = pd.read_csv(LEDGER) if os.path.exists(LEDGER) else pd.DataFrame()
-new_bets = []
+new_bets, seen = [], []
 for tour in ("wta", "atp"):
     model_path = os.path.join(D, "models", f"{tour}_final.pkl")
     if not os.path.exists(model_path):
         print(f"{tour}: no production model yet ({model_path})")
         continue
-    subprocess.run([sys.executable, os.path.join(HERE, "fs_odds.py"), os.path.join(D, "fs_raw"), tour, "GB", "--fixtures", str(DAYS)],
-                   check=True, capture_output=True)
     O = pd.read_parquet(os.path.join(D, "fs_raw", f"{tour}_fs_fixture_odds_GB.parquet"))
     if O.empty:
         print(f"{tour}: no fixtures with odds yet")
         continue
-    O = O[O.tournament.str.split(":").str[0].str.strip().isin(SEGMENTS)]
+    seen.append(O.assign(tour=tour))
     O = O[O.start > time.time()]  # not started
     base = pd.read_parquet(os.path.join(D, "out_live", f"{tour}_matches.parquet"))
     ids = {}
@@ -93,23 +82,18 @@ for tour in ("wta", "atp"):
     fx = O.drop_duplicates("fs_mid").copy()
     rows = []
     for r in fx.itertuples():
-        nh, na = (re.sub(r"(\s\d+)+$", "", str(n).replace("-", " ")) for n in (r.home, r.away))
+        d = {"WU": r.home, "WV": r.away}
+        nh, na = player_name(d, "h"), player_name(d, "a")
         hid, aid = ids.get(key(nh)), ids.get(key(na))
         if hid is None or aid is None:  # debutants have no history: no model price
             continue
-        za = r.tournament.split(":", 1)[-1].strip()
-        tname = re.sub(r"\s*\(.*$", "", za).strip()
-        surf = za.rsplit(",", 1)[-1].strip().capitalize() if "," in za else "Hard"
-        cat, lvl = SEGMENTS[r.tournament.split(":")[0].strip()]
-        m = re.match(r"[WM](\d+)", tname)
-        level = (m.group(1) if m else "15") if lvl == "itf" else lvl
+        cat, slug, tname, surf = tournament({"ZA": r.tournament, "ZL": r.path})
         day = pd.Timestamp(int(r.start), unit="s")
-        slug = r.path.strip("/").split("/")[-1] if r.path else re.sub(r"[^a-z0-9]+", "-", tname.lower())
         tid = f"fs-{slug}-{day.year}"
-        row = {"tourney_id": tid, "tourney_name": tname, "surface": surf if surf in ("Clay", "Grass", "Carpet") else "Hard",
-               "draw_size": "", "tourney_level": level, "tourney_date": int(tstart.get(tid, int(day.strftime("%Y%m%d")))),
-               "match_num": 999, "winner_id": hid, "winner_name": nh.title(), "loser_id": aid, "loser_name": na.title(),
-               "score": "6-0 6-0", "best_of": 3, "round": "R32", "fs_mid": r.fs_mid}
+        row = {"tourney_id": tid, "tourney_name": tname, "surface": surf, "draw_size": "", "tourney_level": level(cat, tname),
+               "tourney_date": int(tstart.get(tid, int(day.strftime("%Y%m%d")))), "match_num": 999,
+               "winner_id": hid, "winner_name": nh.title(), "loser_id": aid, "loser_name": na.title(),
+               "score": "6-0 6-0", "best_of": 3, "round": round_code({"ER": r.round}), "fs_mid": r.fs_mid}
         for side, pid in (("winner", hid), ("loser", aid)):
             if pid in bio.index:
                 b = bio.loc[pid]
@@ -123,12 +107,15 @@ for tour in ("wta", "atp"):
     pd.DataFrame(rows).to_csv(fcsv, index=False)
     fout = os.path.join(PAPER, f"{tour}_fixture_features.parquet")
     env = dict(os.environ, DRY_OUT=fout)
-    subprocess.run([sys.executable, os.path.join(HERE, "features_incr.py"), os.path.join(D, "live_raw"), os.path.join(D, "out_live"),
-                    tour, fcsv], check=True, env=env, capture_output=True)
+    r = subprocess.run([sys.executable, os.path.join(HERE, "features_incr.py"), os.path.join(D, "live_raw"), os.path.join(D, "out_live"),
+                        tour, fcsv], env=env, capture_output=True, text=True)
+    if r.returncode:
+        print(f"{tour}: features_incr failed\n{r.stderr[-1500:]}")
+        continue
     Fx = pd.read_parquet(fout)
     sys.path.insert(0, HERE)
     from design import build_X
-    M = __import__("pickle").load(open(model_path, "rb"))
+    M = pickle.load(open(model_path, "rb"))
     X, _, flip = build_X(Fx, tour)
     X["level"] = pd.Categorical(Fx.tourney_level.astype(str), categories=M["levels"]).codes
     X = X[M["features"]]
@@ -157,12 +144,29 @@ if not C.empty:
             ledger = pd.concat([ledger, pd.DataFrame([{**r._asdict(), "rule": rule, "logged_at": pd.Timestamp.utcnow().tz_localize(None),
                                                        "result": "", "pnl": np.nan}]).drop(columns=["Index"])], ignore_index=True)
             logged += 1
+# pending bets: the book's latest price while the match has not started is the closing price so far (CLV)
+if not ledger.empty and seen:
+    S = pd.concat(seen)
+    S = S[S.start > time.time()]
+    cur = {(r.fs_mid, r.book): (r.cur_h, r.cur_a) for r in S.itertuples()}
+    for c in ("close", "close_seen_at"):
+        if c not in ledger:
+            ledger[c] = np.nan
+    ledger["close_seen_at"] = ledger.close_seen_at.astype(object)
+    for i in ledger.index[ledger.result.fillna("") == ""]:
+        p = cur.get((ledger.at[i, "fs_mid"], ledger.at[i, "book"]))
+        if p:
+            ledger.at[i, "close"] = p[0] if ledger.at[i, "side"] == "home" else p[1]
+            ledger.at[i, "close_seen_at"] = str(pd.Timestamp.utcnow().tz_localize(None))[:16]
 # settle finished matches from the daily results feeds (today and the 3 days before)
 if not ledger.empty:
     done = {}
     for day in range(-3, 1):
         try:
-            for head, d in feed(day):
+            with urllib.request.urlopen(urllib.request.Request(f"https://www.flashscore.com/x/feed/f_2_{day}_1_en_1", headers=UA),
+                                        timeout=30) as resp:
+                text = resp.read().decode("utf-8", "ignore")
+            for head, d in records(text):
                 if d.get("AB") == "3":
                     hs, as_ = int(d.get("AG", 0) or 0), int(d.get("AH", 0) or 0)
                     done[d["AA"]] = ("void" if d.get("AC") not in ("3",) else ("home" if hs > as_ else "away"))
@@ -175,7 +179,19 @@ if not ledger.empty:
             ledger.at[i, "result"] = res
             ledger.at[i, "pnl"] = 0.0 if res == "void" else (ledger.at[i, "open"] - 1 if res == ledger.at[i, "side"] else -1.0)
     ledger.to_csv(LEDGER, index=False)
+if seen:
+    S = pd.concat(seen)
+    S["day"] = pd.to_datetime(S.start, unit="s").dt.strftime("%m-%d")
+    S["at_open"] = (S.open_h == S.cur_h) & (S.open_a == S.cur_a)
+    S = S[S.start > time.time()]
+    cov = S.groupby("day").agg(matches=("fs_mid", "nunique"))
+    cov["some_book_at_open"] = S[S.at_open].groupby("day").fs_mid.nunique()
+    cov["priced_by_model"] = C.drop_duplicates("fs_mid").assign(day=lambda x: x.start.dt.strftime("%m-%d")).groupby("day").size() \
+        if not C.empty else 0
+    print("upcoming matches with odds:\n" + cov.fillna(0).astype(int).to_string())
 print(f"paper trading run {pd.Timestamp.utcnow():%Y-%m-%d %H:%M} UTC: {logged} new paper bets, {time.time() - t0:.0f}s")
 if not ledger.empty:
-    s = ledger.groupby("rule").agg(bets=("fs_mid", "size"), settled=("pnl", "count"), units=("pnl", "sum"), roi=("pnl", "mean"))
+    ledger["clv"] = ledger.open / ledger.close - 1 if "close" in ledger else np.nan
+    s = ledger.groupby("rule").agg(bets=("fs_mid", "size"), settled=("pnl", "count"), units=("pnl", "sum"), roi=("pnl", "mean"),
+                                   clv=("clv", "mean"))
     print(s.round(3).to_string())

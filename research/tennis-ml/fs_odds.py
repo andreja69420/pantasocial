@@ -3,22 +3,22 @@ matches in the fs_results.py page cache (or the daily fixtures feed). One GraphQ
 
 usage: fs_odds.py OUT_DIR TOUR [GEO=GB] [--fixtures DAYS]
   without --fixtures: all matches in OUT_DIR/fs_cache_{tour} (results pages), for the history test
-  --fixtures N: the next N days of singles fixtures from the daily feed (for paper trading)
+  --fixtures N: every scheduled singles match Flashscore lists, for paper trading: the daily feeds for today .. +N days
+    plus the fixtures page of every tournament on the category pages (matches scheduled further ahead show up there)
 Writes OUT_DIR/{tour}_fs_odds_{geo}.parquet (or {tour}_fs_fixture_odds_{geo}.parquet): one row per match and bookmaker
-with fs_mid, book, open_h, open_a, cur_h, cur_a (+ match info for fixtures). Adaptive rate, 128 connections.
+with fs_mid, book, open_h, open_a, cur_h, cur_a (+ match info for fixtures). Fixed rate (fs_common.Limiter), THREADS connections.
 """
 import glob
 import json
 import os
 import re
 import sys
-import threading
 import time
-import urllib.error
-import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 
 import pandas as pd
+
+from fs_common import Limiter, page_feed
 
 OUT, TOUR = sys.argv[1], sys.argv[2]
 GEO = sys.argv[3] if len(sys.argv) > 3 and not sys.argv[3].startswith("--") else "GB"
@@ -27,67 +27,12 @@ UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.3
       "Origin": "https://www.flashscore.com", "Referer": "https://www.flashscore.com/", "x-fsign": "SW9D1eZo"}
 CATS = {"atp": ("ITF MEN - SINGLES", "CHALLENGER MEN - SINGLES", "ATP - SINGLES"),
         "wta": ("ITF WOMEN - SINGLES", "CHALLENGER WOMEN - SINGLES", "WTA - SINGLES")}[TOUR]
-
-
-class Limiter:
-    """Fixed target rate (RATE, default 150/s). A slow answer (>5 s) only lowers the rate by STEP (no pause) and it
-    climbs back after UP clean requests; only a real error (HTTP 429/5xx, connection failure) pauses."""
-    STEP, UP, PAUSE = 10.0, 200, 30
-
-    def __init__(self, rate):
-        self.rate = self.target = rate
-        self.lock, self.next_t, self.ok_n, self.pause_until, self.last_cut = threading.Lock(), 0.0, 0, 0.0, 0.0
-
-    def wait(self):
-        with self.lock:
-            t = max(time.time(), self.next_t, self.pause_until)
-            self.next_t = t + 1.0 / self.rate
-        time.sleep(max(0.0, t - time.time()))
-
-    def ok(self):
-        with self.lock:
-            self.ok_n += 1
-            if self.ok_n % self.UP == 0 and self.rate < self.target:
-                self.rate = min(self.target, self.rate + self.STEP)
-
-    def slow(self):
-        # many requests are in flight at once, so one slow spell reports many times: cut at most once per 3 s
-        with self.lock:
-            if time.time() - self.last_cut > 3:
-                self.rate, self.ok_n, self.last_cut = max(10.0, self.rate - self.STEP), 0, time.time()
-
-    def error(self, why=""):
-        with self.lock:
-            if time.time() < self.pause_until:
-                return
-            self.rate, self.ok_n, self.last_cut = max(10.0, self.rate - self.STEP), 0, time.time()
-            self.pause_until = time.time() + self.PAUSE
-            print(f"  ! error ({why}) -> {self.rate:.0f}/s, pause {self.PAUSE}s", flush=True)
+URLCATS = {"atp": ("itf-men-singles", "challenger-men-singles", "atp-singles"),
+           "wta": ("itf-women-singles", "challenger-women-singles", "wta-singles")}[TOUR]
 
 
 L = Limiter(float(os.environ.get("RATE", "150")))
-
-
-def get(url):
-    for _ in range(5):
-        L.wait()
-        t = time.time()
-        try:
-            with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=30) as r:
-                body = r.read().decode("utf-8", "ignore")
-            (L.slow if time.time() - t > 5 else L.ok)()
-            return body
-        except urllib.error.HTTPError as e:
-            if e.code in (400, 404):
-                L.ok()
-                return ""
-            if e.code in (408, 500, 502, 503, 504):  # backend gave up on one slow query: retry, no pause
-                L.slow()
-                continue
-            L.error(f"HTTP {e.code}")
-        except Exception as e:
-            L.error(type(e).__name__)
-    return ""
+get = lambda url: L.get(url, UA)
 
 
 def feed_records(text):
@@ -102,9 +47,14 @@ def feed_records(text):
 
 matches = {}
 if FIX:
-    for off in range(0, FIX + 1):
-        for head, d in feed_records(get(f"https://www.flashscore.com/x/feed/f_2_{off}_1_en_1")):
-            if head["ZA"].split(":")[0].strip() in CATS and d.get("AB") == "1":
+    with ThreadPoolExecutor(16) as ex:
+        texts = list(ex.map(get, [f"https://www.flashscore.com/x/feed/f_2_{off}_1_en_1" for off in range(0, FIX + 1)]))
+        cats = list(ex.map(get, [f"https://www.flashscore.com/tennis/{c}/" for c in URLCATS]))
+        tours = sorted({(c, t) for c, page in zip(URLCATS, cats) for t in re.findall(rf'/tennis/{c}/([a-z0-9\-]+)/', page)})
+        texts += [page_feed(p, "fixtures") for p in ex.map(get, [f"https://www.flashscore.com/tennis/{c}/{t}/fixtures/" for c, t in tours])]
+    for text in texts:
+        for head, d in feed_records(text):
+            if head["ZA"].split(":")[0].strip() in CATS and d.get("AB") == "1" and d["AA"] not in matches:
                 matches[d["AA"]] = {"fs_mid": d["AA"], "home_pid": d.get("JA"), "away_pid": d.get("JB"),
                                     "home": d.get("WU", d.get("AE")), "away": d.get("WV", d.get("AF")),
                                     "start": int(d["AD"]), "tournament": head["ZA"], "path": head.get("ZL", ""),
