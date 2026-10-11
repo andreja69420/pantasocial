@@ -19,7 +19,7 @@ from fs_common import player_name
 SRC, OUT = sys.argv[1], sys.argv[2]
 BANK = float(sys.argv[3]) if len(sys.argv) > 3 else 100000.0
 KELLY = 0.25
-# "ne" = outside the plan: listed for comparison, stake 0
+# "ne" = outside the plan: not in the sheet
 SEG = {"ITF WOMEN - SINGLES": ("Ženski ITF", "DA (glavno)"), "CHALLENGER MEN - SINGLES": ("Muški Challenger", "DA"),
        "ITF MEN - SINGLES": ("Muški ITF", "DA"), "CHALLENGER WOMEN - SINGLES": ("WTA 125", "ne"),
        "WTA - SINGLES": ("WTA Tour", "ne"), "ATP - SINGLES": ("ATP Tour", "ne")}
@@ -28,6 +28,8 @@ L = pd.read_csv(SRC)
 # one row per match and side: the broadest rule that logged it (EV>5% odds<=5), stake sized by Kelly anyway
 L["thr"] = L.rule.str.extract(r"EV>(\d+)%").astype(float)[0]
 L = L.sort_values(["thr", "logged_at"]).drop_duplicates(["fs_mid", "side"]).sort_values("start")
+# only the plan's segments are played; the rest stays in the ledger for research but not in the sheet
+L = L[L.tournament.str.split(":").str[0].str.strip().map(lambda c: SEG.get(c, ("", "ne"))[1] != "ne")]
 now = pd.Timestamp.now("UTC").tz_localize(None)
 
 wb = Workbook()
@@ -38,7 +40,6 @@ ws["A1"], ws["B1"] = "Početna banka (din)", BANK
 ws["A1"].font = bold
 ws["B1"].fill = PatternFill("solid", fgColor="FFF2CC")
 ws["C1"] = "<- početni kapital; svaka opklada je 1/4 Kelly procenat banke u trenutku opklade (banka raste i pada)"
-ws["C2"] = "Sivi redovi (U planu = ne) se NE igraju: samo praćenje radi poređenja, ulog 0, ne utiču na banku."
 cols = ["#", "Početak (Beograd)", "Kategorija", "U planu", "Turnir", "Igramo na", "Protivnik", "Kladionica", "Kvota (početna)",
         "Model %", "Prednost (EV)", "1/4 Kelly % banke", "Ulog (din)", "Kvota sada / pred meč", "Rezultat (W/L/V)", "Dobit (din)",
         "Status", "Upisano (Beograd)", "Banka pri opkladi", "Kraj (procena)"]
@@ -59,14 +60,11 @@ for i, b in enumerate(L.itertuples()):
     bg = lambda t: pd.Timestamp(t).tz_localize("UTC").tz_convert("Europe/Belgrade").tz_localize(None).to_pydatetime()
     vals = [i + 1, bg(start), cat, plan,
             b.tournament.split(":", 1)[-1].strip(), player_name({"WU": pick}, "h").title(), player_name({"WU": opp}, "h").title(),
-            b.book, o, p, p * o - 1, kelly, f'=IF(D{r}="ne",0,ROUND(S{r}*L{r},0))', None if pd.isna(close) else float(close), res,
+            b.book, o, p, p * o - 1, kelly, f"=ROUND(S{r}*L{r},0)", None if pd.isna(close) else float(close), res,
             f'=IF(O{r}="W",M{r}*(I{r}-1),IF(O{r}="L",-M{r},IF(O{r}="V",0,"")))', status, bg(b.logged_at),
             f'=$B$1+SUMIFS($P${r0}:$P${r0 + len(L) - 1},$T${r0}:$T${r0 + len(L) - 1},"<="&R{r})', f"=B{r}+3/24"]
     for j, v in enumerate(vals, 1):
         ws.cell(row=r, column=j, value=v)
-    if plan == "ne":  # outside the plan: tracked for comparison only, no stake, does not move the bank
-        for j in range(1, len(cols) + 1):
-            ws.cell(row=r, column=j).font = Font(color="999999")
     for j in (2, 18, 20):
         ws.cell(row=r, column=j).number_format = "dd.mm. HH:MM"
     for j in (10, 11, 12):
@@ -87,7 +85,7 @@ rows = [("Opklada ukupno", f"=COUNTA({rng('F')})"), ("Završeno", f'=COUNTIF({rn
         ("Dobijeno", f'=COUNTIF({rng("O")},"W")'), ("Izgubljeno", f'=COUNTIF({rng("O")},"L")'),
         ("Uloženo (završene)", f'=SUMPRODUCT(({rng("O")}="W")+({rng("O")}="L"),{rng("M")})'),
         ("Dobit", f"=SUM({rng('P')})"), ("ROI", "=IF(B6>0,B7/B6,\"\")"), ("Banka sada (din)", "=Opklade!B1+B7"),
-        ("Samo plan (ženski ITF, muški Challenger/ITF) - dobit", f'=SUMIF({rng("D")},"DA*",{rng("P")})')]
+        ("Igraju se samo: ženski ITF (glavno), muški Challenger, muški ITF", "")]
 for i, (a, f) in enumerate(rows, 2):
     s.cell(row=i, column=1, value=a).font = bold
     s.cell(row=i, column=2, value=f)
