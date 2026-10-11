@@ -197,3 +197,9 @@ if not ledger.empty:
     s = ledger.groupby("rule").agg(bets=("fs_mid", "size"), settled=("pnl", "count"), units=("pnl", "sum"), roi=("pnl", "mean"),
                                    clv=("clv", "mean"))
     print(s.round(3).to_string())
+    # the plan's segments: women's ITF (core), men's Challenger and ITF; everything else is logged only for comparison
+    seg = ledger.tournament.str.split(":").str[0].str.strip().map({"ITF WOMEN - SINGLES": "1 women ITF (core)",
+          "CHALLENGER MEN - SINGLES": "2 men Challenger", "ITF MEN - SINGLES": "2 men ITF"}).fillna("3 other (not in plan)")
+    s = ledger.assign(seg=seg).groupby(["seg", "rule"]).agg(bets=("fs_mid", "size"), settled=("pnl", "count"),
+                                                            units=("pnl", "sum"), roi=("pnl", "mean"), clv=("clv", "mean"))
+    print(s.round(3).to_string())
