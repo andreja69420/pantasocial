@@ -2,6 +2,6 @@
 
 ## Radna pravila (korisnik, obavezno za sve)
 - Sve što može da ide paralelno ide paralelno: scrapovi više kategorija/sajtova istovremeno, treninzi na svim slobodnim jezgrima, evaluacije dok traju drugi poslovi. Nikad ne čekaj sekvencijalno ako posao ne zavisi od prethodnog.
-- Brzina scrapovanja: kreni umereno, pa diži broj zahteva/niti sve dok ne krenu greške ili usporavanje (rate limit). Kad krene: vrati se na poslednju brzinu koja je radila, pauza 1-2 min, probaj opet; ako i dalje ne ide, spuštaj korak po korak (npr. 35 -> 30 -> 25 -> 20). Spori odgovori (>5 s) se računaju kao znak rate limita.
+- Brzina scrapovanja: kad je poznata brzina koja radi (Flashscore ~150/s), drži je fiksno. Spor odgovor (>5 s) = samo malo smanji brzinu, BEZ pauze, pa je vrati kad prođe. Pauza samo na pravu grešku (429/5xx/pad veze). Na novom sajtu: kreni umereno i diži dok ne krenu greške, pa se vrati na poslednju brzinu koja je radila.
 - Rezultate upisuj u README, commit i push posle svakog koraka.
 - Izuzetak zbog memorije (15 GB): pun `features2.py` preračun uzima ~8 GB, pa najviše jedan istovremeno; sve ostalo paralelno.

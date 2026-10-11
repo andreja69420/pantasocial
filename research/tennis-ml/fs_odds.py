@@ -30,10 +30,12 @@ CATS = {"atp": ("ITF MEN - SINGLES", "CHALLENGER MEN - SINGLES", "ATP - SINGLES"
 
 
 class Limiter:
-    STEP, UP = 8.0, 200
+    """Fixed target rate (RATE, default 150/s). A slow answer (>5 s) only lowers the rate by STEP (no pause) and it
+    climbs back after UP clean requests; only a real error (HTTP 429/5xx, connection failure) pauses."""
+    STEP, UP, PAUSE = 10.0, 200, 30
 
     def __init__(self, rate):
-        self.rate = self.good = rate
+        self.rate = self.target = rate
         self.lock, self.next_t, self.ok_n, self.pause_until = threading.Lock(), 0.0, 0, 0.0
 
     def wait(self):
@@ -45,20 +47,23 @@ class Limiter:
     def ok(self):
         with self.lock:
             self.ok_n += 1
-            if self.ok_n % self.UP == 0:
-                self.good = self.rate
-                self.rate += self.STEP
+            if self.ok_n % self.UP == 0 and self.rate < self.target:
+                self.rate = min(self.target, self.rate + self.STEP)
+
+    def slow(self):
+        with self.lock:
+            self.rate, self.ok_n = max(10.0, self.rate - self.STEP), 0
 
     def error(self):
         with self.lock:
             if time.time() < self.pause_until:
                 return
-            self.rate = max(4.0, min(self.good, self.rate - self.STEP))
-            self.pause_until, self.ok_n = time.time() + 90, 0
-            print(f"  ! error/slow -> {self.rate:.0f}/s, pause 90s", flush=True)
+            self.rate, self.ok_n = max(10.0, self.rate - self.STEP), 0
+            self.pause_until = time.time() + self.PAUSE
+            print(f"  ! error -> {self.rate:.0f}/s, pause {self.PAUSE}s", flush=True)
 
 
-L = Limiter(float(os.environ.get("RATE", "32")))
+L = Limiter(float(os.environ.get("RATE", "150")))
 
 
 def get(url):
@@ -68,7 +73,7 @@ def get(url):
         try:
             with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=30) as r:
                 body = r.read().decode("utf-8", "ignore")
-            (L.error if time.time() - t > 5 else L.ok)()
+            (L.slow if time.time() - t > 5 else L.ok)()
             return body
         except urllib.error.HTTPError as e:
             if e.code in (400, 404):
@@ -111,8 +116,18 @@ else:
 print(f"{TOUR}: {len(matches)} matches to price ({'fixtures' if FIX else 'history'}), region {GEO}", flush=True)
 
 
+CACHE = os.path.join(OUT, f"fs_odds_cache_{GEO}")
+os.makedirs(CACHE, exist_ok=True)
+
+
 def odds(mid):
-    s = get(f"https://global.ds.lsapp.eu/odds/pq_graphql?_hash=oce&eventId={mid}&projectId=2&geoIpCode={GEO}&geoIpSubdivisionCode={GEO}")
+    path = os.path.join(CACHE, f"{mid}.json")
+    if not FIX and os.path.exists(path):
+        s = open(path, encoding="utf-8").read()
+    else:
+        s = get(f"https://global.ds.lsapp.eu/odds/pq_graphql?_hash=oce&eventId={mid}&projectId=2&geoIpCode={GEO}&geoIpSubdivisionCode={GEO}")
+        if s and not FIX:
+            open(path, "w", encoding="utf-8").write(s)
     try:
         o = json.loads(s)["data"]["findOddsByEventId"]
     except Exception:
