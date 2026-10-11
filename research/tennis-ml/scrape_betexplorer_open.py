@@ -65,7 +65,7 @@ class Limiter:
                 self.ceiling = 1e9
             if self.ok_streak % self.UP == 0:
                 self.good, self.strikes = self.rate, 0
-                if self.rate + self.STEP < self.ceiling:
+                if self.rate + self.STEP < min(self.ceiling, float(os.environ.get("MAX_RATE", "64"))):
                     self.rate += self.STEP
                     print(f"  rate up -> {self.rate:.0f}/s", flush=True)
 

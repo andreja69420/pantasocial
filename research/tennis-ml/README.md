@@ -546,3 +546,12 @@ return statistics and Markov point models, ranking/points/seeding/entry, match m
 | blend EV>10% odds<=5 | 907 +13.0% | 861 +13.2% |
 The edge survives almost intact without serve statistics or rankings: a live version can be built on daily
 BetExplorer results alone (plus static player bio data for age, height, handedness, nationality).
+
+### Live results scraper (`bx_live_results.py`, work in progress) and a throttling note
+Converts BetExplorer finished matches (full names, BetExplorer player ids, set scores incl. tiebreaks, round,
+retirement) into Sackmann-format CSVs so `features2.py` can extend the archive past June 2026; players are mapped to
+Sackmann ids by normalised name, unseen players get synthetic ids. Not yet validated end to end.
+At 03:20 (Belgrade) BetExplorer responses slowed from ~0.3 s to 18-50 s while other sites stayed fast: the site
+throttles this server after the earlier bursts (the adaptive limiter had climbed to ~480 requests/s, because slow
+responses are not errors). Scraping was stopped for the night; all scrapers now cap the rate at MAX_RATE
+(default 64/s).
