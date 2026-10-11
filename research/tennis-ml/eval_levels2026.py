@@ -5,6 +5,7 @@ events from Flashscore (all labelled P / A there) get the level of the same even
 
 usage: eval_levels2026.py DATA_DIR FS_DIR TAG:OUT_SUBDIR [TAG:OUT_SUBDIR ...]
   e.g. eval_levels2026.py $B $B/fs_full r6_v2:out_fx r6_v3:out_v3
+  --bets=PATH: also save every side at its best opening price (tour, tag, level, model q, odds, blend EV, P&L)
   FS_DIR: fs_results.py / fs_odds.py output for 2026-01-01.. ({tour}__{tour}_matches_fs_2026.csv, {tour}_fs_odds_GB.parquet)
 """
 import re
@@ -15,7 +16,8 @@ import numpy as np
 import pandas as pd
 
 D, FS = sys.argv[1], sys.argv[2]
-RUNS = [a.split(":") for a in sys.argv[3:]]
+BETS = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--bets=")), None)  # save every side priced
+RUNS = [a.split(":") for a in sys.argv[3:] if not a.startswith("--")]
 NAMES = {"wta": {"G": "Grand Slam", "PM": "WTA 1000", "P": "WTA 500", "I": "WTA 250", "C": "WTA 125", "100": "W100",
                  "75": "W75", "50": "W50", "35": "W35", "15": "W15"},
          "atp": {"G": "Grand Slam", "M": "Masters 1000", "A": "ATP 250/500", "F": "Finals", "C": "Challenger",
@@ -40,7 +42,7 @@ def shin(a, b):
     return f((lo + hi) / 2, a)
 
 
-out, cover = [], []
+out, cover, saved = [], [], []
 for tour in ("atp", "wta"):
     M = pd.read_parquet(f"{D}/{RUNS[0][1]}/{tour}_matches.parquet",
                         columns=["tourney_id", "tourney_name", "tourney_date", "tourney_level", "winner_id", "loser_id"])
@@ -96,6 +98,7 @@ for tour in ("atp", "wta"):
         S = S[(S.o > 1) & (S.oo > 1)].copy()
         S["evb"] = 1 / (1 + np.exp(-(0.44 * lg(S.q.values) + 0.64 * lg(shin(1 / S.o.values, 1 / S.oo.values))))) * S.o - 1
         best = S.sort_values("o", ascending=False).drop_duplicates(["mi", "won"])
+        saved.append(best.assign(tour=tour, tag=tag, ev=best.q * best.o - 1))
         for cap in (2, 5):
             b = best[(best.evb > 0.05) & (best.o <= cap)]
             for l, g in list(b.groupby("lvl")) + [("ALL", b)]:
@@ -112,3 +115,5 @@ T.index = [f"{t} {NAMES[t].get(l, l)}" for t, l in T.index]
 pd.set_option("display.width", 300)
 pd.set_option("display.max_columns", 40)
 print(T.round(4).to_string())
+if BETS:
+    pd.concat(saved, ignore_index=True).to_parquet(BETS)

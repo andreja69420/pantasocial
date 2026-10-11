@@ -924,3 +924,29 @@ Every level is positive except W100 (and W75 near zero); the lower bound is abov
 Challenger, M25, M15, women's Grand Slams, WTA 500 / 250 / 125, W50, W35 and W15. Tour-level rows rest on 60-230 bets
 each, so their ROI is wide. These are Flashscore's first recorded prices; whether they can be taken in practice is
 what the paper test measures. Full table (also odds<=2): `paper/eval_levels2026.txt`.
+
+### Whole 2026 per odds band (`eval_oddsbands.py`, `paper/eval_oddsbands2026.txt`)
+`eval_levels2026.py --bets=` saves every side at its best opening price; per band, both tours, new model (r6_v3),
+blend EV>5% (lower 90% bound), and all sides in the band without the model:
+
+| odds | all sides | new model EV>5% |
+|---|---|---|
+| 1.0-1.3 | 15,632 +0.2% | 351 +4.9% (+0.9%) |
+| 1.3-1.5 | 9,641 -0.0% | 813 +10.2% (+6.8%) |
+| 1.5-1.8 | 11,863 +1.3% | 1,183 +9.9% (+6.2%) |
+| 1.8-2.2 | 12,468 +3.8% | 1,572 +22.5% (+18.6%) |
+| 2.2-3 | 14,478 +0.1% | 1,257 +18.9% (+12.9%) |
+| 3-4 | 8,506 +1.8% | 665 +19.9% (+9.2%) |
+| 4-5 | 4,729 -7.0% | 333 +4.6% (-12.8%) |
+| 5-7 | 4,009 -6.5% | 282 +4.6% (-18.1%) |
+| 7-10 | 3,519 -22.4% | 324 -10.5% (-34.9%) |
+| 10-20 | 3,498 -46.9% | 300 -45.0% (-69.7%) |
+| >20 | 537 -70.8% | 37 -97.3% |
+
+Cumulative cap (new model, EV>5%, flat 1 unit): odds<=2 3,427 bets +15.5%; <=3 5,176 +15.6%; <=4 5,841 +16.1%;
+<=5 6,174 +15.5% (+956 units); <=7 6,456 +15.0% (+969); <=10 6,780 +13.8% (+935); no cap 7,117 +10.7% (+764).
+The edge is real up to odds 4, flat around 4-7 (positive but within noise) and negative above 7, where the
+favourite-longshot bias of the market costs more than the model finds; higher EV thresholds do not rescue those
+bands. The cap stays at 5. Note: best opening prices of all sides around evens (1.8-2.2) already return +3.8%
+without any model: early lines near 2.0 are often set before the market knows much, which is part of why the model's
+ROI there is largest, and why the paper test (current price must still equal the opening price) matters.
