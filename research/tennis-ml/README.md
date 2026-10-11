@@ -678,17 +678,42 @@ Iva Ivanovic). The first ledger was discarded (`ledger_before_name_fix.csv` kept
 place the paper loop skips fixtures involving an unlinked id. The June-October fresh test above used the split ids
 and is re-run on the rebuilt base.
 
-### 2026 from January: 100,000 dinars, quarter Kelly compounding, ~1-2 bets a day (`kelly_2026.py`, preliminary)
+### Re-run on the rebuilt base (identities fixed, models retrained)
+Same test, same rules, after the name fix (`paper/eval_fs2026_v2.txt`):
+
+| Book / rule | Bets | ROI at open | 90% lower | ROI at close | void stress | CLV |
+|---|---|---|---|---|---|---|
+| bet365 blend EV>5% odds<=2 | 156 | +5.9% | -4.4% | +0.3% | +4.3% | +4.7% |
+| 7BetUK blend EV>10% odds<=2 | 269 | +13.5% | +5.6% | +4.5% | +10.3% | +8.3% |
+| Unibet UK blend EV>5% odds<=2 | 994 | +5.8% | +1.9% | -1.8% | +2.7% | +7.4% |
+| Betway blend EV>5% odds<=2 | 977 | +3.5% | -0.5% | -2.6% | +0.5% | +5.7% |
+| William Hill blend EV>5% odds<=2 | 808 | +3.5% | -0.8% | -3.3% | +2.0% | +7.1% |
+| Ladbrokes / Coral blend EV>5% odds<=2 | ~760 | +1.4% | -3.2% | -5.0% | -0.5% | +6.4% |
+| Midnite blend EV>5% odds<=2 | 702 | -1.7% | -6.4% | -5.4% | -3.1% | +3.7% |
+| SpreadEX blend EV>5% odds<=2 | 860 | -2.4% | -6.7% | -3.5% | -2.9% | +0.7% |
+| Skybet blend EV>15% odds<=5 | 119 | +30.1% | +11.3% | +15.9% | +20.7% | +11.2% |
+| Paddy Power blend EV>5% odds<=5 | 520 | +15.3% | +7.3% | +3.1% | +10.1% | +11.6% |
+| **Best opening price of all books**, blend EV>5% odds<=2 | 1,829 | **+9.8%** | +6.9% | +0.1% | +5.9% | +9.9% |
+| **Best opening price of all books**, blend EV>5% odds<=5 | 3,345 | **+10.6%** | +7.4% | -2.5% | +5.0% | +14.0% |
+
+Every big book moved up 1-5 points: the split identities had been costing edge. Best price across books, odds<=2,
+by segment: women's ITF +5.9% (653), men's ITF +9.0% (566), Challenger +15.6% (344), WTA tour +13.1%, ATP tour +13.6%.
+The best-price rows still assume the best price was available when we bet, which the paper trading measures.
+
+### 2026 from January: 100,000 dinars, quarter Kelly compounding, ~1-2 bets a day (`kelly_2026.py`)
 Plan segments only. Jan 4 - May 13 at BetMGM.us opening prices (full model), Jun 8 - Oct 11 at the best UK opening
-price (results-only model; this part still on the base with split identities, re-run pending). Each day the bets with
-the highest blend EV (EV>5%), stakes = 0.25 x Kelly of the bank at the start of the day.
-| Selection | Bets | Flat ROI (void stress) | As backtested | Void stress + max 10,000 din a bet | Max drawdown |
-|---|---|---|---|---|---|
-| best 1 a day, odds<=5 | 182 | +22.4% (+10.3%) | 635,264 | 244,410 | 49% / 29% |
-| best 2 a day, odds<=5 | 336 | +16.7% (+6.9%) | 543,627 | 197,694 | 49% / 40% |
-| best 1 a day, odds<=2 | 167 | +10.3% (+2.9%) | 223,955 | 128,234 | 40% / 37% |
-Almost all of it comes from January-May at BetMGM (+24% to +36% flat on the top picks); June-October at the UK books
-is +1% to +6% flat. Quarter Kelly on these EVs stakes 4.7-6.2% of the bank per bet, hence the 40-50% drawdowns.
+price (results-only model, rebuilt base). Each day the bets with the highest blend EV (EV>5%), stakes = 0.25 x Kelly
+of the bank at the start of the day (`paper/kelly_2026_v2.txt`).
+| Selection | Bets | Flat ROI (void stress) | As backtested | Max 10,000 din a bet | Void stress + max 10k | Max drawdown (backtest / void+cap) |
+|---|---|---|---|---|---|---|
+| best 1 a day, odds<=5 | 182 | +22.7% (+8.4%) | 573,113 | 384,802 | 201,854 | 46% / 33% |
+| best 2 a day, odds<=5 | 336 | +16.9% (+6.2%) | 583,216 | 457,183 | 164,079 | 55% / 40% |
+| best 1 a day, odds<=2 | 167 | +10.8% (+3.1%) | 270,725 | 186,388 | 135,228 | 47% / 37% |
+Most of it still comes from January-May at BetMGM (+13% to +36% flat on the top picks); June-October at the UK books
+is +2% to +8% flat on the top 1-2 picks a day, below the +10% of all EV>5% bets at the best price: the day's single
+highest EV is where the model disagrees most with the market and, as the calibration chart shows, where P is most
+optimistic. Quarter Kelly on these EVs stakes 4.7-6.3% of the bank per bet, hence the 45-55% drawdowns; a stake cap
+roughly halves them.
 
 ## Calibration chart on test data (`calib_plot.py` → `paper/kalibracija.png`)
 
