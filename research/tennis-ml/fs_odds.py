@@ -36,7 +36,7 @@ class Limiter:
 
     def __init__(self, rate):
         self.rate = self.target = rate
-        self.lock, self.next_t, self.ok_n, self.pause_until = threading.Lock(), 0.0, 0, 0.0
+        self.lock, self.next_t, self.ok_n, self.pause_until, self.last_cut = threading.Lock(), 0.0, 0, 0.0, 0.0
 
     def wait(self):
         with self.lock:
@@ -51,14 +51,16 @@ class Limiter:
                 self.rate = min(self.target, self.rate + self.STEP)
 
     def slow(self):
+        # many requests are in flight at once, so one slow spell reports many times: cut at most once per 3 s
         with self.lock:
-            self.rate, self.ok_n = max(10.0, self.rate - self.STEP), 0
+            if time.time() - self.last_cut > 3:
+                self.rate, self.ok_n, self.last_cut = max(10.0, self.rate - self.STEP), 0, time.time()
 
     def error(self):
         with self.lock:
             if time.time() < self.pause_until:
                 return
-            self.rate, self.ok_n = max(10.0, self.rate - self.STEP), 0
+            self.rate, self.ok_n, self.last_cut = max(10.0, self.rate - self.STEP), 0, time.time()
             self.pause_until = time.time() + self.PAUSE
             print(f"  ! error -> {self.rate:.0f}/s, pause {self.PAUSE}s", flush=True)
 

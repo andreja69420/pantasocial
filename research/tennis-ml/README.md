@@ -602,3 +602,11 @@ it climbed to 128 requests/s with zero errors and zero slow answers (5,000+ page
 | ATP | 13,788 | M15 4,875, Challenger 4,452, M25 3,027, ATP tour 1,434 | 95% |
 Walkovers and cancelled matches are skipped; retirements kept as "RET". These files extend the Sackmann archive
 (which ends in June 2026) in a separate raw dir, and the feature tables are being rebuilt from them.
+
+### Incremental feature updates (`features_incr.py`)
+`features2.py` now also saves the final rating state and the prepared match table. `features_incr.py` continues all
+Elo variants from that state over the new matches only, runs the unchanged vectorized engine on the history the new
+rows depend on (all earlier matches of the players involved plus earlier matches at the same venues), and appends.
+Check (women): base built to 2026-10-03, then the 512 matches of 2026-10-04..10-11 added incrementally in **21 s**
+(history subset 84,692 of 679,752 rows) vs ~5 min for a full rebuild. All 307 numeric columns of the 512 rows equal
+the full rebuild; largest difference 2.4e-7 (float32 rounding of stored ratings).
