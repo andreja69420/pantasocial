@@ -631,6 +631,9 @@ Every 30 minutes (`paper_loop.sh`), in parallel where nothing depends on anythin
    closing price so far (CLV); finished matches are settled from the daily results feeds (walkover / cancelled = void).
 Ledger: `paper/ledger.csv` (copied into the repo by the loop). Rules logged in parallel: EV>15% odds<=5,
 EV>10% odds<=2, EV>5% odds<=5, EV>5% odds<=2.
+Bank rule for the Excel sheet (`ledger_xlsx.py` → `paper/opklade.xlsx`): start 100,000 dinars, stake = quarter Kelly
+× the bank at the moment the bet is logged, fixed from then on. The bank moves only when a bet is settled (the loop
+stores the time it first saw the result, `settled_at`), and the new bank applies only to bets logged after that.
 
 ## Fresh test June-October 2026 at 20 UK books' opening prices (`eval_fs2026.py`)
 Matches 2026-06-08..2026-10-11 after the end of the Sackmann archive (Flashscore results, 22,127 matches with odds),
@@ -735,3 +738,19 @@ match counted. Every number is out of sample.
 - The sides we would bet (blend EV>5%, odds ≤5, 2,490 BetMGM sides): mean P 63.4%, actually won 62.0%, bookmaker fair
   53.4%, model alone 74.2%. P is 1.4 points optimistic on the selected sides (selection on the largest disagreements),
   about 1.4 standard errors, but they still win 8.6 points more often than the opening price says.
+
+## Flashscore match statistics (`fs_stats.py`, 2023-2026)
+
+Box score (aces, double faults, 1st serve in/won, 2nd serve won, service games, break points) where Flashscore has
+one, otherwise serve counts from the point-by-point log (service points played/won, service games, holds, break
+points faced/saved, tiebreak points). Share of finished singles matches with each, women:
+
+| Year | Women's ITF matches | box | point by point (with point scores) | WTA 125 box | WTA tour box |
+|---|---|---|---|---|---|
+| 2023 | 17,790 | 0% | 27% (19%) | - | 100% |
+| 2024 | 18,874 | 0% | 58% (58%) | - | 100% |
+| 2025 | 19,545 | 0% | 72% (72%) | 97% | 100% |
+| 2026 | 14,665 | 0% | 52% (52%) | 96% | 100% |
+
+ITF women never have a box score on Flashscore, but most matches from 2024 on have the point-by-point log, from which
+the same serve statistics are counted exactly. Men: scrape running.
