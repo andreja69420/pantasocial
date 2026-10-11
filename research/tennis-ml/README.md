@@ -566,3 +566,7 @@ Bets in the same tournament are not independent, so whole tournaments are resamp
 | blend EV>10% odds<=5 | 934 | 607 | +12.0% | [+6.0%, +18.0%] | +11.3% | +9.5% |
 The profit is spread over hundreds of tournaments: no single event carries it, and the clustered intervals stay
 clearly above zero.
+
+### Monthly profile (BetMGM 2025-26, retrained model, flat 1 unit)
+EV>5% odds<=2: ~100 bets/month, median +8.7 units/month, worst month -3.9, best +20.5, 4 of 15 months negative.
+EV>5% odds<=5: ~150 bets/month, median +12.5 units/month, worst -1.7, best +53.3, 2 of 16 months negative.

@@ -37,6 +37,14 @@ Brojevi su za model treniran sa manjim learning rate-om (malo bolji od prvobitno
 
 \* Kao da kladionica poništi svaku opkladu čija je fer verovatnoća do početka meča porasla za više od 12 poena.
 
+Mesečni profil (BetMGM 2025–26, ravan ulog 1 jedinica):
+| Varijanta | Opklada mesečno | Jedinica mesečno (medijana) | Najgori mesec | Najbolji mesec | Meseci u minusu |
+|---|---|---|---|---|---|
+| EV>5%, kvota ≤ 2 | ~100 | +8,7 | −3,9 | +20,5 | 4 od 15 |
+| EV>5%, kvota ≤ 5 | ~150 | +12,5 | −1,7 | +53,3 | 2 od 16 |
+Primer: uz ulog od 10 € to je oko +90 € (oprezno) do +125 € (agresivnije) mesečno, ako kladionica prima uloge
+po početnim kvotama i ako se 2025–26 ponovi.
+
 ## 6. Ulog
 - **Preporuka:** Kelly × 0,10, najviše 2% banke po opkladi (ili ravno 1% početne banke).
 - Simulacija na 2025–26: Kelly × 0,10 → tipičan najveći pad oko 20%, u 95% slučajeva ispod 30%.
