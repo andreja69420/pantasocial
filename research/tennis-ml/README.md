@@ -860,6 +860,33 @@ highest EV is where the model disagrees most with the market and, as the calibra
 optimistic. Quarter Kelly on these EVs stakes 4.7-6.3% of the bank per bet, hence the 45-55% drawdowns; a stake cap
 roughly halves them.
 
+## Calibration of the production model on 2026 (`calib_2026.py` → `paper/kalibracija_2026.png`)
+
+Model r6_v3 (never trained on 2026), both sides of every match, 5-point bins (bets: 10-point bins); full bin tables in
+`paper/kalibracija_2026.txt`.
+
+| Set | Matches | Brier | Log-loss | ECE |
+|---|---|---|---|---|
+| Model alone, WTA, every 2026 match | 18,717 | 0.1857 | 0.5471 | 0.96% |
+| Model alone, ATP, every 2026 match | 27,607 | 0.1912 | 0.5623 | 0.49% |
+| Model alone, Serbian-priced matches, no ITF | 16,209 | 0.2008 | 0.5842 | 0.50% |
+| Opening Shin of the best-price Serbian book, same matches | 16,209 | 0.2013 | 0.5854 | 2.45% |
+| Betting P (0.44 model + 0.64 Shin), same matches | 16,209 | 0.1996 | 0.5809 | 1.56% |
+
+| sides we bet (best opening price, odds<=5) | bets | mean P | won | model alone | book fair |
+|---|---|---|---|---|---|
+| EV>5% | 1,860 | 57.8% | 61.1% | 67.1% | 49.9% |
+| EV>10% | 523 | 54.1% | 54.5% | 67.6% | 43.4% |
+| EV>15% | 190 | 53.2% | 50.0% | 70.3% | 39.2% |
+
+- The model alone is calibrated on 2026: every bin within about 1 point (one WTA bin 32.6% -> 35.5%, one 67.4% -> 64.5%).
+- The Shin and P curves sit above the diagonal because each side takes the best price of six books: the two sides of a
+  match sum to 0.95 (Shin) / 0.97 (P), not 1. P at the best price is therefore about 1.5 points too low per side, so
+  the EV we log is on average conservative.
+- On the sides we bet the model alone is 6 points too optimistic (67.1% vs 61.1% won; the bets are where it disagrees
+  most with the market), which is why the betting stage blends it with the book. The blend P is right for EV>10%
+  (54.1% vs 54.5%), 3 points low for EV>5%, 3 points high for EV>15% (190 bets, standard error about 3.6 points).
+
 ## Calibration chart on test data (`calib_plot.py` → `paper/kalibracija.png`)
 
 Matches grouped by predicted win probability (5-point bins), predicted mean vs. actual win share, both sides of every
