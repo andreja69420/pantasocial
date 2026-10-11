@@ -665,3 +665,15 @@ Random sides lose the margin at every book (-5% to -7%), as they should. Reading
   we bet - which is exactly what the live paper trading (bets logged only while the price still equals the opening)
   measures.
 - By segment, men's ITF and Challenger now hold up as well as women's ITF; ATP tour is positive with few bets.
+
+### Bug found by the first paper run: split player identities (fixed, rebuild running)
+The first paper run logged Arango v Knutson at +27% EV. Knutson's June-October 2026 Flashscore matches carried a new
+id: Flashscore writes "Knutson Gabriela", Sackmann "Gabriela Andrea Knutson", and the exact name key did not match.
+About 5% of player slots in the Flashscore results had such a split identity, so the model saw those players as
+newcomers with a 1500 rating. `fs_common.NameIds` now falls back to token-subset matches (middle names, second
+surnames) and close spellings in any token order (Kousuke/Kosuke, Moeller/Moller, D Agostino/Dagostino, Wang
+Xinyu/Xin Yu Wang), only among players active since 2023 and only when one candidate is clearly best. Unlinked slots:
+women 869 -> 502, men 1,497 -> 876 (the rest mostly real newcomers; a few doubtful merges remain, e.g. Ivankovic Iva ->
+Iva Ivanovic). The first ledger was discarded (`ledger_before_name_fix.csv` kept aside); until the rebuilt base is in
+place the paper loop skips fixtures involving an unlinked id. The June-October fresh test above used the split ids
+and is re-run on the rebuilt base.
