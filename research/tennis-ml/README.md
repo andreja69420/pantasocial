@@ -702,8 +702,9 @@ build (features from earlier matches only) plus `fx_live.features` on the whole 
 | Pigossi | 3.20 | pending | +7.9% | +1.4% | deleted |
 
 Plan after the change: 17 bets, 1 settled (Van Emst lost, stake 2,242), bank 97,758; the deleted settled bets had
-been 3 won / 2 lost. The loop keeps showing, for pending bets, the best price now and the current model's edge at our
-entry odds (Excel columns S-U, information only).
+been 3 won / 2 lost. The Excel sheet is kept to the basics (kick-off, category, tournament, who we back, opponent, odds,
+bookmaker, stake, result, profit; summary and profit per category on top); every row is a bet of the current model.
+Stakes are computed in `ledger_xlsx.py` (same quarter-Kelly rule), profits and the summary are formulas.
 
 ## Memory (15 GB machine): measured peaks and what changed (`peakmem.py`)
 `peakmem.py CMD ...` samples the summed PSS of a command's whole process tree every 0.2 s (PSS, not RSS: forked
