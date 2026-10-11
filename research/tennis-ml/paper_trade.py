@@ -25,7 +25,7 @@ import urllib.request
 import numpy as np
 import pandas as pd
 
-from fs_common import CATS, UA, key, level, player_name, records, round_code, tournament
+from fs_common import UA, NameIds, key, level, player_name, records, round_code, tournament
 
 D = sys.argv[1]
 DAYS = int(sys.argv[2]) if len(sys.argv) > 2 else 7
@@ -72,9 +72,9 @@ for tour in ("wta", "atp"):
     seen.append(O.assign(tour=tour))
     O = O[O.start > time.time()]  # not started
     base = pd.read_parquet(os.path.join(D, "out_live", f"{tour}_matches.parquet"))
-    ids = {}
+    ids = NameIds()
     for c in ("winner", "loser"):
-        ids.update(zip(base[f"{c}_name"].map(key), base[f"{c}_id"]))
+        ids.add(base[f"{c}_name"].map(key), base[f"{c}_id"], base.tourney_date.astype(float).values)
     bio = pd.concat([pd.DataFrame({"id": base[f"{c}_id"], "date": base.date, "hand": base[f"{c}_hand"], "ht": base[f"{c}_ht"],
                                    "ioc": base[f"{c}_ioc"], "age": base[f"{c}_age"]}) for c in ("winner", "loser")])
     bio = bio.dropna(subset=["id"]).sort_values("date").groupby("id").last()
@@ -86,6 +86,8 @@ for tour in ("wta", "atp"):
         nh, na = player_name(d, "h"), player_name(d, "a")
         hid, aid = ids.get(key(nh)), ids.get(key(na))
         if hid is None or aid is None:  # debutants have no history: no model price
+            continue
+        if os.environ.get("SKIP_SYNTHETIC") and max(hid, aid) >= 9e8:  # player whose history may be split over two ids
             continue
         cat, slug, tname, surf = tournament({"ZA": r.tournament, "ZL": r.path})
         day = pd.Timestamp(int(r.start), unit="s")
@@ -141,7 +143,7 @@ if not C.empty:
         for r in c.itertuples():
             if not ledger.empty and ((ledger.fs_mid == r.fs_mid) & (ledger.rule == rule)).any():
                 continue
-            ledger = pd.concat([ledger, pd.DataFrame([{**r._asdict(), "rule": rule, "logged_at": pd.Timestamp.utcnow().tz_localize(None),
+            ledger = pd.concat([ledger, pd.DataFrame([{**r._asdict(), "rule": rule, "logged_at": pd.Timestamp.now('UTC').tz_localize(None),
                                                        "result": "", "pnl": np.nan}]).drop(columns=["Index"])], ignore_index=True)
             logged += 1
 # pending bets: the book's latest price while the match has not started is the closing price so far (CLV)
@@ -157,7 +159,7 @@ if not ledger.empty and seen:
         p = cur.get((ledger.at[i, "fs_mid"], ledger.at[i, "book"]))
         if p:
             ledger.at[i, "close"] = p[0] if ledger.at[i, "side"] == "home" else p[1]
-            ledger.at[i, "close_seen_at"] = str(pd.Timestamp.utcnow().tz_localize(None))[:16]
+            ledger.at[i, "close_seen_at"] = str(pd.Timestamp.now('UTC').tz_localize(None))[:16]
 # settle finished matches from the daily results feeds (today and the 3 days before)
 if not ledger.empty:
     done = {}
@@ -189,7 +191,7 @@ if seen:
     cov["priced_by_model"] = C.drop_duplicates("fs_mid").assign(day=lambda x: x.start.dt.strftime("%m-%d")).groupby("day").size() \
         if not C.empty else 0
     print("upcoming matches with odds:\n" + cov.fillna(0).astype(int).to_string())
-print(f"paper trading run {pd.Timestamp.utcnow():%Y-%m-%d %H:%M} UTC: {logged} new paper bets, {time.time() - t0:.0f}s")
+print(f"paper trading run {pd.Timestamp.now('UTC'):%Y-%m-%d %H:%M} UTC: {logged} new paper bets, {time.time() - t0:.0f}s")
 if not ledger.empty:
     ledger["clv"] = ledger.open / ledger.close - 1 if "close" in ledger else np.nan
     s = ledger.groupby("rule").agg(bets=("fs_mid", "size"), settled=("pnl", "count"), units=("pnl", "sum"), roi=("pnl", "mean"),

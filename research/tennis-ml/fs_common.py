@@ -71,13 +71,86 @@ def round_code(d):
     return ROUNDS.get(er, "Q1" if "qualif" in er else "R32")
 
 
+class NameIds(dict):
+    """name key -> id. A Flashscore name without an exact match falls back to
+    1. the player whose name contains all its tokens or whose tokens it all contains (middle names, second surnames:
+       'Knutson Gabriela' = 'Gabriela Andrea Knutson', 'Alcaraz Garfia Carlos' = 'Carlos Alcaraz'),
+    2. a close spelling of the same name in any token order (Kousuke/Kosuke, Moeller/Moller, 'D Agostino' =
+       'Dagostino', 'Wang Xinyu' = 'Xin Yu Wang'): whole-name similarity >= 0.92, every token of the shorter name close
+       (>= 0.75) to a token of the other, and clearly the best candidate.
+    Fallback matches must have played since 2023 (a Flashscore name in 2026 is an active player).
+    When several players qualify, the most recently active one is taken only if the others were last seen 2+ years
+    earlier; otherwise the name stays unmapped (a new id), which is safer than merging two players."""
+
+    def __init__(self):
+        super().__init__()
+        self.last, self.memo = {}, {}
+
+    def add(self, keys, idv, dates):
+        for k, i, d in zip(keys, idv, dates):
+            self[k] = i
+            self.last[i] = max(self.last.get(i, 0), d if d == d else 0)
+
+    def _index(self):
+        self._tok, self._names = {}, {}
+        for kk, i in self.items():
+            self._names.setdefault(i, set()).add(kk)
+            for t in kk.split():
+                self._tok.setdefault(t, set()).add(i)
+                self._tok.setdefault(t[:4], set()).add(i)
+
+    def _pick(self, cand):
+        ranked = sorted(cand, key=lambda i: -self.last.get(i, 0))
+        if len(ranked) == 1 or self.last.get(ranked[0], 0) - self.last.get(ranked[1], 0) > 20000:
+            return ranked[0]
+        return None
+
+    def get(self, k, default=None):
+        if k in self:
+            return self[k]
+        if k in self.memo:
+            return self.memo[k] if self.memo[k] is not None else default
+        import difflib
+        from itertools import permutations
+        if not hasattr(self, "_tok"):
+            self._index()
+        toks, res = set(k.split()), None
+        if len(toks) >= 2:
+            near = set().union(*[self._tok.get(t, set()) | self._tok.get(t[:4], set()) for t in toks])
+            near = {i for i in near if self.last.get(i, 0) >= 20230101}
+            sub = {i for i in near for n in self._names[i] if min(len(toks), len(n.split())) >= 2
+                   and (toks <= set(n.split()) or set(n.split()) <= toks)}
+            if sub:
+                res = self._pick(sub)
+            else:
+                flat = "".join(sorted(toks))
+                score = {}
+                for i in near:
+                    for n in self._names[i]:
+                        nt = n.split()
+                        if len(nt) > 5:
+                            continue
+                        short, other = (sorted(toks), nt) if len(toks) <= len(nt) else (nt, sorted(toks))
+                        if not all(max(difflib.SequenceMatcher(None, a, b).ratio() for b in other) >= 0.75 for a in short):
+                            continue
+                        best = max(difflib.SequenceMatcher(None, "".join(p), x).ratio()
+                                   for p in permutations(nt) for x in ("".join(k.split()), flat))
+                        score[i] = max(score.get(i, 0), best)
+                top = sorted(score.items(), key=lambda x: -x[1])
+                if top and top[0][1] >= 0.92:
+                    close = {i for i, v in top if v >= top[0][1] - 0.04}
+                    res = self._pick(close)
+        self.memo[k] = res
+        return res if res is not None else default
+
+
 def sackmann_ids_bio(raw, tour, extra=()):
     """name key -> player id, and each player's latest static data (hand, height, country, age at that date)."""
-    ids, bio = {}, []
+    ids, bio = NameIds(), []
     files = [f for f in sorted(glob.glob(f"{raw}/sackmann_raw/{tour}__{tour}_matches_*.csv")) if "_fs_" not in f and "_bx_" not in f]
     for d in [pd.read_csv(f, low_memory=False) for f in files] + list(extra):
         for c in ("winner", "loser"):
-            ids.update(zip(d[f"{c}_name"].map(key), d[f"{c}_id"]))
+            ids.add(d[f"{c}_name"].map(key), d[f"{c}_id"], pd.to_numeric(d.tourney_date, errors="coerce").values)
             bio.append(pd.DataFrame({"id": d[f"{c}_id"], "date": pd.to_numeric(d.tourney_date, errors="coerce"),
                                      "hand": d[f"{c}_hand"], "ht": d[f"{c}_ht"], "ioc": d[f"{c}_ioc"], "age": d[f"{c}_age"]}))
     return ids, pd.concat(bio).dropna(subset=["id", "date"]).sort_values("date").groupby("id").last()
@@ -118,7 +191,8 @@ def result_row(head, d, ids):
             "winner_id": ids.get(key(w)) or synthetic_id(w), "winner_name": w.title(),
             "loser_id": ids.get(key(l)) or synthetic_id(l), "loser_name": l.title(),
             "score": " ".join(sets) + (" RET" if ret else ""), "best_of": 5 if hs + as_ > 3 and not ret else 3,
-            "round": round_code(d), "date": day, "fs_mid": d["AA"], "unmapped": (key(w) not in ids) + (key(l) not in ids)}
+            "round": round_code(d), "date": day, "fs_mid": d["AA"],
+            "unmapped": (ids.get(key(w)) is None) + (ids.get(key(l)) is None)}
 
 
 class Limiter:
