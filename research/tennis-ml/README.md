@@ -610,3 +610,24 @@ rows depend on (all earlier matches of the players involved plus earlier matches
 Check (women): base built to 2026-10-03, then the 512 matches of 2026-10-04..10-11 added incrementally in **21 s**
 (history subset 84,692 of 679,752 rows) vs ~5 min for a full rebuild. All 307 numeric columns of the 512 rows equal
 the full rebuild; largest difference 2.4e-7 (float32 rounding of stored ratings).
+
+### Live paper trading: every listed fixture, opening prices only (`paper_trade.py`, `paper_loop.sh`)
+Every 30 minutes (`paper_loop.sh`), in parallel where nothing depends on anything else:
+1. **Results update** (`fs_update.py`): finished singles of the last 3 days from Flashscore's daily feeds that are not
+   yet in the build are appended with `features_incr.py` (e.g. +21 women's matches in 18 s, +2 men's in 30 s; a second
+   run finds nothing new). WTA 125 events (Flashscore "challenger-women-singles") are now included as level C.
+2. **Fixtures and odds** (`fs_odds.py --fixtures 7`): every scheduled singles match Flashscore lists, from the daily
+   feeds for today .. +7 days plus the fixtures page of every current tournament (matches published further ahead
+   appear there), with each UK book's opening and current price; ~1-2 s per tour at 150 requests/s. On Sunday
+   2026-10-11 Flashscore listed matches for today and tomorrow only (71 women's, 144 men's); further days show up
+   once order of play / draws are out, and the loop picks them up as soon as they are listed.
+3. **Features for the fixtures** (`features_incr.py` dry run): placeholder result, history subset only, nothing
+   written to the build. Fixtures are split into batches in which no player appears twice, each batch from the saved
+   state, so one fixture's placeholder result can never reach another fixture's features.
+4. **Price and log**: production model (`train_final.py`: trained <= 2025, calibrated / early-stopped on 2026) ->
+   Shin blend per book -> for each rule, the book with the highest opening price whose **current price still equals
+   its opening price** and passes the rule is logged once per match as a 1-unit paper bet at that price.
+5. **Closing price and settlement**: while a logged match has not started, the book's latest price is stored as the
+   closing price so far (CLV); finished matches are settled from the daily results feeds (walkover / cancelled = void).
+Ledger: `paper/ledger.csv` (copied into the repo by the loop). Rules logged in parallel: EV>15% odds<=5,
+EV>10% odds<=2, EV>5% odds<=5, EV>5% odds<=2.

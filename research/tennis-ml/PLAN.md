@@ -59,6 +59,14 @@ po početnim kvotama i ako se 2025–26 ponovi.
 - **Poništene opklade:** kod velikih grešaka u kvoti kladionica može da poništi opkladu („palpable error“).
 - **Drift modela:** model se mora ponovo trenirati svake godine (walk-forward, kao u testovima).
 
+## 7a. Simulacija uživo (papirno klađenje, bez novca)
+- Na svakih 30 minuta: novi rezultati se dodaju u bazu za par sekundi, skidaju se kvote za **sve** mečeve koje Flashscore
+  ima (danas i koliko god dana unapred je objavljeno), model računa verovatnoću.
+- Opklada se upisuje samo ako je trenutna kvota kladionice **još uvek početna** (linija se nije pomerila), po
+  kriterijumima EV>15% kvota≤5, EV>10% kvota≤2, EV>5% kvota≤5, EV>5% kvota≤2; uzima se kladionica s najvišom početnom kvotom.
+- Do početka meča prati se kvota (da vidimo da li se linija pomera u našu korist), posle meča se opklada obračunava.
+- Dnevnik: `paper/ledger.csv`.
+
 ## 8. Šta još treba napraviti pre pravog novca
 1. **Svež izvor rezultata:** Sackmann arhiva se završava u junu 2026, a model mora da zna jučerašnje mečeve (Elo,
    forma, umor). Provereno: model samo sa rezultatima (324 feature-a, bez statistike servisa i rang-liste) zadržava
