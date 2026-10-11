@@ -56,13 +56,13 @@ class Limiter:
             if time.time() - self.last_cut > 3:
                 self.rate, self.ok_n, self.last_cut = max(10.0, self.rate - self.STEP), 0, time.time()
 
-    def error(self):
+    def error(self, why=""):
         with self.lock:
             if time.time() < self.pause_until:
                 return
             self.rate, self.ok_n, self.last_cut = max(10.0, self.rate - self.STEP), 0, time.time()
             self.pause_until = time.time() + self.PAUSE
-            print(f"  ! error -> {self.rate:.0f}/s, pause {self.PAUSE}s", flush=True)
+            print(f"  ! error ({why}) -> {self.rate:.0f}/s, pause {self.PAUSE}s", flush=True)
 
 
 L = Limiter(float(os.environ.get("RATE", "150")))
@@ -81,9 +81,12 @@ def get(url):
             if e.code in (400, 404):
                 L.ok()
                 return ""
-            L.error()
-        except Exception:
-            L.error()
+            if e.code in (408, 500, 502, 503, 504):  # backend gave up on one slow query: retry, no pause
+                L.slow()
+                continue
+            L.error(f"HTTP {e.code}")
+        except Exception as e:
+            L.error(type(e).__name__)
     return ""
 
 
@@ -150,7 +153,7 @@ def odds(mid):
 
 
 t0 = time.time()
-with ThreadPoolExecutor(128) as ex:
+with ThreadPoolExecutor(int(os.environ.get("THREADS", "48"))) as ex:
     res = list(ex.map(odds, list(matches)))
 O = pd.DataFrame([r for rs in res for r in rs])
 name = f"{TOUR}_fs_fixture_odds_{GEO}" if FIX else f"{TOUR}_fs_odds_{GEO}"
