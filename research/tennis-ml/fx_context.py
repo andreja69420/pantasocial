@@ -388,6 +388,7 @@ def player_rows(n, wta, ordv, W, L, td_m, est_m, ev, rord, load_m, isQ_m, isF_m,
             b = (b + lpl[r]) * f10l[r]
         o4[r], o10[r] = a, b
     out["ctx_load_ewm4"], out["ctx_load_ewm10"] = o4 / 10, o10 / 10
+    del stl, lpl, f4l, f10l, f4, f10, o4, o10, estl_prev, dt
 
     # streaks
     chg_r = np.r_[True, newp[1:] | (won[1:] != won[:-1])]
@@ -455,6 +456,7 @@ def player_rows(n, wta, ordv, W, L, td_m, est_m, ev, rord, load_m, isQ_m, isF_m,
                                          (age - mean_a[mi]) / np.where(std_a[mi] > 0, std_a[mi], 1))
     em = np.where(np.isnan(ev_mean[mi]), lg_elo_mean[mi], ev_mean[mi])
     out["ctx_elo_vs_event"] = elo_s - em
+    del elo_s, em, e_p, resid, age, pioc, rl, chg_r
 
     # qualifying path
     qf = isQ.astype(np.float64)
@@ -567,7 +569,7 @@ def compute(M, wta=None):
     LG = Seg(key=lg_m)
     tdl = LG._to(td_m)
     kl = np.maximum.accumulate(LG.k.astype(np.int64) * BIG + tdl)
-    lo = np.maximum(np.searchsorted(kl, kl - 365, "left"), LG.st)
+    lo = np.maximum(np.searchsorted(kl, kl - 365, "right"), LG.st)
 
     def lg_window(v, min_matches=200):
         cs = np.concatenate(([0.0], np.cumsum(v[LG.p], dtype=np.float64)))
@@ -602,7 +604,7 @@ def compute(M, wta=None):
         if Ll[i] not in s[0]:
             s[0].add(Ll[i])
             s[1] += e1[i]
-    del seen_ev
+    del seen_ev, evl, Wl, Ll, e0, e1
 
     # first main-draw round already played in the event, strictly earlier in order
     rmain = np.where(isQ_m, np.inf, rord)
