@@ -170,11 +170,17 @@ with ThreadPoolExecutor(THREADS) as ex:
     pages = list(ex.map(lambda cs: fetch(f"https://www.flashscore.com/tennis/{cs[0]}/{cs[1]}/results/"), slugs))
 print(f"pages fetched in {time.time() - t0:.0f}s; ok {stats['ok']} errors {stats['err']} slow(>5s) {stats['slow']}", flush=True)
 
-ids = {}
+ids, bio = {}, []
 for f in sorted(glob.glob(f"{RAW}/sackmann_raw/{TOUR}__{TOUR}_matches_*.csv")):
-    d = pd.read_csv(f, usecols=["winner_id", "winner_name", "loser_id", "loser_name"], low_memory=False)
+    if "_fs_" in f or "_bx_" in f:
+        continue
+    d = pd.read_csv(f, low_memory=False)
     for c in ("winner", "loser"):
         ids.update(zip(d[f"{c}_name"].map(key), d[f"{c}_id"]))
+        bio.append(pd.DataFrame({"id": d[f"{c}_id"], "date": d.tourney_date, "hand": d[f"{c}_hand"], "ht": d[f"{c}_ht"],
+                                 "ioc": d[f"{c}_ioc"], "age": d[f"{c}_age"]}))
+# static player data from each player's latest Sackmann match; age is carried forward by the elapsed time
+BIO = pd.concat(bio).dropna(subset=["id"]).sort_values("date").groupby("id").last()
 out, unmapped, skipped = [], 0, {"status": 0, "date": 0}
 for (cat, slug), page in zip(slugs, pages):
     _, rows = records(page)
@@ -214,6 +220,12 @@ for (cat, slug), page in zip(slugs, pages):
                     "round": ROUNDS.get(d.get("ER", "").strip().lower(), "Q1" if "qualif" in d.get("ER", "").lower() else "R32"),
                     "date": day, "fs_mid": d["AA"]})
 O = pd.DataFrame(out).drop_duplicates("fs_mid")
+for c in ("winner", "loser"):
+    b = BIO.reindex(O[f"{c}_id"].values)
+    O[f"{c}_hand"], O[f"{c}_ht"], O[f"{c}_ioc"] = b.hand.values, b.ht.values, b.ioc.values
+    last = pd.to_datetime(pd.Series(b.date.values).astype("Int64").astype(str), format="%Y%m%d", errors="coerce")
+    elapsed = (pd.to_datetime(O.date).values - last.values) / pd.Timedelta(days=365.25)
+    O[f"{c}_age"] = b.age.values + elapsed
 O["tourney_date"] = pd.to_datetime(O.groupby("tourney_id").date.transform("min")).dt.strftime("%Y%m%d")
 O = O.sort_values(["tourney_date", "tourney_id", "date"])
 O["match_num"] = O.groupby("tourney_id").cumcount()

@@ -27,7 +27,12 @@ def load_matches():
         d = pd.read_csv(f, low_memory=False)
         d["main"] = int(bool(re.search(rf"{TOUR}_matches_\d{{4}}", f)))
         dfs.append(d)
-    m = pd.concat(dfs, ignore_index=True).dropna(subset=["winner_id", "loser_id", "tourney_date"])
+    return prepare(pd.concat(dfs, ignore_index=True))
+
+
+def prepare(m, first_order=0):
+    """Normalise raw Sackmann-format rows: dates, round order, score flags; drop walkovers; chronological order."""
+    m = m.dropna(subset=["winner_id", "loser_id", "tourney_date"]).copy()
     m["date"] = pd.to_datetime(m["tourney_date"].astype(int).astype(str), format="%Y%m%d")
     m["rord"] = m["round"].map(ROUND_ORDER).fillna(5)
     m["score"] = m["score"].fillna("").astype(str)
@@ -36,11 +41,13 @@ def load_matches():
     m["surface"] = m["surface"].fillna("Hard")
     m["tourney_level"] = m["tourney_level"].astype(str)
     m = m[~m["walkover"]].sort_values(["date", "tourney_id", "rord", "match_num"]).reset_index(drop=True)
-    m["order"] = np.arange(len(m))
+    m["order"] = np.arange(len(m)) + first_order
     return m
 
 
 _score_cache = {}
+KEEP_OBJ = {"tourney_id", "tourney_name", "surface", "tourney_level", "round", "score", "winner_name", "loser_name",
+            "winner_hand", "loser_hand", "winner_ioc", "loser_ioc", "winner_entry", "loser_entry", "winner_seed", "loser_seed"}
 
 
 def parse_score(s):
@@ -71,11 +78,15 @@ def elo_p(a, b):
     return 1.0 / (1.0 + 10 ** ((b - a) / 400.0))
 
 
-def ratings(m, games_share, sets_share):
+def new_state():
+    return tuple(defaultdict(lambda: 1500.0) for _ in range(8)) + (defaultdict(int), defaultdict(int))
+
+
+def ratings(m, games_share, sets_share, state=None):
     """Several Elo variants, recorded pre-match for winner and loser. WE/WSE/WS are WElo (Angelini, Candila &
     De Angelis 2022): the Elo update is scaled by the winner's share of games (or sets) in the match."""
-    E, SE, FE, GE, ME, WE, WSE, WS = (defaultdict(lambda: 1500.0) for _ in range(8))
-    n, ns = defaultdict(int), defaultdict(int)
+    state = state or new_state()
+    E, SE, FE, GE, ME, WE, WSE, WS, n, ns = state
     W, L, S = m.winner_id.values, m.loser_id.values, m.surface.values
     main, ret = m.main.values, m.retired.values
     out = np.zeros((len(m), 16))
@@ -101,6 +112,7 @@ def ratings(m, games_share, sets_share):
         e = elo_p(WSE[(w, s)], WSE[(l, s)]); WSE[(w, s)] += ksw * (1 - e) * fg; WSE[(l, s)] -= ksl * (1 - e) * fg
         e = elo_p(WS[w], WS[l]); WS[w] += kw * (1 - e) * fs; WS[l] -= kl * (1 - e) * fs
         n[w] += 1; n[l] += 1; ns[(w, s)] += 1; ns[(l, s)] += 1
+    ratings.state = state  # final state, so a later run can continue from here (features_incr.py)
     return out
 
 
@@ -166,13 +178,13 @@ def ratio(a, b, min_den=1):
 
 
 # ---------------------------------------------------------------- build
-def build():
-    m = load_matches()
+def build(m=None, R=None, wcmap=None):
+    m = load_matches() if m is None else m
     print(TOUR, len(m), "matches", m.date.min().date(), m.date.max().date(), flush=True)
     sc = np.array([parse_score(s) for s in m.score.values], dtype=float)
     gshare = np.where(sc[:, 0] + sc[:, 1] > 0, sc[:, 0] / np.maximum(sc[:, 0] + sc[:, 1], 1), np.nan)
     sshare = np.where(sc[:, 2] + sc[:, 3] > 0, sc[:, 2] / np.maximum(sc[:, 2] + sc[:, 3], 1), np.nan)
-    R = ratings(m, gshare, sshare)
+    R = ratings(m, gshare, sshare) if R is None else R
     print("ratings done", flush=True)
 
     # long table: one row per player per match
@@ -247,7 +259,8 @@ def build():
     wc = wc.sort_values("n", ascending=False).drop_duplicates("tname")
     tot = L[L.entry == "WC"].groupby("tname").size()
     wc = wc[(wc.n >= 3) & (wc.n >= 0.5 * tot.reindex(wc.tname).values)]
-    country = L.tname.map(wc.set_index("tname").ioc).fillna("").values
+    build.wcmap = wcmap if wcmap is not None else wc.set_index("tname").ioc.to_dict()
+    country = L.tname.map(build.wcmap).fillna("").values
     home = ((country != "") & (country == L.ioc.values)).astype(float)
     ccode = pd.factorize(pd.Series(country))[0].astype(float)
     ccode[country == ""] = np.nan
@@ -454,4 +467,12 @@ if __name__ == "__main__":
     ctx = m[["date", "surface", "tourney_level", "rord", "best_of", "draw_size", "main", "retired", "score", "tourney_name"]].copy()
     ctx = ctx.join(attach_odds(m))
     W.add_prefix("w_").join(Lo.add_prefix("l_")).join(ctx).to_parquet(f"{OUT}/{TOUR}_f2.parquet")
-    print("saved", flush=True)
+    import pickle
+    st = ratings.state
+    with open(f"{OUT}/{TOUR}_state.pkl", "wb") as f:
+        pickle.dump({"ratings": [dict(d) for d in st], "wcmap": build.wcmap, "last_order": int(m.order.max())}, f)
+    mt = m.drop(columns=[c for c in m.columns if m[c].dtype == object and c not in KEEP_OBJ])
+    for c in KEEP_OBJ & set(mt.columns):
+        mt[c] = mt[c].astype(str).replace("nan", np.nan)
+    mt.to_parquet(f"{OUT}/{TOUR}_matches.parquet")
+    print("saved (features, rating state, match table)", flush=True)
