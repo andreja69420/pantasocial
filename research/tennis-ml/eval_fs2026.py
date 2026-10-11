@@ -3,7 +3,8 @@ model trained to 2024 and calibrated on 2025, priced at each bookmaker's OPENING
 settled on the result; the current price of a finished match is its closing price.
 Rules: raw model EV and the betting-stage blend fitted on Bet365 2014-2024 (0.44 logit model + 0.64 logit Shin fair).
 
-usage: eval_fs2026.py DATA_DIR      (expects live/out = out_live with preds3_{tour}_ens_r6_bxlive_lower_2026.parquet)
+usage: eval_fs2026.py DATA_DIR [OUT_SUBDIR=out_live] [TAG=r6_bxlive]
+  (expects DATA_DIR/OUT_SUBDIR/preds3_{tour}_ens_{TAG}_lower_2026.parquet and {tour}_matches.parquet)
 """
 import sys
 
@@ -11,6 +12,8 @@ import numpy as np
 import pandas as pd
 
 D = sys.argv[1]
+OUTD = sys.argv[2] if len(sys.argv) > 2 else "out_live"
+TAG = sys.argv[3] if len(sys.argv) > 3 else "r6_bxlive"
 SEG = {"wta": [("Women ITF", r"^\d"), ("WTA Tour", r"^[PGIF]")], "atp": [("Men ITF", r"^\d"), ("Challenger", r"^C$"), ("ATP Tour", r"^A$")]}
 
 
@@ -28,8 +31,8 @@ def shin(a, b):
 lg = lambda p: np.log(np.clip(p, 1e-4, 1 - 1e-4) / (1 - np.clip(p, 1e-4, 1 - 1e-4)))
 rows = []
 for tour, segs in SEG.items():
-    P = pd.read_parquet(f"{D}/out_live/preds3_{tour}_ens_r6_bxlive_lower_2026.parquet")
-    M = pd.read_parquet(f"{D}/out_live/{tour}_matches.parquet", columns=["tourney_date", "winner_id", "loser_id", "tourney_level", "date"])
+    P = pd.read_parquet(f"{D}/{OUTD}/preds3_{tour}_ens_{TAG}_lower_2026.parquet")
+    M = pd.read_parquet(f"{D}/{OUTD}/{tour}_matches.parquet", columns=["tourney_date", "winner_id", "loser_id", "tourney_level", "date"])
     fs = pd.read_csv(f"{D}/fs_raw/{tour}__{tour}_matches_fs_2026.csv", usecols=["tourney_date", "winner_id", "loser_id", "fs_mid"])
     key = lambda d: d.tourney_date.astype(int).astype(str) + "|" + d.winner_id.astype(int).astype(str) + "|" + d.loser_id.astype(int).astype(str)
     M["fs_mid"] = key(M).map(dict(zip(key(fs), fs.fs_mid)))
