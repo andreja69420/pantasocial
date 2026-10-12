@@ -1048,7 +1048,7 @@ A lower start only delays reaching the cap by a few weeks; the cap decides the e
 2026 month by month, start 100,000, cap 30,000 (cap 50,000 in brackets): Jan 136 bets +63k, Feb 194 +393k,
 Mar 146 +649k (+760k), Apr 194 +732k (+898k), May 179 +588k (+839k), Jun 293 +2,569k (+4,043k), Jul 274 +190k
 (+316k), Aug 210 +938k (+1,568k), Sep 185 +716k (+1,202k), Oct 1-10 45 +102k (+170k). From April on, at the cap, the
-30,000 run averages about 830k a month on 5-8 million staked, ROI 2-30% by month.
+30,000 run averages about 955k a month (Apr-Sep) on 5-8 million staked, ROI 2-30% by month.
 
 ## Leak check of the 2026 test (model r6_v3, six Serbian books)
 
