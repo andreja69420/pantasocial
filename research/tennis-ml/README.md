@@ -636,6 +636,12 @@ kick-off. Li Ann - Osorio (model 96%, market 53%): one recent Flashscore result 
 overwrote her real one (409 matches); real ids now always win over synthetic ones. Cakarevic - Serban: "Serban Raluca
 Georgiana" was not matched to "Raluka Serban" (567 matches), so the model saw 11 matches; the loop now skips any match
 where a player has only a synthetic id (`SKIP_SYNTHETIC=1`, 3 of 59 WTA fixtures, 0 ATP that day).
+Since then every bet passes data checks before it is logged (`paper_trade.py`, failures go to `paper/skipped.csv`
+with the reason and to the loop log): both players on a real id, at least 10 matches of history each, the Flashscore
+name shares a name with the history of the id, and when the model is 30+ points above the book's fair price both
+players have 30+ matches and played in the last 180 days. A gap filter alone would be wrong: in the backtests the bets
+with a gap over 30 points were the best ones (ROI +97% / +59% / +66% in 2024 / 2025 / 2026, 21 / 28 / 61 bets), so
+the big gap only triggers the stricter history check. On the 12-10 fixtures (302 players) the name check flagged none.
 
 Bank rule for the Excel sheet (`ledger_xlsx.py` → `paper/opklade.xlsx`): start 100,000 dinars, stake = quarter Kelly
 × the bank at the moment the bet is logged, fixed from then on. The bank moves only when a bet is settled (the loop

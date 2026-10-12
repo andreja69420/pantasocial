@@ -9,6 +9,10 @@ Each run (meant to run every 30 min, so opening lines are caught while they stil
   3. production model (train_final.py) -> P(home); betting-stage blend with the Shin fair opening price
   4. the plan rule (blend EV>5%, odds<=5) on every book's CURRENT price (blend with the Shin fair price of that book's
      current pair): the best price that passes is logged once per match as a paper bet at that price
+  4b. checks before a bet is logged (otherwise it goes to DATA_DIR/paper/skipped.csv with the reason): both players
+     mapped to a real id, at least 10 matches of history each, the Flashscore name shares a name with the history of
+     that id, and when the model is 30+ points above the book (fair price) both have 30+ matches and played in the
+     last 180 days (a big gap is where a split or wrong history shows up first)
   5. pending bets: the book's latest price before the start is kept as the closing price (CLV); finished matches are
      settled from Flashscore's daily results feed
 Ledger: DATA_DIR/paper/ledger.csv. Summary printed per rule.
@@ -24,6 +28,7 @@ import pickle
 import subprocess
 import sys
 import time
+from difflib import SequenceMatcher
 import urllib.request
 
 import numpy as np
@@ -44,7 +49,8 @@ TAG = os.environ.get("MODEL_TAG", "")
 GEO = os.environ.get("GEO", "GB")  # Flashscore odds region
 BOOKS = [b for b in os.environ.get("BOOKS", "").split(",") if b]  # only these bookmakers (all of the region if empty)
 SKIP_CATS = [c for c in os.environ.get("SKIP_CATS", "").split(",") if c]  # Flashscore categories not bet, e.g. ITF MEN - SINGLES
-RULES = {"EV>5% odds<=5": (0.05, 5.0)}  # the plan rule only (whole-2026 test)
+RULES = {"EV>5% odds<=5": (0.05, 5.0)}
+MIN_HIST, BIG_GAP, BIG_HIST, BIG_DAYS = 10, 0.30, 30, 180  # the plan rule only (whole-2026 test)
 lg = lambda p: np.log(np.clip(p, 1e-4, 1 - 1e-4) / (1 - np.clip(p, 1e-4, 1 - 1e-4)))
 
 
@@ -70,7 +76,7 @@ for name, j in jobs.items():
     out = j.communicate()[0].strip()
     print(f"[{name}] " + (out.splitlines()[-1] if j.returncode == 0 and name != "update" else out[-800:]), flush=True)
 ledger = pd.read_csv(LEDGER) if os.path.exists(LEDGER) else pd.DataFrame()
-new_bets, seen = [], []
+new_bets, seen, checks = [], [], {}
 for tour in ("wta", "atp"):
     model_path = os.path.join(D, MODELS, f"{tour}_final.pkl")
     if not os.path.exists(model_path):
@@ -93,6 +99,10 @@ for tour in ("wta", "atp"):
     # a later result can give a known player a synthetic id (>= 9e8); the real id with the full history must win
     names = names.assign(real=names.id < 9e8).sort_values(["real", "d"])
     ids.add(names.k, names.id, names.d.values)
+    hist = pd.concat([pd.DataFrame({"id": base[f"{c}_id"], "date": base.date, "name": base[f"{c}_name"].map(key)})
+                      for c in ("winner", "loser")])
+    n_hist, last_hist = hist.groupby("id").size(), hist.groupby("id").date.max()
+    id_names = hist.groupby("id").name.agg(set)
     bio = pd.concat([pd.DataFrame({"id": base[f"{c}_id"], "date": base.date, "hand": base[f"{c}_hand"], "ht": base[f"{c}_ht"],
                                    "ioc": base[f"{c}_ioc"], "age": base[f"{c}_age"]}) for c in ("winner", "loser")])
     bio = bio.dropna(subset=["id"]).sort_values("date").groupby("id").last()
@@ -105,10 +115,16 @@ for tour in ("wta", "atp"):
         hid, aid = ids.get(key(nh)), ids.get(key(na))
         if hid is None or aid is None:  # debutants have no history: no model price
             continue
-        if os.environ.get("SKIP_SYNTHETIC") and max(hid, aid) >= 9e8:  # player whose history may be split over two ids
-            continue
-        cat, slug, tname, surf = tournament({"ZA": r.tournament, "ZL": r.path})
         day = pd.Timestamp(int(r.start), unit="s")
+        chk = {}
+        for s_, nm, pid in (("h", nh, hid), ("a", na, aid)):
+            toks = [t for kk in id_names.get(pid, ()) for t in kk.split()]
+            chk[f"n_{s_}"] = int(n_hist.get(pid, 0))
+            chk[f"days_{s_}"] = int((day - last_hist[pid]).days) if pid in last_hist.index else 9999
+            chk[f"name_{s_}"] = any(SequenceMatcher(None, t, u).ratio() >= 0.8 for t in key(nm).split() for u in toks)
+            chk[f"syn_{s_}"] = pid >= 9e8
+        checks[r.fs_mid] = chk
+        cat, slug, tname, surf = tournament({"ZA": r.tournament, "ZL": r.path})
         tid = f"fs-{slug}-{day.year}"
         row = {"tourney_id": tid, "tourney_name": tname, "surface": surf, "draw_size": "", "tourney_level": level(cat, tname),
                "tourney_date": int(tstart.get(tid, int(day.strftime("%Y%m%d")))), "match_num": 999,
@@ -162,18 +178,54 @@ for tour in ("wta", "atp"):
             qb = 1 / (1 + np.exp(-(0.44 * lg(q) + 0.64 * lg(shin(np.array([1 / cur]), np.array([1 / cuo]))[0]))))
             new_bets.append({"fs_mid": r.fs_mid, "tour": tour, "tournament": r.tournament, "home": r.home, "away": r.away,
                              "start": pd.Timestamp(int(r.start), unit="s"), "side": side, "book": r.book, "odds": cur, "open": o,
-                             "q_model": q, "q_blend": qb, "ev": qb * cur - 1, "model": TAG})
+                             "q_model": q, "q_blend": qb, "ev": qb * cur - 1, "model": TAG,
+                             "fair": shin(np.array([1 / cur]), np.array([1 / cuo]))[0]})
 C = pd.DataFrame(new_bets)
-logged = 0
+logged, skipped = 0, []
+
+
+def problems(k, r):
+    """why this bet must not be logged ('' = the data checks pass)"""
+    if not k:
+        return "no data check"
+    out = []
+    for s_, who in (("h", r.home), ("a", r.away)):
+        if k[f"syn_{s_}"] and os.environ.get("SKIP_SYNTHETIC"):
+            out.append(f"{who}: no real id (history may be split)")
+        elif k[f"n_{s_}"] < MIN_HIST:
+            out.append(f"{who}: only {k[f'n_{s_}']} matches of history")
+        if not k[f"name_{s_}"]:
+            out.append(f"{who}: name does not match the history of the id")
+    gap = r.q_model - r.fair
+    if gap > BIG_GAP:
+        for s_, who in (("h", r.home), ("a", r.away)):
+            if k[f"n_{s_}"] < BIG_HIST or k[f"days_{s_}"] > BIG_DAYS:
+                out.append(f"model {gap:.0%} above the book and {who} has {k[f'n_{s_}']} matches, last {k[f'days_{s_}']} days ago")
+    return "; ".join(out)
+
+
 if not C.empty:
     for rule, (thr, cap) in RULES.items():
         c = C[(C.ev > thr) & (C.odds <= cap)].sort_values("odds", ascending=False).drop_duplicates(["fs_mid"])
         for r in c.itertuples():
             if not ledger.empty and ((ledger.fs_mid == r.fs_mid) & (ledger.rule == rule)).any():
                 continue
-            ledger = pd.concat([ledger, pd.DataFrame([{**r._asdict(), "rule": rule, "logged_at": pd.Timestamp.now('UTC').tz_localize(None),
+            why = problems(checks.get(r.fs_mid, {}), r)
+            if why:
+                skipped.append({"fs_mid": r.fs_mid, "home": r.home, "away": r.away, "start": r.start, "side": r.side, "book": r.book,
+                                "odds": r.odds, "q_model": r.q_model, "ev": r.ev, "reason": why,
+                                "seen_at": pd.Timestamp.now("UTC").tz_localize(None)})
+                continue
+            k = checks[r.fs_mid]
+            ledger = pd.concat([ledger, pd.DataFrame([{**r._asdict(), "hist_home": k["n_h"], "hist_away": k["n_a"], "rule": rule, "logged_at": pd.Timestamp.now('UTC').tz_localize(None),
                                                        "result": "", "pnl": np.nan}]).drop(columns=["Index"])], ignore_index=True)
             logged += 1
+if skipped:
+    sk = os.path.join(PAPER, "skipped.csv")
+    K = pd.concat([pd.read_csv(sk), pd.DataFrame(skipped)]) if os.path.exists(sk) else pd.DataFrame(skipped)
+    K.drop_duplicates(["fs_mid", "reason"]).to_csv(sk, index=False)
+    for x in skipped:
+        print(f"not logged {x['home']} - {x['away']} ({x['side']} {x['odds']}): {x['reason']}")
 # pending bets: the book's latest price while the match has not started is the closing price so far (CLV)
 if not ledger.empty and seen:
     S = pd.concat(seen)
