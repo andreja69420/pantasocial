@@ -1329,3 +1329,30 @@ favourite-longshot bias of the market costs more than the model finds; higher EV
 bands. The cap stays at 5. Note: best opening prices of all sides around evens (1.8-2.2) already return +3.8%
 without any model: early lines near 2.0 are often set before the market knows much, which is part of why the model's
 ROI there is largest, and why the paper test (current price must still equal the opening price) matters.
+
+## Losing weeks and a search for anything that should not be there (`loss_weeks.py`, `paper/loss_weeks.txt`)
+Plan bets 2024-2026 at the Serbian books, with the same book's closing price, the other books' opening prices and the
+live data checks of `paper_trade.py` applied after the fact.
+
+- **The edge is line movement.** 87-92% of the bets close shorter than they were taken (median CLV +15-16%). Had the
+  closing fair price been the truth, the bets would return +11 to +14%; they returned +14 to +21%, i.e. the picks also
+  beat the close by 0.4-4.3 points of win probability. Profit rises with CLV: bets with CLV <= +5% lose, bets with CLV
+  > 30% return +37 to +66%. Live paper so far: mean CLV about +9% on 23 bets (lower than the backtest's median, to watch).
+- **Losing weeks are outcome variance.** Negative and positive weeks have the same CLV (+18.6% vs +19.4%), blend EV and
+  average odds; only the results differ (48% vs 66% won, 10 points below vs 6 above the closing price). The number of
+  negative weeks matches a simulation drawn from the closing price (2024: 13 vs 10.4 expected, 2025: 9 vs 10.5, 2026: 8
+  vs 5.8, all inside the 90% range); weekly results are only weakly correlated (lag 1: 0.12 / 0.16 / 0.28).
+- **No bet type loses in all three years** (month, surface, odds band, EV band, gap, weekday, book, round, repeated
+  player): nothing can be cut without fitting the past.
+- **Split identities (2026).** Most bets where the model is 30+ points above the opening market are against a player whose
+  Flashscore name did not match the history (Svitolina as "Monfils Elina", Starodubtseva as "Starodubtsewa", Storm Hunter
+  as "Sanders Storm", Schwarzler, Wong, Van De Winkel, Wolf...): the model sees a newcomer. The live checks (real id,
+  10+ matches, 30+ and a recent match for a gap over 0.30) refuse them: 15 / 43 / 125 bets in 2024 / 2025 / 2026.
+- **Lines posted with the players swapped.** 72 / 99 / 99 bets were taken where the opening favourite became the closing
+  underdog at near-mirror prices (e.g. 4.00/1.20 -> 1.20/4.00), and 10 / 44 / 74 at a price 30%+ above the median opening
+  of the other books. A book would void such palpable errors. In the live review a price far above the other books is a
+  reason to reject.
+- **Without all of these** (live checks + swapped + outlier lines): 812 / 1,742 / 1,570 bets, ROI +21.0% / +14.7% /
+  +15.7%, negative weeks 13 / 10 / 6. Each month from 300,000 (quarter Kelly, at most 30,000): mean full month 227k
+  instead of 275k, one negative month in 33 (Dec 2025, -8k), year totals 1.89M / 3.03M / 2.57M instead of 2.22M / 3.08M /
+  3.77M. 2026 loses most (June 1.07M -> 0.56M), because the split identities cluster on the grass season.
