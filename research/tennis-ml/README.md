@@ -1050,6 +1050,18 @@ Mar 146 +649k (+760k), Apr 194 +732k (+898k), May 179 +588k (+839k), Jun 293 +2,
 (+316k), Aug 210 +938k (+1,568k), Sep 185 +716k (+1,202k), Oct 1-10 45 +102k (+170k). From April on, at the cap, the
 30,000 run averages about 955k a month (Apr-Sep) on 5-8 million staked, ROI 2-30% by month.
 
+Higher EV threshold (`kelly_cap.py --ev=`, `paper/kelly_cap_ev.txt`), start 100,000 each season, cap 30,000:
+
+| EV | 2024 bets / flat ROI / end bank | 2025 | 2026 to 10-10 | largest drop % (2024 / 2025 / 2026) |
+|---|---|---|---|---|
+| >5% (plan) | 906 / +21.0% / 4,216,123 | 1,922 / +14.3% / 5,884,773 | 1,856 / +16.7% / 7,040,916 | 15.5 / 32.3 / 15.8 |
+| >10% | 206 / +45.8% / 1,440,713 | 435 / +26.7% / 1,601,857 | 520 / +19.7% / 1,631,013 | 12.6 / 29.0 / 21.9 |
+| >15% | 72 / +66.5% / 600,900 | 118 / +37.3% / 555,047 | 188 / +20.0% / 641,443 | 10.2 / 14.7 / 33.7 |
+
+EV>10% with a 50,000 cap: 1,602,908 / 2,124,881 / 2,226,122. A higher threshold raises ROI per bet but cuts the bets
+3-4x (EV>10%: 0.6-1.9 a day), so the bank grows slower and the cap is reached later or never; drawdowns are not
+smaller. In 2026 the extra ROI over EV>5% is only 3 points.
+
 ## Leak check of the 2026 test (model r6_v3, six Serbian books)
 
 | 2026 matches | model picks the winner | market favourite wins | log-loss model | log-loss market |
