@@ -8,9 +8,11 @@ Time windows use the running maximum of 'date', so a row dated before an earlier
 
 usage: fx_ratings.py MATCHES_PARQUET OUT_PARQUET
 """
+import hashlib
 import multiprocessing as mp
 from concurrent.futures import ProcessPoolExecutor
 import os
+import pickle
 import re
 import sys
 from collections import deque
@@ -197,16 +199,77 @@ def _g2_update(mu, phi, sig, muo, phio, s):
     return mu + phin * phin * g * (s - E), phin, sig2
 
 
-def _task_g2():
+# ---------------------------------------------------------------- resumable sequential tasks
+# A sequential task walks the rows once with a per-player state. For live fixtures (rows i0..n at the end of the table)
+# the state at row i0 is saved per player id (codes change when rows are appended) with a digest of the rows it has
+# seen; the next run continues from it over the rows appended since and computes only the fixture rows. A saved state
+# whose rows are no longer the first rows of the table is ignored and the walk starts from the first row.
+def _ckpt_load(name):
     G = _G
-    n, nP = G["n"], G["nP"]
-    w, l, day, sf, ret = G["w"].tolist(), G["l"].tolist(), G["day"].tolist(), G["surf"].tolist(), G["ret"].tolist()
+    path = G.get("state")
+    if not path or not G["i0"]:
+        return None
+    try:
+        with open(f"{path}_{name}.pkl", "rb") as fh:
+            c = pickle.load(fh)
+    except (OSError, EOFError, pickle.UnpicklingError):
+        return None
+    return c if c["k"] <= G["i0"] and c["digest"] == _digest(c["k"]) else None
+
+
+def _ckpt_save(name, k, state, **extra):
+    path = _G.get("state")
+    if not path:
+        return
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(f"{path}_{name}.pkl.tmp", "wb") as fh:
+        pickle.dump({"k": k, "digest": _digest(k), "state": state, **extra}, fh, protocol=pickle.HIGHEST_PROTOCOL)
+    os.replace(f"{path}_{name}.pkl.tmp", f"{path}_{name}.pkl")
+
+
+def _digest(k):
+    return hashlib.sha1(_G["rowhash"][:k].tobytes()).hexdigest()
+
+
+def _code():
+    if "code" not in _G:
+        _G["code"] = {p: c for c, p in enumerate(_G["ids"].tolist())}
+    return _G["code"]
+
+
+def _seq(name, new, loop, save, load, width):
+    """Run a sequential task over rows i0..n (all rows when i0 = 0); returns its per-row record for those rows."""
+    G = _G
+    n, i0 = G["n"], G["i0"]
+    c = _ckpt_load(name)
+    st, k = (load(c["state"]), c["k"]) if c else (new(), 0)
+    if k < i0:
+        loop(k, i0, st, None)  # rows before the first wanted row only feed the state
+        if G.get("state"):
+            _ckpt_save(name, i0, save(st))
+    R = np.zeros((n - i0, width))
+    loop(i0, n, st, R)
+    return R
+
+
+def _ids_of(codes):
+    ids = _G["ids"]
+    return [ids[c].item() for c in codes]
+
+
+# ---------------------------------------------------------------- Glicko-2 (state: mu, phi, sig, last day per player, per player x surface)
+def _g2_new():
+    nP = _G["nP"]
+    return {"mu": [0.0] * nP, "phi": [350.0 / SC] * nP, "sig": [0.06] * nP, "last": [-1] * nP, "S": {}}
+
+
+def _g2_loop(lo, hi, st, R):
+    G = _G
+    w, l, day, sf, ret = (G[x][lo:hi].tolist() for x in ("w", "l", "day", "surf", "ret"))
     phi0 = 350.0 / SC
-    mu, phi, sig, last = [0.0] * nP, [phi0] * nP, [0.06] * nP, [-1] * nP
-    S = {}
-    R = np.zeros((n, 8))
-    for i in range(n):
-        a, b, d, s = w[i], l[i], day[i], sf[i]
+    mu, phi, sig, last, S = st["mu"], st["phi"], st["sig"], st["last"], st["S"]
+    for j in range(hi - lo):
+        a, b, d, s = w[j], l[j], day[j], sf[j]
         pa = phi[a] if last[a] < 0 else min(sqrt(phi[a] ** 2 + 0.005 * (d - last[a])), phi0)
         pb = phi[b] if last[b] < 0 else min(sqrt(phi[b] ** 2 + 0.005 * (d - last[b])), phi0)
         ma, mb = mu[a], mu[b]
@@ -217,8 +280,9 @@ def _task_g2():
         sb = [mb, max(pb, 1.0), 0.06, d] if sb is None else sb
         psa = min(sqrt(sa[1] ** 2 + 0.005 * (d - sa[3])), phi0)
         psb = min(sqrt(sb[1] ** 2 + 0.005 * (d - sb[3])), phi0)
-        R[i] = (ma, mb, pa, pb, sig[a], sig[b], (sa[0] * SC + 1500) - 2 * psa * SC, (sb[0] * SC + 1500) - 2 * psb * SC)
-        sw, sl = (0.75, 0.25) if ret[i] else (1.0, 0.0)
+        if R is not None:
+            R[j] = (ma, mb, pa, pb, sig[a], sig[b], (sa[0] * SC + 1500) - 2 * psa * SC, (sb[0] * SC + 1500) - 2 * psb * SC)
+        sw, sl = (0.75, 0.25) if ret[j] else (1.0, 0.0)
         mu[a], phi[a], sig[a] = _g2_update(ma, pa, sig[a], mb, pb, sw)
         mu[b], phi[b], sig[b] = _g2_update(mb, pb, sig[b], ma, pa, sl)
         x = _g2_update(sa[0], psa, sa[2], sb[0], psb, sw)
@@ -226,6 +290,25 @@ def _task_g2():
         S[ka] = [x[0], x[1], x[2], d]
         S[kb] = [y[0], y[1], y[2], d]
         last[a] = last[b] = d
+
+
+def _g2_save(st):
+    seen = [c for c, t in enumerate(st["last"]) if t >= 0]
+    return {"p": dict(zip(_ids_of(seen), [(st["mu"][c], st["phi"][c], st["sig"][c], st["last"][c]) for c in seen])),
+            "S": {(p, k % 4): v for k, v, p in zip(st["S"], st["S"].values(), _ids_of(k // 4 for k in st["S"]))}}
+
+
+def _g2_load(s):
+    st, code = _g2_new(), _code()
+    for p, (m, ph, sg, t) in s["p"].items():
+        c = code[p]
+        st["mu"][c], st["phi"][c], st["sig"][c], st["last"][c] = m, ph, sg, t
+    st["S"] = {code[p] * 4 + q: v for (p, q), v in s["S"].items()}
+    return st
+
+
+def _task_g2():
+    R = _seq("g2", _g2_new, _g2_loop, _g2_save, _g2_load, 8)
     mw, ml, pw_, pl_, vw, vl, sw_, sl_ = R.T
     rw, rl = mw * SC + 1500, ml * SC + 1500
     dw, dl = pw_ * SC, pl_ * SC
@@ -237,29 +320,32 @@ def _task_g2():
 
 
 # ---------------------------------------------------------------- TrueSkill and level-aware Elo variants
-def _task_ts_lvl():
+def _ts_new():
+    nP = _G["nP"]
+    v0 = (25.0 / 3) ** 2
+    return {"tmu": [25.0] * nP, "tvar": [v0] * nP, "tlast": [-1] * nP, "Eo": [1500.0] * nP, "El": [None] * nP,
+            "Sg": [1500.0] * 4, "LGE": {}, "LGN": {}}
+
+
+def _ts_loop(lo, hi, st, R):
     G = _G
-    n, nP = G["n"], G["nP"]
-    w, l, day, ret, lgc = G["w"].tolist(), G["l"].tolist(), G["day"].tolist(), G["ret"].tolist(), G["lg"].tolist()
-    nw, nl, ew = G["nw"].tolist(), G["nl"].tolist(), G["ew"].tolist()
+    w, l, day, ret, lgc = (G[x][lo:hi].tolist() for x in ("w", "l", "day", "ret", "lg"))
+    nw, nl, ew = (G[x][lo:hi].tolist() for x in ("nw", "nl", "ew"))
+    el_ = G["el"]
     s0 = 25.0 / 3
     v0, b2, t2 = s0 * s0, (s0 / 2) ** 2, (s0 / 100) ** 2
-    tmu, tvar, tlast = [25.0] * nP, [v0] * nP, [-1] * nP
-    Eo = [1500.0] * nP
-    El = [None] * nP
-    Sg = [1500.0] * 4
-    LGE, LGN = {}, {}
-    T = np.zeros((n, 4)); O = np.zeros((n, 2)); V = np.zeros((n, 3)); Q = np.zeros((n, 2))
-    for i in range(n):
-        a, b, d, g = w[i], l[i], day[i], lgc[i]
-        na, nb = nw[i], nl[i]
-        m = 0.5 if ret[i] else 1.0
+    tmu, tvar, tlast, Eo, El, Sg, LGE, LGN = (st[x] for x in ("tmu", "tvar", "tlast", "Eo", "El", "Sg", "LGE", "LGN"))
+    for j in range(hi - lo):
+        a, b, d, g = w[j], l[j], day[j], lgc[j]
+        na, nb = nw[j], nl[j]
+        m = 0.5 if ret[j] else 1.0
         ka, kb = 250.0 / (na + 5) ** 0.4, 250.0 / (nb + 5) ** 0.4
         # TrueSkill
         va = tvar[a] if tlast[a] < 0 else min(tvar[a] + t2 + 0.00048 * (d - tlast[a]), v0)
         vb = tvar[b] if tlast[b] < 0 else min(tvar[b] + t2 + 0.00048 * (d - tlast[b]), v0)
         ma, mb = tmu[a], tmu[b]
-        T[i] = (ma, mb, sqrt(va), sqrt(vb))
+        if R is not None:
+            R[j, 0:4] = (ma, mb, sqrt(va), sqrt(vb))
         c2 = 2 * b2 + va + vb
         c = sqrt(c2)
         t = (ma - mb) / c
@@ -270,7 +356,8 @@ def _task_ts_lvl():
         tlast[a] = tlast[b] = d
         # opponent-experience weighted Elo
         ra, rb = Eo[a], Eo[b]
-        O[i] = (ra, rb)
+        if R is not None:
+            R[j, 4:6] = (ra, rb)
         e = 1.0 / (1.0 + 10.0 ** ((rb - ra) / 400.0))
         Eo[a] = ra + m * ka * min(1.0, (nb + 2) / 15.0) * (1 - e)
         Eo[b] = rb - m * kb * min(1.0, (na + 2) / 15.0) * (1 - e)
@@ -278,7 +365,8 @@ def _task_ts_lvl():
         sg = Sg[g]
         ra = El[a] if El[a] is not None else sg - 75.0
         rb = El[b] if El[b] is not None else sg - 75.0
-        V[i] = (ra, rb, sg)
+        if R is not None:
+            R[j, 6:9] = (ra, rb, sg)
         e = 1.0 / (1.0 + 10.0 ** ((rb - ra) / 400.0))
         El[a] = ra + m * ka * (1 - e)
         El[b] = rb - m * kb * (1 - e)
@@ -290,16 +378,45 @@ def _task_ts_lvl():
         # Elo per level group, initialised from the overall Elo
         qa, qb = a * 4 + g, b * 4 + g
         ra = LGE.get(qa)
-        ra = ew[i] if ra is None else ra
+        ra = ew[j] if ra is None else ra
         rb = LGE.get(qb)
-        rb = G["el"][i] if rb is None else rb
-        Q[i] = (ra, rb)
+        rb = el_[lo + j] if rb is None else rb
+        if R is not None:
+            R[j, 9:11] = (ra, rb)
         e = 1.0 / (1.0 + 10.0 ** ((rb - ra) / 400.0))
         ca, cb = LGN.get(qa, 0), LGN.get(qb, 0)
         LGE[qa] = ra + m * 250.0 / (ca + 5) ** 0.4 * (1 - e)
         LGE[qb] = rb - m * 250.0 / (cb + 5) ** 0.4 * (1 - e)
         LGN[qa], LGN[qb] = ca + 1, cb + 1
-    ew_, el_ = G["ew"], G["el"]
+
+
+def _ts_save(st):
+    seen = [c for c, t in enumerate(st["tlast"]) if t >= 0]
+    return {"p": dict(zip(_ids_of(seen), [tuple(st[x][c] for x in ("tmu", "tvar", "tlast", "Eo", "El")) for c in seen])),
+            "Sg": list(st["Sg"]),
+            "LGE": {(p, k % 4): v for k, v, p in zip(st["LGE"], st["LGE"].values(), _ids_of(k // 4 for k in st["LGE"]))},
+            "LGN": {(p, k % 4): v for k, v, p in zip(st["LGN"], st["LGN"].values(), _ids_of(k // 4 for k in st["LGN"]))}}
+
+
+def _ts_load(s):
+    st, code = _ts_new(), _code()
+    for p, vals in s["p"].items():
+        c = code[p]
+        for x, v in zip(("tmu", "tvar", "tlast", "Eo", "El"), vals):
+            st[x][c] = v
+    st["Sg"] = list(s["Sg"])
+    st["LGE"] = {code[p] * 4 + q: v for (p, q), v in s["LGE"].items()}
+    st["LGN"] = {code[p] * 4 + q: v for (p, q), v in s["LGN"].items()}
+    return st
+
+
+def _task_ts_lvl():
+    G = _G
+    i0 = G["i0"]
+    R = _seq("ts_lvl", _ts_new, _ts_loop, _ts_save, _ts_load, 11)
+    T, O, V, Q = R[:, 0:4], R[:, 4:6], R[:, 6:9], R[:, 9:11]
+    b2 = (25.0 / 3 / 2) ** 2
+    ew_, el_ = G["ew"][i0:], G["el"][i0:]
     dm = T[:, 0] - T[:, 1]
     z = dm / np.sqrt(T[:, 2] ** 2 + T[:, 3] ** 2)
     p = ndtr(dm / np.sqrt(2 * b2 + T[:, 2] ** 2 + T[:, 3] ** 2))
@@ -313,169 +430,248 @@ def _task_ts_lvl():
 RHO = [[1, .75, .65, .85], [.75, 1, .5, .6], [.65, .5, 1, .75], [.85, .6, .75, 1]]
 
 
-def _task_cs_layoff_mf():
+# ---------------------------------------------------------------- cross-surface Elo, layoff-aware Elo, latent matchup factors
+def _cs_new():
+    nP = _G["nP"]
+    init = np.array([np.random.default_rng((7, int(p))).normal(0, 0.1, 8) for p in _G["ids"]])  # keyed by player id, not data span
+    return {"CS": [None] * nP, "LO": [None] * nP, "llast": [-1] * nP, "loff": [False] * nP, "since": [99] * nP,
+            "U": np.ascontiguousarray(init[:, :4]), "V": np.ascontiguousarray(init[:, 4:])}
+
+
+def _cs_loop(lo, hi, st, R):
     G = _G
-    n, nP = G["n"], G["nP"]
-    w, l, day, ret, sf = G["w"].tolist(), G["l"].tolist(), G["day"].tolist(), G["ret"].tolist(), G["surf"].tolist()
-    main, offs = G["main"].tolist(), G["offs"].tolist()
-    nw, nl = G["nw"].tolist(), G["nl"].tolist()
-    ewl, ell = G["ew"].tolist(), G["el"].tolist()
-    CS = [None] * nP
-    LO, llast, loff, since = [None] * nP, [-1] * nP, [False] * nP, [99] * nP
-    init = np.array([np.random.default_rng((7, int(p))).normal(0, 0.1, 8) for p in G["ids"]])  # keyed by player id, not data span
-    U, Vv = np.ascontiguousarray(init[:, :4]), np.ascontiguousarray(init[:, 4:])
+    w, l, day, ret, sf = (G[x][lo:hi].tolist() for x in ("w", "l", "day", "ret", "surf"))
+    main, offs = G["main"][lo:hi].tolist(), G["offs"][lo:hi].tolist()
+    nw, nl = G["nw"][lo:hi].tolist(), G["nl"][lo:hi].tolist()
+    ewl, ell = G["ew"][lo:hi].tolist(), G["el"][lo:hi].tolist()
+    CS, LO, llast, loff, since, U, Vv = (st[x] for x in ("CS", "LO", "llast", "loff", "since", "U", "V"))
     cm = log(10.0) / 400.0
-    C = np.zeros((n, 2)); Lo = np.zeros((n, 2)); F = np.zeros(n)
-    for i in range(n):
-        a, b, d, s = w[i], l[i], day[i], sf[i]
-        na, nb = nw[i], nl[i]
-        m = 0.5 if ret[i] else 1.0
+    for j in range(hi - lo):
+        a, b, d, s = w[j], l[j], day[j], sf[j]
+        na, nb = nw[j], nl[j]
+        m = 0.5 if ret[j] else 1.0
         # cross-surface Elo
         xa = CS[a] = CS[a] or [1500.0] * 4
         xb = CS[b] = CS[b] or [1500.0] * 4
-        C[i] = (xa[s], xb[s])
+        if R is not None:
+            R[j, 0:2] = (xa[s], xb[s])
         e = 1.0 / (1.0 + 10.0 ** ((xb[s] - xa[s]) / 400.0))
         fa, fb = m * 250.0 / (na + 5) ** 0.4 * (1 - e), m * 250.0 / (nb + 5) ** 0.4 * (1 - e)
         rho = RHO[s]
-        for j in range(4):
-            xa[j] += rho[j] * fa
-            xb[j] -= rho[j] * fb
+        for q in range(4):
+            xa[q] += rho[q] * fa
+            xb[q] -= rho[q] * fb
         # layoff-aware Elo
         for p in (a, b):
             if LO[p] is None:
-                LO[p] = 1500.0 if main[i] else 1250.0
+                LO[p] = 1500.0 if main[j] else 1250.0
             elif d - llast[p] >= 56 and not loff[p]:
                 LO[p] -= min(100.0 + 1.5 * (d - llast[p] - 56) / 7.0, 200.0)
                 since[p] = 0
         ra, rb = LO[a], LO[b]
-        Lo[i] = (ra, rb)
+        if R is not None:
+            R[j, 2:4] = (ra, rb)
         e = 1.0 / (1.0 + 10.0 ** ((rb - ra) / 400.0))
         LO[a] = ra + m * 250.0 / (na + 5) ** 0.4 * (1 + 0.55 * max(0.0, 1 - since[a] / 20.0)) * (1 - e)
         LO[b] = rb - m * 250.0 / (nb + 5) ** 0.4 * (1 + 0.55 * max(0.0, 1 - since[b] / 20.0)) * (1 - e)
         since[a] += 1; since[b] += 1
         llast[a] = llast[b] = d
-        loff[a] = loff[b] = offs[i]
+        loff[a] = loff[b] = offs[j]
         # latent matchup factors (logit = Elo term + u_i.v_j - u_j.v_i), one SGD step after the match
         ua, va, ub, vb = U[a], Vv[a], U[b], Vv[b]
         x = ua @ vb - ub @ va
-        F[i] = x if (na >= 5 and nb >= 5) else 0.0
-        gr = 1.0 - 1.0 / (1.0 + exp(-(cm * (ewl[i] - ell[i]) + x)))
+        if R is not None:
+            R[j, 4] = x if (na >= 5 and nb >= 5) else 0.0
+        gr = 1.0 - 1.0 / (1.0 + exp(-(cm * (ewl[j] - ell[j]) + x)))
         da, db_ = gr * vb - 0.05 * ua, -gr * va - 0.05 * ub
         dva, dvb = -gr * ub - 0.05 * va, gr * ua - 0.05 * vb
         U[a] = ua + 0.05 * da; U[b] = ub + 0.05 * db_
         Vv[a] = va + 0.05 * dva; Vv[b] = vb + 0.05 * dvb
+
+
+def _cs_save(st):
+    seen = [c for c, t in enumerate(st["llast"]) if t >= 0]
+    return dict(zip(_ids_of(seen), [(list(st["CS"][c]), st["LO"][c], st["llast"][c], st["loff"][c], st["since"][c],
+                                     st["U"][c].copy(), st["V"][c].copy()) for c in seen]))
+
+
+def _cs_load(s):
+    st, code = _cs_new(), _code()
+    for p, (cs, lo_, ll, lf, sn, u, v) in s.items():
+        c = code[p]
+        st["CS"][c], st["LO"][c], st["llast"][c], st["loff"][c], st["since"][c] = list(cs), lo_, ll, lf, sn
+        st["U"][c], st["V"][c] = u, v
+    return st
+
+
+def _task_cs_layoff_mf():
+    R = _seq("cs_layoff_mf", _cs_new, _cs_loop, _cs_save, _cs_load, 5)
+    C, Lo, F = R[:, 0:2], R[:, 2:4], R[:, 4]
     return _split({"cs_elo": (C[:, 0], C[:, 1]), "layoff_elo": (Lo[:, 0], Lo[:, 1]), "mf_latent_matchup": (F, -F)})
 
 
 # ---------------------------------------------------------------- opponents' current Elo vs Elo when they played
-def _task_hind():
+def _hind_new():
+    nP = _G["nP"]
+    return {"Ec": np.full(nP, 1500.0), "ho": [[] for _ in range(nP)], "ht": [[] for _ in range(nP)]}
+
+
+def _hind_loop(lo, hi, st, R):
     G = _G
-    n, nP = G["n"], G["nP"]
-    w, l = G["w"].tolist(), G["l"].tolist()
-    ew, el, ewp, elp = G["ew"].tolist(), G["el"].tolist(), G["ewp"].tolist(), G["elp"].tolist()
-    Ec = np.full(nP, 1500.0)
-    ho, ht = [[] for _ in range(nP)], [[] for _ in range(nP)]
-    H = np.full((n, 4), np.nan)
-    i0 = G["i0"]
-    for i in range(n):
-        a, b = w[i], l[i]
-        for j, p in ((0, a), (2, b)):
-            h = ho[p]
-            if h and i >= i0:
-                dif = Ec[h[-30:]] - np.array(ht[p][-30:])
-                H[i, j] = dif.mean()
-                H[i, j + 1] = dif[-10:].mean()
-        ho[a].append(b); ht[a].append(el[i])
-        ho[b].append(a); ht[b].append(ew[i])
-        Ec[a], Ec[b] = ewp[i], elp[i]
-    return _split({"hind_30": (H[:, 0], H[:, 2]), "hind_10": (H[:, 1], H[:, 3])})
+    w, l = G["w"][lo:hi].tolist(), G["l"][lo:hi].tolist()
+    ew, el, ewp, elp = (G[x][lo:hi].tolist() for x in ("ew", "el", "ewp", "elp"))
+    Ec, ho, ht = st["Ec"], st["ho"], st["ht"]
+    for j in range(hi - lo):
+        a, b = w[j], l[j]
+        if R is not None:
+            for q, p in ((0, a), (2, b)):
+                h = ho[p]
+                if h:
+                    dif = Ec[h[-30:]] - np.array(ht[p][-30:])
+                    R[j, q] = dif.mean()
+                    R[j, q + 1] = dif[-10:].mean()
+                else:
+                    R[j, q] = R[j, q + 1] = np.nan
+        ho[a].append(b); ht[a].append(el[j])
+        ho[b].append(a); ht[b].append(ew[j])
+        Ec[a], Ec[b] = ewp[j], elp[j]
+
+
+def _hind_save(st):
+    seen = [c for c, h in enumerate(st["ho"]) if h]  # only the last 30 opponents are ever read
+    return dict(zip(_ids_of(seen), [(st["Ec"][c], _ids_of(st["ho"][c][-30:]), st["ht"][c][-30:]) for c in seen]))
+
+
+def _hind_load(s):
+    st, code = _hind_new(), _code()
+    for p, (e, ops, hts) in s.items():
+        c = code[p]
+        st["Ec"][c], st["ho"][c], st["ht"][c] = e, [code[o] for o in ops], list(hts)
+    return st
+
+
+def _task_hind():
+    R = _seq("hind", _hind_new, _hind_loop, _hind_save, _hind_load, 4)
+    return _split({"hind_30": (R[:, 0], R[:, 2]), "hind_10": (R[:, 1], R[:, 3])})
 
 
 # ---------------------------------------------------------------- common opponents and two-hop chains
-def _task_co():
+def _co_new():
+    nP = _G["nP"]
+    return {"dq": [None] * nP, "by": [None] * nP}
+
+
+def _co_window(st, p, lim):
+    q = st["dq"][p]
+    if q is None:
+        return None
+    b = st["by"][p]
+    while q and q[0][0] < lim:
+        o = q.popleft()[1]
+        r = b[o]
+        r.popleft()
+        if not r:
+            del b[o]
+    return b
+
+
+def _co_loop(lo, hi, st, R):
     G = _G
-    n, nP = G["n"], G["nP"]
-    w, l, day, mgl, pwl = G["w"].tolist(), G["l"].tolist(), G["day"].tolist(), G["mg"].tolist(), G["pw"].tolist()
-    dq, by = [None] * nP, [None] * nP
+    w, l, day, mgl, pwl = (G[x][lo:hi].tolist() for x in ("w", "l", "day", "mg", "pw"))
+    dq, by = st["dq"], st["by"]
     k180, k270, k365 = LN2 / 180.0, LN2 / 270.0, 1.0 / 365.0
-    out = np.zeros((n, 5))
-
-    def window(p, lim):
-        q = dq[p]
-        if q is None:
-            return None
-        b = by[p]
-        while q and q[0][0] < lim:
-            o = q.popleft()[1]
-            r = b[o]
-            r.popleft()
-            if not r:
-                del b[o]
-        return b
-
-    i0 = G["i0"]
-    for i in range(n):
-        a, b, d = w[i], l[i], day[i]
-        lim = d - 730
-        A, B = (window(a, lim), window(b, lim)) if i >= i0 else (None, None)
-        if A and B:
-            small, big = (A, B) if len(A) < len(B) else (B, A)
-            common = [c for c in small if c in big]
-            nc = len(common)
-            if nc:
-                out[i, 0] = log1p(nc)
-                wd = md = ed = ws = es = 0.0
-                c1 = c2 = 0.0
-                for c in common:
-                    la, lb = A[c], B[c]
-                    st = []
-                    for lst in (la, lb):
-                        sw = sn = ms = mw = rs = rw = 0.0
-                        mn = 0
-                        wins, losses = [], []
-                        for dd, won, mg, r in lst:
-                            age = d - dd
-                            x = exp(-age * k180)
-                            sw += x; sn += x * won
-                            if mg == mg:
-                                ms += x * mg; mw += x; mn += 1
-                            y = exp(-age * k270)
-                            rs += y * r; rw += y
-                            (wins if won else losses).append(age)
-                        st.append(((sn + 0.5) / (sw + 1.0), ms / mw if mw else None, mn, rs / rw, len(lst), wins, losses))
-                    sa, sb = st
-                    wd += sa[0] - sb[0]
-                    if sa[1] is not None and sb[1] is not None:
-                        x = min(sa[2], sb[2], 3)
-                        md += x * (sa[1] - sb[1]); ws += x
-                    x = min(sa[4], sb[4], 3)
-                    ed += x * (sa[3] - sb[3]); es += x
-                    for u in sa[5]:
-                        for v in sb[6]:
-                            c1 += exp(-max(u, v) * k365)
-                    for u in sb[5]:
-                        for v in sa[6]:
-                            c2 += exp(-max(u, v) * k365)
-                if nc >= 2:
-                    out[i, 1] = wd / nc
-                    out[i, 2] = md / ws if ws else 0.0
-                    out[i, 3] = ed / es if es else 0.0
-                out[i, 4] = (c1 - c2) / (c1 + c2 + 2.0) if (c1 + c2) > 0 else 0.0
-        mg, r = mgl[i], 1.0 - pwl[i]
+    for j in range(hi - lo):
+        a, b, d = w[j], l[j], day[j]
+        if R is not None:
+            lim = d - 730
+            A, B = _co_window(st, a, lim), _co_window(st, b, lim)
+            if A and B:
+                small, big = (A, B) if len(A) < len(B) else (B, A)
+                common = [c for c in small if c in big]
+                nc = len(common)
+                if nc:
+                    R[j, 0] = log1p(nc)
+                    wd = md = ed = ws = es = 0.0
+                    c1 = c2 = 0.0
+                    for c in common:
+                        la, lb = A[c], B[c]
+                        stt = []
+                        for lst in (la, lb):
+                            sw = sn = ms = mw = rs = rw = 0.0
+                            mn = 0
+                            wins, losses = [], []
+                            for dd, won, mg, r in lst:
+                                age = d - dd
+                                x = exp(-age * k180)
+                                sw += x; sn += x * won
+                                if mg == mg:
+                                    ms += x * mg; mw += x; mn += 1
+                                y = exp(-age * k270)
+                                rs += y * r; rw += y
+                                (wins if won else losses).append(age)
+                            stt.append(((sn + 0.5) / (sw + 1.0), ms / mw if mw else None, mn, rs / rw, len(lst), wins, losses))
+                        sa, sb = stt
+                        wd += sa[0] - sb[0]
+                        if sa[1] is not None and sb[1] is not None:
+                            x = min(sa[2], sb[2], 3)
+                            md += x * (sa[1] - sb[1]); ws += x
+                        x = min(sa[4], sb[4], 3)
+                        ed += x * (sa[3] - sb[3]); es += x
+                        for u in sa[5]:
+                            for v in sb[6]:
+                                c1 += exp(-max(u, v) * k365)
+                        for u in sb[5]:
+                            for v in sa[6]:
+                                c2 += exp(-max(u, v) * k365)
+                    if nc >= 2:
+                        R[j, 1] = wd / nc
+                        R[j, 2] = md / ws if ws else 0.0
+                        R[j, 3] = ed / es if es else 0.0
+                    R[j, 4] = (c1 - c2) / (c1 + c2 + 2.0) if (c1 + c2) > 0 else 0.0
+        mg, r = mgl[j], 1.0 - pwl[j]
         for p, o, won, sg in ((a, b, 1, 1.0), (b, a, 0, -1.0)):
             if dq[p] is None:
                 dq[p], by[p] = deque(), {}
             dq[p].append((d, o))
             by[p].setdefault(o, deque()).append((d, won, sg * mg, sg * r))
-    return _split({"co_count": (out[:, 0], out[:, 0]), "co_win_diff": (out[:, 1], -out[:, 1]),
-                   "co_margin_diff": (out[:, 2], -out[:, 2]), "co_elo_adj_diff": (out[:, 3], -out[:, 3]),
-                   "trans_2hop": (out[:, 4], -out[:, 4])})
+
+
+def _co_save(st):
+    # entries older than 730 days before the last row are dropped now: every later row has a later or equal day, so
+    # its window would drop them anyway (the order of what is left does not change)
+    lim = int(_G["day"][_G["i0"] - 1]) - 730
+    seen = [c for c, q in enumerate(st["dq"]) if q is not None]
+    out = {}
+    for c, p in zip(seen, _ids_of(seen)):
+        _co_window(st, c, lim)
+        dq = st["dq"][c]
+        out[p] = ([(d, o) for (d, _), o in zip(dq, _ids_of(o for _, o in dq))],
+                  {o: list(v) for o, v in zip(_ids_of(st["by"][c]), st["by"][c].values())})
+    return out
+
+
+def _co_load(s):
+    st, code = _co_new(), _code()
+    for p, (dq, by) in s.items():
+        c = code[p]
+        st["dq"][c] = deque((d, code[o]) for d, o in dq)
+        st["by"][c] = {code[o]: deque(v) for o, v in by.items()}
+    return st
+
+
+def _task_co():
+    R = _seq("co", _co_new, _co_loop, _co_save, _co_load, 5)
+    return _split({"co_count": (R[:, 0], R[:, 0]), "co_win_diff": (R[:, 1], -R[:, 1]),
+                   "co_margin_diff": (R[:, 2], -R[:, 2]), "co_elo_adj_diff": (R[:, 3], -R[:, 3]),
+                   "trans_2hop": (R[:, 4], -R[:, 4])})
 
 
 # ---------------------------------------------------------------- PageRank snapshots
 def _task_pr():
+    """One PageRank per match day over the previous 365 days (warm start from the last values). With a saved state the
+    days before the first wanted row's day are not recomputed."""
     G = _G
-    n, nP = G["n"], G["nP"]
+    n, nP, i0 = G["n"], G["nP"], G["i0"]
     w, l, day = G["w"], G["l"], G["day"]
     PRg = np.zeros(nP)
     loc = np.full(nP, -1)
@@ -484,46 +680,121 @@ def _task_pr():
     pcw, pcl = np.full(n, 0.15), np.full(n, 0.15)
     ud, us = np.unique(day, return_index=True)
     ends = np.r_[us[1:], n]
-    for d, s0, s1 in zip(ud, us, ends):
-        lo = np.searchsorted(day, d - 365, side="left")
-        if s0 <= lo:
-            continue
-        ww, ll = w[lo:s0], l[lo:s0]
-        m = len(ww)
-        wt = np.exp(-(d - day[lo:s0]) / 120.0)
-        nodes, inv = np.unique(np.r_[ww, ll], return_inverse=True)
-        N = len(nodes)
-        iw, il = inv[:m], inv[m:]
-        outw = np.bincount(il, weights=wt, minlength=N)
-        P = sparse.csr_matrix((wt / outw[il], (iw, il)), shape=(N, N))
-        dang = outw == 0
-        x = PRg[nodes]
-        x = np.where(x > 0, x, 1.0 / N)
-        x = x / x.sum()
-        for _ in range(30):
-            x = 0.85 * (P @ x + x[dang].sum() / N) + 0.15 / N
-        PRg[nodes] = x
-        lo90 = np.searchsorted(day, d - 90, side="left") - lo
-        act = np.zeros(N, bool)
-        act[iw[lo90:]] = True; act[il[lo90:]] = True
-        ref = np.sort(x[act])
-        lv = np.log(x * N)
-        loc[nodes] = np.arange(N)
-        for ids, po, pc in ((w[s0:s1], prw, pcw), (l[s0:s1], prl, pcl)):
-            j = loc[ids]
-            f = j >= 0
-            xs = x[j[f]]
-            sl = slice(s0, s1)
-            po[sl][f] = lv[j[f]]
-            if len(ref):
-                pc[sl][f] = (np.searchsorted(ref, xs, "left") + np.searchsorted(ref, xs, "right")) / (2.0 * len(ref))
-        loc[nodes] = -1
+    d0 = int(day[i0]) if i0 < n else None  # days before it write only rows that are not wanted
+    c = _ckpt_load("pr")
+    start = 0
+    if c and c["day"] <= d0:
+        code = _code()
+        for p, v in c["state"].items():
+            PRg[code[p]] = v
+        start = int(np.searchsorted(ud, c["day"]))
+
+    def run(a, b):
+        for d, s0, s1 in zip(ud[a:b], us[a:b], ends[a:b]):
+            lo = np.searchsorted(day, d - 365, side="left")
+            if s0 <= lo:
+                continue
+            ww, ll = w[lo:s0], l[lo:s0]
+            m = len(ww)
+            wt = np.exp(-(d - day[lo:s0]) / 120.0)
+            nodes, inv = np.unique(np.r_[ww, ll], return_inverse=True)
+            N = len(nodes)
+            iw, il = inv[:m], inv[m:]
+            outw = np.bincount(il, weights=wt, minlength=N)
+            P = sparse.csr_matrix((wt / outw[il], (iw, il)), shape=(N, N))
+            dang = outw == 0
+            x = PRg[nodes]
+            x = np.where(x > 0, x, 1.0 / N)
+            x = x / x.sum()
+            for _ in range(30):
+                x = 0.85 * (P @ x + x[dang].sum() / N) + 0.15 / N
+            PRg[nodes] = x
+            lo90 = np.searchsorted(day, d - 90, side="left") - lo
+            act = np.zeros(N, bool)
+            act[iw[lo90:]] = True; act[il[lo90:]] = True
+            ref = np.sort(x[act])
+            lv = np.log(x * N)
+            loc[nodes] = np.arange(N)
+            for ids, po, pc in ((w[s0:s1], prw, pcw), (l[s0:s1], prl, pcl)):
+                j = loc[ids]
+                f = j >= 0
+                xs = x[j[f]]
+                sl = slice(s0, s1)
+                po[sl][f] = lv[j[f]]
+                if len(ref):
+                    pc[sl][f] = (np.searchsorted(ref, xs, "left") + np.searchsorted(ref, xs, "right")) / (2.0 * len(ref))
+            loc[nodes] = -1
+
+    if i0 and d0 is not None:
+        stop = int(np.searchsorted(ud, d0))
+        run(start, stop)
+        if G.get("state") and stop > start:
+            seen = np.flatnonzero(PRg != 0)
+            _ckpt_save("pr", i0, dict(zip(_ids_of(seen), PRg[seen].tolist())), day=d0)
+        run(stop, len(ud))
+    else:
+        run(0, len(ud))
     return _split({"pagerank_365": (prw, prl), "pagerank_pct90": (pcw, pcl)})
 
 
 # ---------------------------------------------------------------- long-format vectorised features
+def _level_z(G):
+    """Per match: mean and sd of the level group's pooled Elo over the previous 365 days (all matches of the table)."""
+    n, day, ew, el = G["n"], G["day"], G["ew"], G["el"]
+    mean_m, sd_m, ok_m = np.zeros(n), np.ones(n), np.zeros(n, bool)
+    for g in range(4):
+        idx = np.flatnonzero(G["lg"] == g)
+        if not len(idx):
+            continue
+        dg = day[idx]
+        a, b = ew[idx] - 1500.0, el[idx] - 1500.0
+        c1, c2 = np.r_[0.0, np.cumsum(a + b)], np.r_[0.0, np.cumsum(a * a + b * b)]
+        lo_, hi_ = np.searchsorted(dg, dg - 365, side="left"), np.searchsorted(dg, dg, side="left")
+        cn = 2.0 * (hi_ - lo_)
+        mu_ = (c1[hi_] - c1[lo_]) / np.maximum(cn, 1)
+        mean_m[idx] = mu_ + 1500.0
+        sd_m[idx] = np.sqrt(np.maximum((c2[hi_] - c2[lo_]) / np.maximum(cn, 1) - mu_ ** 2, 1.0))
+        ok_m[idx] = cn >= 40
+    return mean_m, sd_m, ok_m
+
+
+def _long_rows(G):
+    """Matches whose rows the wanted rows' long features read: every match of the wanted rows' players and of their
+    opponents in the 730 days before the first wanted day or in their last 10 matches (the opponent's Elo form and
+    tiebreak bucket at those matches come from the opponent's own history)."""
+    w, l, day, i0 = G["w"], G["l"], G["day"], G["i0"]
+    P = np.unique(np.r_[w[i0:], l[i0:]])
+    a, o = np.r_[w[:i0], l[:i0]], np.r_[l[:i0], w[:i0]]
+    ix, dd = np.r_[np.arange(i0), np.arange(i0)], np.r_[day[:i0], day[:i0]]
+    m = np.isin(a, P)
+    srt = np.lexsort((ix[m], a[m]))
+    g = a[m][srt]
+    end = np.flatnonzero(np.r_[g[1:] != g[:-1], True])
+    last10 = np.zeros(int(m.sum()), bool)
+    last10[srt] = np.repeat(end, np.diff(np.r_[-1, end])) - np.arange(len(g)) < 10
+    Q = np.unique(o[m][(dd[m] >= day[i0:].min() - 730) | last10])
+    PQ = np.union1d(P, Q)
+    keep = np.isin(w, PQ) | np.isin(l, PQ)
+    keep[i0:] = True
+    return keep
+
+
 def _task_long():
     G = _G
+    n, i0 = G["n"], G["i0"]
+    zst = _level_z(G)
+    if not i0:
+        return _long(G, zst)
+    # only the rows the wanted rows read (same values: every window of a kept player holds all its rows)
+    keep = _long_rows(G)
+    H = {k: G[k][keep] for k in ("w", "l", "day", "pw", "ew", "el", "nl", "nw", "tbs", "cmp", "surf")}
+    H.update(n=int(keep.sum()), nP=G["nP"])
+    out = _long(H, tuple(z[keep] for z in zst))
+    pos = np.searchsorted(np.flatnonzero(keep), np.arange(i0, n))
+    return {k: v[pos] for k, v in out.items()}
+
+
+def _long(G, zst):
     n = G["n"]
     w, l, day, pw = G["w"], G["l"], G["day"], G["pw"]
     ew, el = G["ew"], G["el"]
@@ -605,20 +876,7 @@ def _task_long():
     put("quality_win_rate_365", L.wdsum(good, lam, 365) / (L.dsum(ones, 365) + 3.0))
 
     # z-score of opponent Elo against the level group's pooled Elo over the previous 365 days
-    mean_m, sd_m, ok_m = np.zeros(n), np.ones(n), np.zeros(n, bool)
-    for g in range(4):
-        idx = np.flatnonzero(G["lg"] == g)
-        if not len(idx):
-            continue
-        dg = day[idx]
-        a, b = ew[idx] - 1500.0, el[idx] - 1500.0
-        c1, c2 = np.r_[0.0, np.cumsum(a + b)], np.r_[0.0, np.cumsum(a * a + b * b)]
-        lo_, hi_ = np.searchsorted(dg, dg - 365, side="left"), np.searchsorted(dg, dg, side="left")
-        cn = 2.0 * (hi_ - lo_)
-        mu_ = (c1[hi_] - c1[lo_]) / np.maximum(cn, 1)
-        mean_m[idx] = mu_ + 1500.0
-        sd_m[idx] = np.sqrt(np.maximum((c2[hi_] - c2[lo_]) / np.maximum(cn, 1) - mu_ ** 2, 1.0))
-        ok_m[idx] = cn >= 40
+    mean_m, sd_m, ok_m = zst
     zl = np.where(np.r_[ok_m, ok_m], np.clip((opp_u - np.r_[mean_m, mean_m]) / np.r_[sd_m, sd_m], -3, 3), 0.0)
     wm = (won - 0.5) * L.g(zl)
     num = den = np.zeros(len(pos))
@@ -686,13 +944,16 @@ def _task_sim():
 
 
 TASKS = [_task_g2, _task_co, _task_pr, _task_ts_lvl, _task_cs_layoff_mf, _task_long, _task_hind, _task_sim]
+# every input of the saved states (a saved state is used only while these values of its rows are unchanged)
+STATE_COLS = ["winner_id", "loser_id", "date", "order", "surface", "tourney_level", "score", "retired", "main"]
 # the pool gets the longest tasks first (ATP times with live 'need': cs 16s, pr 10, g2 9, long 8, co 7, ts 4, hind 1, sim 0)
 LONGEST_FIRST = [4, 2, 0, 5, 1, 3, 6, 7]
 
 
 def _run(i):
-    i0 = _G["i0"]
-    return {k: v[i0:] for k, v in TASKS[i]().items()}  # rows before i0 are not wanted: keep them out of the pipe
+    n, i0 = _G["n"], _G["i0"]
+    # rows before i0 are not wanted: keep them out of the pipe (the sequential tasks return only rows i0..n)
+    return {k: (v[i0:] if len(v) == n else v) for k, v in TASKS[i]().items()}
 
 
 def _excluded(M):
@@ -721,25 +982,30 @@ def _with_exclusions(M, run, need=None):
     return F
 
 
-def compute(M, workers=None, need=None):
+def compute(M, workers=None, need=None, state=None):
     """Features for every row of M; returns a float32 frame with M's index (rows may come in any order, 'order' decides).
     Self-play rows get NaN and exact twin rows take the features of their first copy, see _excluded.
     need: index labels of the rows whose features are wanted (e.g. live fixtures at the end of the table); earlier rows
-    then only feed the state, and the slow per-row parts of some tasks are skipped for them (their values are not valid)."""
+    then only feed the state, and the slow per-row parts of some tasks are skipped for them (their values are not valid).
+    state: file prefix for the saved state of the sequential tasks at the first wanted row (with need only); the next
+    call continues from it when the rows it has seen are still the first rows of the table."""
     o = M["order"].values
     if len(o) > 1 and not (np.diff(o) > 0).all():
-        return compute(M.iloc[np.argsort(o, kind="stable")], workers, need).loc[M.index]
+        return compute(M.iloc[np.argsort(o, kind="stable")], workers, need, state).loc[M.index]
     mask = None if need is None else M.index.isin(need)
-    return _with_exclusions(M, lambda X, m: _compute(X, workers, m), mask)
+    return _with_exclusions(M, lambda X, m: _compute(X, workers, m, state), mask)
 
 
-def _compute(M, workers=None, need=None):
+def _compute(M, workers=None, need=None, state=None):
     perm = np.argsort(M["order"].values, kind="stable")
     Ms = M.iloc[perm] if (perm != np.arange(len(M))).any() else M
     _G.clear()
     _G.update(_prep(Ms))
     # first row whose features are wanted: rows before it only update the state in the tasks that check i0
     _G["i0"] = 0 if need is None else (int(np.argmax(need[perm])) if need.any() else len(Ms))
+    if state and need is not None:
+        _G["state"] = state
+        _G["rowhash"] = pd.util.hash_pandas_object(Ms[[c for c in STATE_COLS if c in Ms]], index=False).values
     _std_elo(_G)
     workers = workers or int(os.environ.get("FX_WORKERS", min(3, os.cpu_count() or 1)))
     if workers > 1:

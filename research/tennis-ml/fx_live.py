@@ -29,8 +29,10 @@ COLS = {"ratings": ID + ["surface", "tourney_level", "score", "retired", "main"]
         "context": ID + ["tourney_id", "tourney_name", "surface", "tourney_level", "round", "rord", "score", "retired",
                          "winner_ioc", "loser_ioc", "winner_age", "loser_age"],
         "pbp": ID + [f"{s}_pbp_{c}" for s in ("w", "l") for c in ("svpt", "svwon", "SvGms", "holds", "bpFaced", "bpSaved", "tbpt", "tbwon")]}
-# one worker per module (ratings, the slowest, has its own pool inside); ratings and pbp get the new rows as 'need', so
-# their slow per-row parts run only for the new rows (the same values, checked against the full run)
+# one worker per module (ratings has its own pool inside). Every module gets the new rows as 'need': the per-player
+# parts run only over the histories of the new rows' players, and the sequential rating tasks continue from their
+# saved state (OUT/.fx_state/<tour>_*.pkl, kept at the end of the build) over the rows appended since, so a run reads
+# the history once instead of replaying every match (the same values as the full run, checked)
 GROUPS = [["ratings"], ["score"], ["context"], ["pbp"]]
 _M = {}
 
@@ -39,13 +41,15 @@ def _run(group):
     out = []
     for name in group:
         M = _M["M"][[c for c in COLS[name] if c in _M["M"]]]
-        out.append(fx_score.compute(M, _M["wta"]) if name == "score" else fx_context.compute(M, _M["wta"]) if name == "context"
-                   else MODS[name](M, need=_M["need"]))
+        need = _M["need"]
+        out.append(fx_score.compute(M, _M["wta"], need=need) if name == "score"
+                   else fx_context.compute(M, _M["wta"], need=need) if name == "context"
+                   else fx_ratings.compute(M, need=need, state=_M["state"]) if name == "ratings" else MODS[name](M, need=need))
     return [p.loc[_M["need"]] for p in out]  # only the new rows go back through the pipe
 
 
-def features(base, new, wta):
-    _M.update(M=pd.concat([base, new[[c for c in base.columns if c in new.columns]]]), wta=wta, need=new.index)
+def features(base, new, wta, state=None):
+    _M.update(M=pd.concat([base, new[[c for c in base.columns if c in new.columns]]]), wta=wta, need=new.index, state=state)
     # fork: the workers see the table without pickling it; fx_ratings starts its own pool inside its worker
     with ProcessPoolExecutor(len(GROUPS), mp_context=mp.get_context("fork")) as pool:
         parts = [p for g in pool.map(_run, GROUPS) for p in g]
@@ -66,6 +70,7 @@ if __name__ == "__main__":
     new = pd.read_parquet(NEW)
     assert not set(new.index) & set(base.index), "new rows reuse index values of the build"
     wta = TOUR == "wta"
-    X = pd.concat([features(base, new[new.batch == b], wta) for b in np.unique(new.batch)]).loc[new.index]
+    state = os.path.join(OUT, ".fx_state", TOUR)
+    X = pd.concat([features(base, new[new.batch == b], wta, state) for b in np.unique(new.batch)]).loc[new.index]
     X.to_parquet(DST)
     print(f"{TOUR}: {X.shape[1] // 2} new features per player for {len(X)} rows in {time.time() - t0:.0f}s -> {DST}", flush=True)

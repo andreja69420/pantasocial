@@ -237,28 +237,47 @@ def _excluded(M):
     return sp, (first != np.arange(len(M))) & ~sp, first
 
 
-def _with_exclusions(M, run):
-    """run(M_clean) -> frame; self-play rows get NaN, twins get the features of their first copy."""
+def _with_exclusions(M, run, need=None):
+    """run(M_clean, need_clean) -> frame; self-play rows get NaN, twins get the features of their first copy."""
     sp, twin, first = _excluded(M)
+    if need is not None:
+        need = need.copy()
+        need[first[need & twin]] = True  # a needed twin takes its first copy's features
     if not (sp | twin).any():
-        return run(M)
-    F = run(M[~(sp | twin)]).reindex(M.index)
+        return run(M, need)
+    F = run(M[~(sp | twin)], None if need is None else need[~(sp | twin)]).reindex(M.index)
     di = np.flatnonzero(twin)
     F.iloc[di] = F.iloc[first[di]].values
     return F
 
 
-def compute(M, women=None):
-    """Self-play rows get NaN and exact twin rows take the features of their first copy, see _excluded."""
+def compute(M, women=None, need=None):
+    """Self-play rows get NaN and exact twin rows take the features of their first copy, see _excluded.
+    need: index labels of the rows whose features are wanted. The Elo and the four fitted curves still run over the
+    whole table; every per-player window then runs over the matches of the wanted rows' players only (the windows of
+    those players are complete, so their values are the same); other rows get NaN."""
     if women is None:
         women = bool(M["tourney_level"].isin(["P", "PM", "I", "T1"]).any())
     o = M["order"].values
     if len(o) > 1 and not (np.diff(o) > 0).all():  # the Elo recursion walks the rows, so they must be in 'order'
-        return compute(M.iloc[np.argsort(o, kind="stable")], women).loc[M.index]
-    return _with_exclusions(M, lambda X: _compute(X, women))
+        return compute(M.iloc[np.argsort(o, kind="stable")], women, need).loc[M.index]
+    mask = None if need is None else M.index.isin(need)
+    return _with_exclusions(M, lambda X, m: _compute(X, women) if m is None else _compute_need(X, women, m), mask)
 
 
-def _compute(M, women=None):
+def _compute_need(M, women, need):
+    n = len(M)
+    glob = _compute(M, women, fits_only=True)
+    W, L = M["winner_id"].values, M["loser_id"].values
+    P = np.unique(np.r_[W[need], L[need]])
+    keep = np.isin(W, P) | np.isin(L, P)
+    k2 = np.r_[keep, keep]
+    sub = {k: (v[keep] if len(v) == n else v[k2]) for k, v in glob.items()}
+    return _compute(M[keep], women, glob=sub).reindex(M.index)
+
+
+def _compute(M, women=None, glob=None, fits_only=False):
+    """glob: the Elo and fitted curves of these rows from a run over the whole table; fits_only: return just those."""
     n = len(M)
     order = M["order"].values.astype(np.int64)
     if women is None:
@@ -274,7 +293,7 @@ def _compute(M, women=None):
     day = M["date"].values.astype("datetime64[D]").astype(np.int64)
     bo = M["best_of"].values
 
-    elo = elo_exp(wc, lc, ret)
+    elo = elo_exp(wc, lc, ret) if glob is None else glob["elo"]
     e_w = 1.0 / (1.0 + 10 ** ((elo[:, 1] - elo[:, 0]) / 400.0))
 
     codes, uniq = pd.factorize(M["score"].fillna("").astype(str).values)
@@ -325,9 +344,18 @@ def _compute(M, women=None):
     ct2 = ch2 | tour2
 
     lg = logit(e_row)
-    a1, b1 = causal_logit(lg, won, (s1c == 1) & (s1won == 0), yrL, "q1", 0.02)
-    a2, b2 = causal_logit(lg, won, (s1c == 1) & (s1won == 1), yrL, "q2", 0.02)
-    a3, b3 = causal_logit(lg, s1won, s1c == 1, yrL, "p1set", 0.02)
+    if glob is None:
+        a1, b1 = causal_logit(lg, won, (s1c == 1) & (s1won == 0), yrL, "q1", 0.02)
+        a2, b2 = causal_logit(lg, won, (s1c == 1) & (s1won == 1), yrL, "q2", 0.02)
+        a3, b3 = causal_logit(lg, s1won, s1c == 1, yrL, "p1set", 0.02)
+    else:
+        a1, b1, a2, b2, a3, b3 = (glob[k] for k in ("a1", "b1", "a2", "b2", "a3", "b3"))
+    if fits_only:
+        nm = GP.count(40)
+        w40 = sr(GP.sum(won, 40), nm, 0.5, 4)
+        g40 = sr(GP.sum(gw, 40), GP.sum(games, 40), 0.5, 40)
+        la, lb = causal_logit(g40.astype(float) - 0.5, w40, nm >= 5, yrL, "luck", 0.004)
+        return dict(elo=elo, a1=a1, b1=b1, a2=a2, b2=b2, a3=a3, b3=b3, la=la, lb=lb)
     q1, q2, p1s = sigmoid(a1 + b1 * lg), sigmoid(a2 + b2 * lg), sigmoid(a3 + b3 * lg)
 
     out = Out()
@@ -366,7 +394,7 @@ def _compute(M, women=None):
     nm = nwin(40)
     w40 = sr(GP.sum(won, 40), nm, 0.5, 4)
     g40 = sr(GP.sum(gw, 40), GP.sum(games, 40), 0.5, 40)
-    la, lb = causal_logit(g40.astype(float) - 0.5, w40, nm >= 5, yrL, "luck", 0.004)
+    la, lb = causal_logit(g40.astype(float) - 0.5, w40, nm >= 5, yrL, "luck", 0.004) if glob is None else (glob["la"], glob["lb"])
     out["luck_match_40"] = np.where(nm >= 5, w40 - sigmoid(la + lb * (g40 - 0.5)), 0.0)
     sset = sr(GP.sum(sw, 40), GP.sum(cs_all, 40), 0.5, 8)
     out["luck_set_40"] = np.where(nm >= 5, sset - np.clip(0.5 + 1.7 * (g40 - 0.5), 0, 1), 0.0)

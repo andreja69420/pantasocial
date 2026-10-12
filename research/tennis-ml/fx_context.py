@@ -512,28 +512,35 @@ def _excluded(M):
     return sp, (first != np.arange(len(M))) & ~sp, first
 
 
-def _with_exclusions(M, run):
-    """run(M_clean) -> frame; self-play rows get NaN, twins get the features of their first copy."""
+def _with_exclusions(M, run, need=None):
+    """run(M_clean, need_clean) -> frame; self-play rows get NaN, twins get the features of their first copy."""
     sp, twin, first = _excluded(M)
+    if need is not None:
+        need = need.copy()
+        need[first[need & twin]] = True  # a needed twin takes its first copy's features
     if not (sp | twin).any():
-        return run(M)
-    F = run(M[~(sp | twin)]).reindex(M.index)
+        return run(M, need)
+    F = run(M[~(sp | twin)], None if need is None else need[~(sp | twin)]).reindex(M.index)
     di = np.flatnonzero(twin)
     F.iloc[di] = F.iloc[first[di]].values
     return F
 
 
-def compute(M, wta=None):
-    """Self-play rows get NaN and exact twin rows take the features of their first copy, see _excluded."""
+def compute(M, wta=None, need=None):
+    """Self-play rows get NaN and exact twin rows take the features of their first copy, see _excluded.
+    need: index labels of the rows whose features are wanted. The match-level parts (event country, Elo, level-group
+    and event means) still run over the whole table; the per-player part then runs over the matches of the wanted
+    rows' players only (their windows are complete, so their values are the same); other rows get NaN."""
     if wta is None:
         wta = _is_wta(M)
     o = M["order"].values
     if len(o) > 1 and not (np.diff(o) > 0).all():
-        return compute(M.iloc[np.argsort(o, kind="stable")], wta).loc[M.index]
-    return _with_exclusions(M, lambda X: _compute(X, wta))
+        return compute(M.iloc[np.argsort(o, kind="stable")], wta, need).loc[M.index]
+    mask = None if need is None else M.index.isin(need)
+    return _with_exclusions(M, lambda X, m: _compute(X, wta, m), mask)
 
 
-def _compute(M, wta=None):
+def _compute(M, wta=None, need=None):
     n = len(M)
     N = 2 * n
     if wta is None:
@@ -642,13 +649,20 @@ def _compute(M, wta=None):
     rmain = np.where(isQ_m, np.inf, rord)
     min_main_prev = pd.Series(rmain).groupby(ev).cummin().groupby(ev).shift(1).values
 
-    out, perm = player_rows(n, wta, ordv, W, L, td_m, est_m, ev, rord, load_m, isQ_m, isF_m, surf_m, lvl_m, lg_m, cty_m, wio, lio, wa, la, e_w, elo, mean_a, std_a, lg_elo_mean, ev_mean, min_main_prev, indoor_m, phase, nk_codes)
+    args = [ordv, W, L, td_m, est_m, ev, rord, load_m, isQ_m, isF_m, surf_m, lvl_m, lg_m, cty_m, wio, lio, wa, la, e_w, elo,
+            mean_a, std_a, lg_elo_mean, ev_mean, min_main_prev, indoor_m, phase, nk_codes]
+    index = M.index
+    if need is not None:
+        P = np.unique(np.r_[W[need], L[need]])
+        keep = np.isin(W, P) | np.isin(L, P)
+        args, index, n, N = [a[keep] for a in args], M.index[keep], int(keep.sum()), 2 * int(keep.sum())
+    out, perm = player_rows(n, wta, *args)
     res = {}
     for k, v in out.items():
         full = np.empty(N, dtype=np.float32)
         full[perm] = v
         res[f"w_{k}"], res[f"l_{k}"] = full[:n], full[n:]
-    return pd.DataFrame(res, index=M.index)
+    return pd.DataFrame(res, index=index).reindex(M.index)
 
 
 if __name__ == "__main__":

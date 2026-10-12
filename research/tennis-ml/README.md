@@ -714,6 +714,25 @@ whole match table (865k men's rows) to keep ~100 fixture rows. Changes, each che
   ids, dates and bio, checked).
 - The two tours stay one after the other: in parallel they took 46 s instead of 52 s at 10.5 GB, not worth the memory.
 
+**Saved state instead of replaying the history (2026-10-12 night): `fx_live.py` 22 + 28 s -> 5 + 7 s.** Every pass
+used to walk all 680k / 865k matches again to reach today's state of every player. Now:
+- the sequential rating tasks (Glicko-2, TrueSkill and the Elo variants, cross-surface / layoff Elo and the matchup
+  factors, hindsight Elo, common opponents, daily PageRank) save their state at the end of the history per player id
+  (`out_live2/.fx_state/<tour>_*.pkl`, 41 MB) with a digest of the rows it has seen. The next pass checks that those
+  rows are still the first rows of the table, continues over the matches added since (usually 0-5) and computes the
+  fixtures; when the history changed anywhere else the digest does not match and the state is rebuilt from the first row
+- the per-player window features (long-format ratings part, score, context, pbp) run over the matches of the fixtures'
+  players only (for two ratings features also their opponents of the last 730 days / last 10 matches, whose own form
+  enters them); the parts that pool all players (standard Elo, the fitted curves of fx_score, event country, level-group
+  and event means) still run over the whole table
+- check (fixtures of the 22:43 pass + the last 2,000 history rows as wanted rows, against the old code over the whole
+  table): ratings / context / pbp equal in every cell for both tours, score equal for men and in 176,557 of 176,558
+  cells for women (one cell 9e-10 apart: sums over the whole table round differently than sums over the subset; the old
+  method itself moves by that much whenever a row is added). Whole `fx_live.py` output for the 53 + 82 fixtures: 0
+  cells differ, on the run that builds the state and on the run that reads it. The full-table mode (no `need`, used for
+  builds) gives the same values as before
+- the two tours in parallel are still not faster (14 s against 5 + 7 s): the four cores are busy with one tour
+
 ### Whole 2026 at the Serbian books' prices (`fs_odds.py --matches` region RS, `eval_levels2026.py --geo=RS`, `eval_books.py`)
 Flashscore's Serbian region lists bet365, MozzartBet, AdmiralBet, SoccerBet, Superbet.rs and 1xBet.rs. Their 2026
 prices (opening and closing, 48k matches, 4 scrapers at 37/s = ~150/s in total, 1-2 short 429 pauses each) were
