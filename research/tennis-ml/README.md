@@ -1019,6 +1019,20 @@ Plan rule, opening price, flat 1 unit (`eval_years.py`, full table `paper/eval_r
 - Caveat: the blend coefficients (0.44 / 0.64) were fitted on TennisExplorer Bet365 2014-2024, so 2024 is not fully
   independent for those two numbers; the model itself never saw the season it predicts.
 
+### Quarter Kelly from the current bank, at most 30,000 a bet (`kelly_cap.py`, `paper/kelly_cap30k.txt`)
+Plan rule without ITF at the Serbian books' opening prices, start 100,000 each season, stakes from the bank at the start
+of each day:
+
+| season | bets | end bank | largest drop | lowest bank | bets at the 30,000 cap |
+|---|---|---|---|---|---|
+| 2024 (3 books) | 906 | 4,216,123 | 181,085 (15.5%) | 100,000 | 387 |
+| 2025 (5 books) | 1,922 | 5,884,773 | 279,932 (32.3%) | 100,000 | 1,027 |
+| 2026 to 10-10 (6 books) | 1,856 | 7,040,916 | 422,700 (15.8%) | 93,992 | 1,250 |
+
+The cap is reached once the bank passes about 1-1.5 million (median quarter-Kelly stake 2.45% of the bank); from then on
+it is a flat 30,000 a bet, so the end bank is roughly 30,000 x bets x ROI. Book limits on winning accounts and whether
+the opening price could be taken at 30,000 are not modelled.
+
 ## Leak check of the 2026 test (model r6_v3, six Serbian books)
 
 | 2026 matches | model picks the winner | market favourite wins | log-loss model | log-loss market |
