@@ -19,6 +19,7 @@ PAPER = os.path.join(D, "paper")
 PROP, LEDGER, SKIPPED = (os.path.join(PAPER, f) for f in ("proposals.csv", "ledger.csv", "skipped.csv"))
 LIVE_OUT = os.environ.get("LIVE_OUT", "out_live2")
 GEO = os.environ.get("GEO", "RS")
+BOOKS = os.environ.get("BOOKS", "bet365,Mozzartbetrs,Admiralbet.rs,SoccerBet,Superbet.rs,1xBet.rs").split(",")
 now = pd.Timestamp.now("UTC").tz_localize(None)
 P = pd.read_csv(PROP) if os.path.exists(PROP) else pd.DataFrame(columns=["fs_mid"])
 
@@ -52,6 +53,13 @@ if CMD in ("ok", "no"):
     if CMD == "ok":
         L = pd.read_csv(LEDGER) if os.path.exists(LEDGER) else pd.DataFrame()
         add = row.drop(columns=["id_home", "id_away"]).assign(logged_at=now, review=" ".join(sys.argv[4:]) or "ok")
+        # every book's current price for our side right away, so the "Sve kvote" sheet is not empty until the next pass
+        r0 = add.iloc[0]
+        fx = pd.read_parquet(os.path.join(D, "fs_raw", f"{r0.tour}_fs_fixture_odds_{GEO}.parquet"))
+        fx = fx[fx.fs_mid == mid]
+        for b in fx.itertuples():
+            if b.book in BOOKS:
+                add[f"px_{b.book}"] = b.cur_h if r0.side == "home" else b.cur_a
         L = pd.concat([L, add], ignore_index=True)
         L.to_csv(LEDGER, index=False)
         publish()
