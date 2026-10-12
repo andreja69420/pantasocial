@@ -1,9 +1,12 @@
 """Shared Flashscore helpers: feed parsing, player-name keys, Sackmann-format rows from feed records."""
 import glob
+import os
+import pickle
 import re
 import unicodedata
 import zlib
 
+import numpy as np
 import pandas as pd
 
 UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36",
@@ -87,9 +90,13 @@ class NameIds(dict):
         self.last, self.memo = {}, {}
 
     def add(self, keys, idv, dates):
-        for k, i, d in zip(keys, idv, dates):
-            self[k] = i
-            self.last[i] = max(self.last.get(i, 0), d if d == d else 0)
+        """the same as setting self[k] = i row by row (the last id of a key wins) and keeping each id's latest date, vectorised"""
+        f = pd.DataFrame({"k": np.asarray(keys, dtype=object), "i": np.asarray(idv),
+                          "d": pd.to_numeric(pd.Series(np.asarray(dates)), errors="coerce")})
+        last = f.drop_duplicates("k", keep="last")
+        self.update(zip(last.k, last.i))
+        for i, d in f.groupby("i", dropna=False, sort=False).d.max().fillna(0).items():
+            self.last[i] = max(self.last.get(i, 0), d)
 
     def _index(self):
         self._tok, self._names = {}, {}
@@ -145,15 +152,31 @@ class NameIds(dict):
 
 
 def sackmann_ids_bio(raw, tour, extra=()):
-    """name key -> player id, and each player's latest static data (hand, height, country, age at that date)."""
+    """name key -> player id, and each player's latest static data (hand, height, country, age at that date).
+    Without extra frames the result is cached next to the files (rebuilt when any file's name, size or time changes)."""
     ids, bio = NameIds(), []
     files = [f for f in sorted(glob.glob(f"{raw}/sackmann_raw/{tour}__{tour}_matches_*.csv")) if "_fs_" not in f and "_bx_" not in f]
+    cache = os.path.join(raw, f".ids_bio_{tour}.pkl")
+    sig = [(os.path.basename(f), os.stat(f).st_size, os.stat(f).st_mtime_ns) for f in files]
+    if not extra and os.path.exists(cache):
+        with open(cache, "rb") as fh:
+            c = pickle.load(fh)
+        if c["sig"] == sig:
+            ids.update(c["ids"])
+            ids.last.update(c["last"])
+            return ids, c["bio"]
     for d in [pd.read_csv(f, low_memory=False) for f in files] + list(extra):
         for c in ("winner", "loser"):
-            ids.add(d[f"{c}_name"].map(key), d[f"{c}_id"], pd.to_numeric(d.tourney_date, errors="coerce").values)
+            ids.add(d[f"{c}_name"].map({n: key(n) for n in d[f"{c}_name"].unique()}), d[f"{c}_id"],
+                    pd.to_numeric(d.tourney_date, errors="coerce").values)
             bio.append(pd.DataFrame({"id": d[f"{c}_id"], "date": pd.to_numeric(d.tourney_date, errors="coerce"),
                                      "hand": d[f"{c}_hand"], "ht": d[f"{c}_ht"], "ioc": d[f"{c}_ioc"], "age": d[f"{c}_age"]}))
-    return ids, pd.concat(bio).dropna(subset=["id", "date"]).sort_values("date").groupby("id").last()
+    bio = pd.concat(bio).dropna(subset=["id", "date"]).sort_values("date").groupby("id").last()
+    if not extra:
+        with open(cache + ".tmp", "wb") as fh:
+            pickle.dump({"sig": sig, "ids": dict(ids), "last": ids.last, "bio": bio}, fh)
+        os.replace(cache + ".tmp", cache)
+    return ids, bio
 
 
 def add_bio(O, BIO, day_col="date"):

@@ -29,9 +29,9 @@ COLS = {"ratings": ID + ["surface", "tourney_level", "score", "retired", "main"]
         "context": ID + ["tourney_id", "tourney_name", "surface", "tourney_level", "round", "rord", "score", "retired",
                          "winner_ioc", "loser_ioc", "winner_age", "loser_age"],
         "pbp": ID + [f"{s}_pbp_{c}" for s in ("w", "l") for c in ("svpt", "svwon", "SvGms", "holds", "bpFaced", "bpSaved", "tbpt", "tbwon")]}
-# two worker processes: ratings (the slowest, with its own pool inside) and the other three one after another, so at most
-# two modules hold their working memory at a time
-GROUPS = [["ratings"], ["score", "context", "pbp"]]
+# one worker per module (ratings, the slowest, has its own pool inside); ratings and pbp get the new rows as 'need', so
+# their slow per-row parts run only for the new rows (the same values, checked against the full run)
+GROUPS = [["ratings"], ["score"], ["context"], ["pbp"]]
 _M = {}
 
 
@@ -40,12 +40,12 @@ def _run(group):
     for name in group:
         M = _M["M"][[c for c in COLS[name] if c in _M["M"]]]
         out.append(fx_score.compute(M, _M["wta"]) if name == "score" else fx_context.compute(M, _M["wta"]) if name == "context"
-                   else MODS[name](M))
-    return out
+                   else MODS[name](M, need=_M["need"]))
+    return [p.loc[_M["need"]] for p in out]  # only the new rows go back through the pipe
 
 
 def features(base, new, wta):
-    _M.update(M=pd.concat([base, new[[c for c in base.columns if c in new.columns]]]), wta=wta)
+    _M.update(M=pd.concat([base, new[[c for c in base.columns if c in new.columns]]]), wta=wta, need=new.index)
     # fork: the workers see the table without pickling it; fx_ratings starts its own pool inside its worker
     with ProcessPoolExecutor(len(GROUPS), mp_context=mp.get_context("fork")) as pool:
         parts = [p for g in pool.map(_run, GROUPS) for p in g]

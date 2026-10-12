@@ -376,11 +376,12 @@ def _task_hind():
     Ec = np.full(nP, 1500.0)
     ho, ht = [[] for _ in range(nP)], [[] for _ in range(nP)]
     H = np.full((n, 4), np.nan)
+    i0 = G["i0"]
     for i in range(n):
         a, b = w[i], l[i]
         for j, p in ((0, a), (2, b)):
             h = ho[p]
-            if h:
+            if h and i >= i0:
                 dif = Ec[h[-30:]] - np.array(ht[p][-30:])
                 H[i, j] = dif.mean()
                 H[i, j + 1] = dif[-10:].mean()
@@ -412,10 +413,11 @@ def _task_co():
                 del b[o]
         return b
 
+    i0 = G["i0"]
     for i in range(n):
         a, b, d = w[i], l[i], day[i]
         lim = d - 730
-        A, B = window(a, lim), window(b, lim)
+        A, B = (window(a, lim), window(b, lim)) if i >= i0 else (None, None)
         if A and B:
             small, big = (A, B) if len(A) < len(B) else (B, A)
             common = [c for c in small if c in big]
@@ -673,7 +675,7 @@ def _task_sim():
     opp = L.g(np.r_[el, ew]); res = L.g(np.r_[1 - pw, -(1 - pw)])
     lo = L.lo(730)
     val = np.zeros(len(opp))
-    for q in np.flatnonzero(L.ar - lo >= 5):
+    for q in np.flatnonzero((L.ar - lo >= 5) & (L.g(mi) >= G["i0"])):
         s = slice(lo[q], q)
         m = np.abs(opp[s] - opp[q]) <= 100.0
         c = m.sum()
@@ -684,10 +686,13 @@ def _task_sim():
 
 
 TASKS = [_task_g2, _task_co, _task_pr, _task_ts_lvl, _task_cs_layoff_mf, _task_long, _task_hind, _task_sim]
+# the pool gets the longest tasks first (ATP times with live 'need': cs 16s, pr 10, g2 9, long 8, co 7, ts 4, hind 1, sim 0)
+LONGEST_FIRST = [4, 2, 0, 5, 1, 3, 6, 7]
 
 
 def _run(i):
-    return TASKS[i]()
+    i0 = _G["i0"]
+    return {k: v[i0:] for k, v in TASKS[i]().items()}  # rows before i0 are not wanted: keep them out of the pipe
 
 
 def _excluded(M):
@@ -702,42 +707,52 @@ def _excluded(M):
     return sp, (first != np.arange(len(M))) & ~sp, first
 
 
-def _with_exclusions(M, run):
-    """run(M_clean) -> frame; self-play rows get NaN, twins get the features of their first copy."""
+def _with_exclusions(M, run, need=None):
+    """run(M_clean, need_clean) -> frame; self-play rows get NaN, twins get the features of their first copy."""
     sp, twin, first = _excluded(M)
+    if need is not None:
+        need = need.copy()
+        need[first[need & twin]] = True  # a needed twin takes its first copy's features
     if not (sp | twin).any():
-        return run(M)
-    F = run(M[~(sp | twin)]).reindex(M.index)
+        return run(M, need)
+    F = run(M[~(sp | twin)], None if need is None else need[~(sp | twin)]).reindex(M.index)
     di = np.flatnonzero(twin)
     F.iloc[di] = F.iloc[first[di]].values
     return F
 
 
-def compute(M, workers=None):
+def compute(M, workers=None, need=None):
     """Features for every row of M; returns a float32 frame with M's index (rows may come in any order, 'order' decides).
-    Self-play rows get NaN and exact twin rows take the features of their first copy, see _excluded."""
+    Self-play rows get NaN and exact twin rows take the features of their first copy, see _excluded.
+    need: index labels of the rows whose features are wanted (e.g. live fixtures at the end of the table); earlier rows
+    then only feed the state, and the slow per-row parts of some tasks are skipped for them (their values are not valid)."""
     o = M["order"].values
     if len(o) > 1 and not (np.diff(o) > 0).all():
-        return compute(M.iloc[np.argsort(o, kind="stable")], workers).loc[M.index]
-    return _with_exclusions(M, lambda X: _compute(X, workers))
+        return compute(M.iloc[np.argsort(o, kind="stable")], workers, need).loc[M.index]
+    mask = None if need is None else M.index.isin(need)
+    return _with_exclusions(M, lambda X, m: _compute(X, workers, m), mask)
 
 
-def _compute(M, workers=None):
+def _compute(M, workers=None, need=None):
     perm = np.argsort(M["order"].values, kind="stable")
     Ms = M.iloc[perm] if (perm != np.arange(len(M))).any() else M
     _G.clear()
     _G.update(_prep(Ms))
+    # first row whose features are wanted: rows before it only update the state in the tasks that check i0
+    _G["i0"] = 0 if need is None else (int(np.argmax(need[perm])) if need.any() else len(Ms))
     _std_elo(_G)
     workers = workers or int(os.environ.get("FX_WORKERS", min(3, os.cpu_count() or 1)))
     if workers > 1:
         with ProcessPoolExecutor(workers, mp_context=mp.get_context("fork")) as pool:
-            parts = list(pool.map(_run, range(len(TASKS))))
+            done = dict(zip(LONGEST_FIRST, pool.map(_run, LONGEST_FIRST)))
+        parts = [done[i] for i in range(len(TASKS))]
     else:
         parts = [_run(i) for i in range(len(TASKS))]
     cols = {}
     for p in parts:
         cols.update(p)
-    out = pd.DataFrame(cols, index=Ms.index)
+    i0 = _G["i0"]
+    out = pd.DataFrame(cols, index=Ms.index[i0:]).reindex(Ms.index) if i0 else pd.DataFrame(cols, index=Ms.index)
     return out.loc[M.index] if Ms is not M else out
 
 

@@ -75,9 +75,11 @@ if not os.environ.get("SKIP_UPDATE"):
 for name, j in jobs.items():
     out = j.communicate()[0].strip()
     print(f"[{name}] " + (out.splitlines()[-1] if j.returncode == 0 and name != "update" else out[-800:]), flush=True)
+print(f"[time] odds and update {time.time() - t0:.0f}s", flush=True)
 ledger = pd.read_csv(LEDGER) if os.path.exists(LEDGER) else pd.DataFrame()
 new_bets, seen, checks = [], [], {}
 for tour in ("wta", "atp"):
+    ts = time.time()
     model_path = os.path.join(D, MODELS, f"{tour}_final.pkl")
     if not os.path.exists(model_path):
         print(f"{tour}: no production model yet ({model_path})")
@@ -94,13 +96,13 @@ for tour in ("wta", "atp"):
     O = O[O.start > time.time()]  # not started
     base = pd.read_parquet(os.path.join(D, LIVE_OUT, f"{tour}_matches.parquet"))
     ids = NameIds()
-    names = pd.concat([pd.DataFrame({"k": base[f"{c}_name"].map(key), "id": base[f"{c}_id"], "d": base.tourney_date.astype(float)})
+    nk = {c: base[f"{c}_name"].map({n: key(n) for n in base[f"{c}_name"].unique()}) for c in ("winner", "loser")}
+    names = pd.concat([pd.DataFrame({"k": nk[c], "id": base[f"{c}_id"], "d": base.tourney_date.astype(float)})
                        for c in ("winner", "loser")])
     # a later result can give a known player a synthetic id (>= 9e8); the real id with the full history must win
     names = names.assign(real=names.id < 9e8).sort_values(["real", "d"])
     ids.add(names.k, names.id, names.d.values)
-    hist = pd.concat([pd.DataFrame({"id": base[f"{c}_id"], "date": base.date, "name": base[f"{c}_name"].map(key)})
-                      for c in ("winner", "loser")])
+    hist = pd.concat([pd.DataFrame({"id": base[f"{c}_id"], "date": base.date, "name": nk[c]}) for c in ("winner", "loser")])
     n_hist, last_hist = hist.groupby("id").size(), hist.groupby("id").date.max()
     id_names = hist.groupby("id").name.agg(set)
     bio = pd.concat([pd.DataFrame({"id": base[f"{c}_id"], "date": base.date, "hand": base[f"{c}_hand"], "ht": base[f"{c}_ht"],
@@ -145,12 +147,14 @@ for tour in ("wta", "atp"):
     fout = os.path.join(PAPER, f"{tour}_fixture_features.parquet")
     fnew = os.path.join(PAPER, f"{tour}_fixture_rows.parquet")
     env = dict(os.environ, DRY_OUT=fout, DRY_MATCHES=fnew)
+    tp = time.time()
     r = subprocess.run([sys.executable, os.path.join(HERE, "features_incr.py"), os.path.join(D, "live_raw"), os.path.join(D, LIVE_OUT),
                         tour, fcsv], env=env, capture_output=True, text=True)
     if r.returncode:
         print(f"{tour}: features_incr failed\n{r.stderr[-1500:]}")
         continue
     Fx = pd.read_parquet(fout)
+    tf = time.time()
     if NX:
         fnx = os.path.join(PAPER, f"{tour}_fixture_nx.parquet")
         r = subprocess.run([sys.executable, os.path.join(HERE, "fx_live.py"), os.path.join(D, LIVE_OUT), tour, fnew, fnx],
@@ -170,6 +174,7 @@ for tour in ("wta", "atp"):
                  M["models"]["logit"].predict_proba(np.nan_to_num(lg(X[M["pcols"]].values.astype(float))))[:, 1]], axis=0)
     p = M["cal"].predict_proba(lg(p)[:, None])[:, 1]
     p_home = pd.Series(np.where(flip, 1 - p, p), index=Fx.fs_mid.values)
+    print(f"[time] {tour}: fixtures {tp - ts:.0f}s, features_incr {tf - tp:.0f}s, fx_live and model {time.time() - tf:.0f}s", flush=True)
     for r in O[O.fs_mid.isin(p_home.index)].itertuples():
         for side, o, oo, cur, cuo in (("home", r.open_h, r.open_a, r.cur_h, r.cur_a), ("away", r.open_a, r.open_h, r.cur_a, r.cur_h)):
             if not (cur > 1 and cuo > 1):

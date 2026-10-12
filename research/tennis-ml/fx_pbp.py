@@ -30,7 +30,9 @@ def last_k(gcode, order, has, v, k):
     return out
 
 
-def compute(M):
+def compute(M, need=None):
+    """need: index labels of the rows whose features are wanted; the windows then run over the histories of their players
+    only (the population means stay over all rows), other rows get NaN."""
     n = len(M)
     num = lambda c: pd.to_numeric(M[c], errors="coerce").values.astype(float) if c in M else np.full(n, np.nan)
     pc, _ = pd.factorize(np.concatenate([M.winner_id.astype(str).values, M.loser_id.astype(str).values]))
@@ -56,8 +58,18 @@ def compute(M):
     hasT = hasP & (np.nan_to_num(L["tbpt"]) > 0)
     flag = {"svpt": hasP, "svwon": hasP, "rtpt": hasP, "rtwon": hasP, "tbpt": hasT, "tbwon": hasT}
 
+    keep = slice(None)
+    if need is not None:
+        m = M.index.isin(need)
+        keep = np.isin(pc, pc[np.r_[m, m]])  # every row of the players of the wanted rows
+
+    def last_k_(has, v, k):
+        out = np.full(2 * n, np.nan)
+        out[keep] = last_k(pc[keep], order[keep], has[keep], v[keep], k)
+        return out
+
     def sums(c, k):
-        return last_k(pc, order, flag.get(c, hasG), np.nan_to_num(L[c]), k)
+        return last_k_(flag.get(c, hasG), np.nan_to_num(L[c]), k)
 
     def sr(num_c, den_c, k, m):
         h = flag.get(num_c, hasG) & early
@@ -77,8 +89,8 @@ def compute(M):
         F[f"pbp_spw_rpw_{k}"] = F[f"pbp_sv_won_{k}"] + F[f"pbp_rt_won_{k}"]
     F["pbp_tb_pt_won_30"], _ = sr("tbwon", "tbpt", 30, 20)
     F["pbp_bp_faced_per_game_30"], _ = sr("bpf", "svg", 30, 10)
-    F["pbp_n_30"] = last_k(pc, order, hasG, np.ones(2 * n), 30)
-    F["pbp_pts_n_30"] = last_k(pc, order, hasP, np.ones(2 * n), 30)
+    F["pbp_n_30"] = last_k_(hasG, np.ones(2 * n), 30)
+    F["pbp_pts_n_30"] = last_k_(hasP, np.ones(2 * n), 30)
     out = pd.DataFrame({f"{p}_{k}": v[s] for k, v in F.items() for p, s in (("w", slice(0, n)), ("l", slice(n, 2 * n)))},
                        index=M.index)
     return out.astype(np.float32)

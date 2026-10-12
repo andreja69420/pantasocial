@@ -696,6 +696,24 @@ defaults `GEO=RS`, `BOOKS=bet365,Mozzartbetrs,Admiralbet.rs,SoccerBet,Superbet.r
 pending bet the ledger keeps each book's latest price for our side (`px_<book>`); the Excel sheet "Sve kvote" shows
 them with the best one in green. First run: 11 bets (7 WTA 125, 4 men's Challenger).
 
+**Faster pass (2026-10-12 evening): 142 s -> ~90 s, same numbers.** Timed per stage (`[time]` lines in the loop log):
+the fixture features took 84 s of the 142, nearly all of it in `fx_live.py`, which ran the four modules over the
+whole match table (865k men's rows) to keep ~100 fixture rows. Changes, each checked to give exactly the same values:
+- `fx_ratings.py` / `fx_pbp.py` take `need` (the wanted rows). In ratings every row still updates the state, but the
+  slow per-row outputs of three tasks are only computed from the first wanted row on: common opponents 42 s -> 7 s,
+  hindsight Elo 17 -> 1 s, similar-opponent residual 11 -> 0.3 s; pbp runs its windows over the histories of the
+  fixtures' players only (12 -> 4 s; the population means stay over all rows). Tasks go to the pool longest first,
+  the workers send back only the wanted rows, and `fx_live.py` runs the four modules in four processes (was two).
+  `fx_live.py`: women 35 -> 23 s, men 49 -> 29 s (peak memory 8.5 GB). Check: the 2026-10-12 fixtures (53 + 84 rows,
+  all 316 columns) and the last 3,000 rows of the table equal the old full run (largest difference 0); the old code
+  run on the test pass's own rows gives the same file.
+- `fs_common.NameIds.add` is vectorised (same result: the last id of a key wins, each id's latest date) and names
+  are keyed once per unique name: the fixture preparation 9-10 s -> 4 s per tour.
+- `sackmann_ids_bio` (the results update reads 109 Sackmann files per tour) caches its result in
+  `live_raw/.ids_bio_<tour>.pkl`, rebuilt when any file's name, size or time changes: ~9 s -> 0.01 s per tour (same
+  ids, dates and bio, checked).
+- The two tours stay one after the other: in parallel they took 46 s instead of 52 s at 10.5 GB, not worth the memory.
+
 ### Whole 2026 at the Serbian books' prices (`fs_odds.py --matches` region RS, `eval_levels2026.py --geo=RS`, `eval_books.py`)
 Flashscore's Serbian region lists bet365, MozzartBet, AdmiralBet, SoccerBet, Superbet.rs and 1xBet.rs. Their 2026
 prices (opening and closing, 48k matches, 4 scrapers at 37/s = ~150/s in total, 1-2 short 429 pauses each) were
