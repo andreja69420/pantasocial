@@ -732,6 +732,16 @@ used to walk all 680k / 865k matches again to reach today's state of every playe
   cells differ, on the run that builds the state and on the run that reads it. The full-table mode (no `need`, used for
   builds) gives the same values as before
 - the two tours in parallel are still not faster (14 s against 5 + 7 s): the four cores are busy with one tour
+  (the whole pass with the tours in parallel: 38 s against 40 s one after the other, so they stay one after the other)
+
+**Odds fetch 162 s -> 7 s (2026-10-12 23:30).** One ITF tournament page (`m15-maringa-3/fixtures/`) answered with a
+redirect to itself; `Limiter.get` counted the HTTP 307 as a server error, paused 30 s and retried, five times, and the
+pause also held every odds request behind it (~15% of passes had a 33 s odds step, this evening every pass). A 3xx that
+does not resolve is now handled like 404 (no page, no pause, no retry); pauses stay for 429 / 5xx / connection errors.
+Same matches and prices (169 men's matches, 662 book prices).
+
+**Pass now ~40 s without new results** (odds 7 s, the two tours 5 + 4 + 7 s and 4 + 5 + 8 s for fixture rows,
+`features_incr`, `fx_live` + model), was 142 s at the start of the evening.
 
 ### Whole 2026 at the Serbian books' prices (`fs_odds.py --matches` region RS, `eval_levels2026.py --geo=RS`, `eval_books.py`)
 Flashscore's Serbian region lists bet365, MozzartBet, AdmiralBet, SoccerBet, Superbet.rs and 1xBet.rs. Their 2026

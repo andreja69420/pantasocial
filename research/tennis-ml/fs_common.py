@@ -258,7 +258,8 @@ class Limiter:
             print(f"  ! error ({why}) -> {self.rate:.0f}/s, pause {self.PAUSE}s", flush=True)
 
     def get(self, url, headers=None, timeout=30):
-        """Body of url ('' for 400/404 or after 5 failed tries). 408/5xx = backend gave up on one slow query: retry, no pause."""
+        """Body of url ('' for 400/404, an endless redirect or after 5 failed tries). 408/5xx = backend gave up on one slow
+        query: retry, no pause."""
         import time
         import urllib.error
         import urllib.request
@@ -271,7 +272,9 @@ class Limiter:
                 (self.slow if time.time() - t > 5 else self.ok)()
                 return body
             except urllib.error.HTTPError as e:
-                if e.code in (400, 404):
+                # 400/404, and a redirect that never ends (a moved tournament page that points to itself): a page that
+                # is not there, not a server in trouble, so no pause and no retry
+                if e.code in (400, 404) or 300 <= e.code < 400:
                     self.ok()
                     return ""
                 if e.code in (408, 500, 502, 503, 504):
