@@ -1085,6 +1085,14 @@ Jun 550,299, Jul 184,183, Aug 192,441, Sep 284,868, Oct 1-10 98,898. Every full 
 lowest point inside a month 88,379 (April). With a fixed stake base of 100,000 (no growth inside the month) the
 monthly profit is +52k to +206k.
 
+Worst cases, each 2026 month from 300,000 (same staking; `paper/worst_case_300k.txt`, 4,000 simulated months each, the
+real bets and stakes, only the winners drawn): A = the true chance is the blend P the stakes assume, B = the model knows
+half of what it thinks (P halfway between the book's fair price and the blend), C = the model knows nothing (true chance
+= the book's fair price). Actual 2026 month profits: +152k .. +1,069k, every full month positive.
+A: average +102k .. +766k a month, worst 5% of months -55k .. +234k, 0-17% of months in the red.
+B: average +15k .. +235k, worst 5% -104k .. -138k, 21-48% of months in the red.
+C: average -54k .. -117k, worst 5% -151k .. -258k (bank down to 40k in a 293-bet month), 80-85% of months in the red.
+
 ## Leak check of the 2026 test (model r6_v3, six Serbian books)
 
 | 2026 matches | model picks the winner | market favourite wins | log-loss model | log-loss market |
