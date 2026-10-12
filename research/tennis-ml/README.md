@@ -993,6 +993,28 @@ betting ROI is unchanged. This is a small effect, not an established improvement
 3. For the blend: log both P versions (best-price Shin and consensus mean Shin) in the paper ledger; this needs the opening
    prices of all books at bet time. Adopt the consensus P only together with EV>10% if flat-stake ROI matters, or for Kelly sizing.
 
+## Leak check of the 2026 test (model r6_v3, six Serbian books)
+
+| 2026 matches | model picks the winner | market favourite wins | log-loss model | log-loss market |
+|---|---|---|---|---|
+| no ITF, opening price (16,209) | 68.4% | 68.6% | 0.5842 | 0.5854 |
+| no ITF, closing price (16,208) | 68.4% | 69.1% | 0.5842 | **0.5762** |
+| ITF, opening price (26,719) | 71.9% | 72.9% | 0.5460 | 0.5338 |
+| ITF, closing price (26,693) | 71.9% | 73.0% | 0.5464 | 0.5291 |
+
+- The model is not better than the market at picking winners and is clearly worse than the closing price. A model with
+  result information would beat every price by a wide margin (train3.py's own alarm fires at +3 points of accuracy).
+  The edge is consistent with soft opening prices that the market later corrects (ROI at the closing price +6%, with ITF -2%).
+- Feature check: for every winner/loser feature pair, the share of 2026 matches where the winner's value is on the
+  usual side. The highest are rating features at about 0.69-0.70, the same level as the model's accuracy. Three
+  context flags are higher: `ctx_first_at_level` 0.83 / 0.74 on the ~4% of matches where the flags differ,
+  `ctx_bye_proxy` 0.79 and `ctx_no_prev_event` 0.72. They are computed only from the player's earlier matches and
+  the earlier rounds of the event (`Seg.cnt` counts rows strictly before, `min_main_prev` is shifted by one), so they
+  carry no result: a debut at a level, or a first-round bye (top seed), is known before the match.
+- Not covered by this check, and the reason the live paper ledger is the real test: whether the best opening price of
+  six books could have been taken at a real stake, and the choice of the rule (no ITF, six books, odds <= 5, EV > 5%),
+  which was made after looking at 2026.
+
 ## Calibration chart on test data (`calib_plot.py` → `paper/kalibracija.png`)
 
 Matches grouped by predicted win probability (5-point bins), predicted mean vs. actual win share, both sides of every
