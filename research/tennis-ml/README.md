@@ -1033,6 +1033,18 @@ The cap is reached once the bank passes about 1-1.5 million (median quarter-Kell
 it is a flat 30,000 a bet, so the end bank is roughly 30,000 x bets x ROI. Book limits on winning accounts and whether
 the opening price could be taken at 30,000 are not modelled.
 
+Other start / cap (`paper/kelly_cap50k.txt`), end bank per season (each from its start) and 2024-2026 as one bank:
+
+| start | cap | 2024 | 2025 | 2026 to 10-10 | 2024-2026 chained | largest drop % (2024 / 2025 / 2026) |
+|---|---|---|---|---|---|---|
+| 100,000 | 30,000 | 4,216,123 | 5,884,773 | 7,040,916 | 21,728,785 | 15.5 / 32.3 / 15.8 |
+| 100,000 | 50,000 | 6,241,543 | 8,832,757 | 10,352,172 | 35,423,398 | 16.3 / 34.5 / 15.8 |
+| 50,000 | 30,000 | 3,543,837 | 5,103,589 | 5,920,593 | 21,055,555 | 16.9 / 34.7 / 15.8 |
+| 50,000 | 50,000 | 4,683,432 | 7,492,651 | 8,755,643 | 33,895,103 | 19.5 / 34.7 / 15.8 |
+
+A lower start only delays reaching the cap by a few weeks; the cap decides the end bank. Largest drop in dinars with a
+50,000 cap: 298k / 448k / 705k.
+
 ## Leak check of the 2026 test (model r6_v3, six Serbian books)
 
 | 2026 matches | model picks the winner | market favourite wins | log-loss model | log-loss market |
