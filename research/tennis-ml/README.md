@@ -631,6 +631,12 @@ Every 30 minutes (`paper_loop.sh`), in parallel where nothing depends on anythin
    closing price so far (CLV); finished matches are settled from the daily results feeds (walkover / cancelled = void).
 Ledger: `paper/ledger.csv` (copied into the repo by the loop). One rule: EV>5% odds<=5 (until 2026-10-11 four rules
 were logged in parallel: EV>15% odds<=5, EV>10% odds<=2, EV>5% odds<=5, EV>5% odds<=2).
+Player ids in the live loop (2026-10-12): two paper bets came from a split player history and were removed before
+kick-off. Li Ann - Osorio (model 96%, market 53%): one recent Flashscore result had given Osorio a synthetic id that
+overwrote her real one (409 matches); real ids now always win over synthetic ones. Cakarevic - Serban: "Serban Raluca
+Georgiana" was not matched to "Raluka Serban" (567 matches), so the model saw 11 matches; the loop now skips any match
+where a player has only a synthetic id (`SKIP_SYNTHETIC=1`, 3 of 59 WTA fixtures, 0 ATP that day).
+
 Bank rule for the Excel sheet (`ledger_xlsx.py` → `paper/opklade.xlsx`): start 100,000 dinars, stake = quarter Kelly
 × the bank at the moment the bet is logged, fixed from then on. The bank moves only when a bet is settled (the loop
 stores the time it first saw the result, `settled_at`), and the new bank applies only to bets logged after that.

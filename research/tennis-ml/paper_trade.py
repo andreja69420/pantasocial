@@ -88,8 +88,11 @@ for tour in ("wta", "atp"):
     O = O[O.start > time.time()]  # not started
     base = pd.read_parquet(os.path.join(D, LIVE_OUT, f"{tour}_matches.parquet"))
     ids = NameIds()
-    for c in ("winner", "loser"):
-        ids.add(base[f"{c}_name"].map(key), base[f"{c}_id"], base.tourney_date.astype(float).values)
+    names = pd.concat([pd.DataFrame({"k": base[f"{c}_name"].map(key), "id": base[f"{c}_id"], "d": base.tourney_date.astype(float)})
+                       for c in ("winner", "loser")])
+    # a later result can give a known player a synthetic id (>= 9e8); the real id with the full history must win
+    names = names.assign(real=names.id < 9e8).sort_values(["real", "d"])
+    ids.add(names.k, names.id, names.d.values)
     bio = pd.concat([pd.DataFrame({"id": base[f"{c}_id"], "date": base.date, "hand": base[f"{c}_hand"], "ht": base[f"{c}_ht"],
                                    "ioc": base[f"{c}_ioc"], "age": base[f"{c}_age"]}) for c in ("winner", "loser")])
     bio = bio.dropna(subset=["id"]).sort_values("date").groupby("id").last()
