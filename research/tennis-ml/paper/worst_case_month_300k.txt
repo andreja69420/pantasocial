@@ -1,0 +1,15 @@
+2026, svaki mesec od 300.000; dobit u mesecu; 1/4 Kelly od trenutnog kapitala; bez ITF; poništeno = medijana 200 izvlačenja
+  mesec  opk. početna  opk. pred poč.  test (početna, max 30k)  početna, max 10k  početna, max 5k  početna, 10% poništeno  pred početak, max 30k  pred početak, max 10k  NAJGORE sve  NAJGORE najniže
+2026-01           136              38                   188943            156822           116738                  117859                  -1812                   4157        -3616           280286
+2026-02           194              69                   688784            400360           227104                  492068                  39623                  23173        -5315           269281
+2026-03           146              69                   415019            262139           160285                  301802                 106810                  73296        32508           300000
+2026-04           194              84                   283397            201277           148949                  173861                  74697                  36905         5340           288497
+2026-05           179              94                   239548            131535            94881                  143106                  56760                  52712        24842           282261
+2026-06           293             188                  1069063            662277           403255                  729061                 326889                 186890        50209           281367
+2026-07           274             167                   152133             72300            27491                   36957                 129656                  39128       -29363           270599
+2026-08           210             140                   269161            263078           147317                  136178                  -9751                  38082        -7340           282570
+2026-09           185             104                   463107            244604           136994                  332092                  34194                 -21291       -59502           232731
+2026-10            45              34                    -7029               -84             9502                  -19687                 -44661                 -21879       -11720           278087
+
+pun mesec (jan-sep): prosek {'test (početna, max 30k)': 418795, 'početna, max 10k': 266044, 'početna, max 5k': 162557, 'početna, 10% poništeno': 273665, 'pred početak, max 30k': 84118, 'pred početak, max 10k': 48117, 'NAJGORE sve': 863}
+meseci u minusu: {'test (početna, max 30k)': 0, 'početna, max 10k': 0, 'početna, max 5k': 0, 'početna, 10% poništeno': 0, 'pred početak, max 30k': 2, 'pred početak, max 10k': 1, 'NAJGORE sve': 5}

@@ -1106,6 +1106,11 @@ rebuilt with `eval_levels2026.py ... --geo=RS --close`, 987 bets ROI +5.8%; void
 | closing price, at most 10,000 | 987 | 697,693 | 23.2% |
 | all at once: closing price, at most 5,000, 10% of winners voided | 987 | 286,673 | 37.7% |
 
+The same scenarios with every 2026 month starting again from 300,000 (`paper/worst_case_month_300k.txt`), average
+profit of a full month (Jan-Sep) and months in the red: test +419k (0), opening at most 10,000 +266k (0), at most
+5,000 +163k (0), 10% of winners voided +274k (0), closing price at most 30,000 +84k (2), closing at most 10,000 +48k
+(1), all at once +1k (5 of 9; worst month September -60k, lowest bank 232,731).
+
 ## Leak check of the 2026 test (model r6_v3, six Serbian books)
 
 | 2026 matches | model picks the winner | market favourite wins | log-loss model | log-loss market |
