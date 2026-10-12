@@ -8,6 +8,7 @@ export LIVE_OUT=${LIVE_OUT:-out_live2} MODELS=${MODELS:-models_v3} NX=${NX:-1} F
 # books the user can bet with from Serbia (Flashscore region RS), no ITF (whole-2026 test at these prices: +17% without
 # ITF, ITF only +4..6%)
 export GEO=${GEO:-RS} BOOKS=${BOOKS:-bet365,Mozzartbetrs,Admiralbet.rs,SoccerBet,Superbet.rs,1xBet.rs}
+export REVIEW=${REVIEW:-1}  # bets are only proposed; review.py ok/no after a look at both players
 export SKIP_SYNTHETIC=${SKIP_SYNTHETIC:-1}  # no bets when a player has no real id: the history may be split (Serban = Raluka Serban)
 export SKIP_CATS=${SKIP_CATS:-ITF MEN - SINGLES,ITF WOMEN - SINGLES}
 HERE=$(cd "$(dirname "$0")" && pwd)

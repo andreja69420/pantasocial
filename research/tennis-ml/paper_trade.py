@@ -123,6 +123,7 @@ for tour in ("wta", "atp"):
             chk[f"days_{s_}"] = int((day - last_hist[pid]).days) if pid in last_hist.index else 9999
             chk[f"name_{s_}"] = any(SequenceMatcher(None, t, u).ratio() >= 0.8 for t in key(nm).split() for u in toks)
             chk[f"syn_{s_}"] = pid >= 9e8
+            chk[f"id_{s_}"] = int(pid)
         checks[r.fs_mid] = chk
         cat, slug, tname, surf = tournament({"ZA": r.tournament, "ZL": r.path})
         tid = f"fs-{slug}-{day.year}"
@@ -204,11 +205,21 @@ def problems(k, r):
     return "; ".join(out)
 
 
+# REVIEW=1: a bet that passes the checks is only proposed (DATA_DIR/paper/proposals.csv); it goes to the ledger after a
+# manual look at both players (review.py ok / no)
+REVIEW = bool(os.environ.get("REVIEW"))
+PROP = os.path.join(PAPER, "proposals.csv")
+SKIPPED = os.path.join(PAPER, "skipped.csv")
+props = pd.read_csv(PROP) if REVIEW and os.path.exists(PROP) else pd.DataFrame(columns=["fs_mid"])
+done_ids = set(props.fs_mid) | (set(pd.read_csv(SKIPPED).fs_mid) if REVIEW and os.path.exists(SKIPPED) else set())
+proposed = []
 if not C.empty:
     for rule, (thr, cap) in RULES.items():
         c = C[(C.ev > thr) & (C.odds <= cap)].sort_values("odds", ascending=False).drop_duplicates(["fs_mid"])
         for r in c.itertuples():
             if not ledger.empty and ((ledger.fs_mid == r.fs_mid) & (ledger.rule == rule)).any():
+                continue
+            if r.fs_mid in done_ids:  # already proposed, or rejected
                 continue
             why = problems(checks.get(r.fs_mid, {}), r)
             if why:
@@ -217,9 +228,17 @@ if not C.empty:
                                 "seen_at": pd.Timestamp.now("UTC").tz_localize(None)})
                 continue
             k = checks[r.fs_mid]
-            ledger = pd.concat([ledger, pd.DataFrame([{**r._asdict(), "hist_home": k["n_h"], "hist_away": k["n_a"], "rule": rule, "logged_at": pd.Timestamp.now('UTC').tz_localize(None),
-                                                       "result": "", "pnl": np.nan}]).drop(columns=["Index"])], ignore_index=True)
+            row = {**r._asdict(), "hist_home": k["n_h"], "hist_away": k["n_a"], "rule": rule,
+                   "logged_at": pd.Timestamp.now('UTC').tz_localize(None), "result": "", "pnl": np.nan}
+            row.pop("Index")
+            if REVIEW:
+                proposed.append({**row, "id_home": k["id_h"], "id_away": k["id_a"]})
+                print(f"proposed {r.home} - {r.away}: {r.side} {r.odds} {r.book}, model {r.q_model:.0%}, book {r.fair:.0%}")
+                continue
+            ledger = pd.concat([ledger, pd.DataFrame([row])], ignore_index=True)
             logged += 1
+if proposed:
+    pd.concat([props, pd.DataFrame(proposed)]).to_csv(PROP, index=False)
 if skipped:
     sk = os.path.join(PAPER, "skipped.csv")
     K = pd.concat([pd.read_csv(sk), pd.DataFrame(skipped)]) if os.path.exists(sk) else pd.DataFrame(skipped)
@@ -285,7 +304,7 @@ if seen:
     cov["priced_by_model"] = C.drop_duplicates("fs_mid").assign(day=lambda x: x.start.dt.strftime("%m-%d")).groupby("day").size() \
         if not C.empty else 0
     print("upcoming matches with odds:\n" + cov.fillna(0).astype(int).to_string())
-print(f"paper trading run {pd.Timestamp.now('UTC'):%Y-%m-%d %H:%M} UTC: {logged} new paper bets, {time.time() - t0:.0f}s")
+print(f"paper trading run {pd.Timestamp.now('UTC'):%Y-%m-%d %H:%M} UTC: {logged} new paper bets, {len(proposed)} proposed for review, {time.time() - t0:.0f}s")
 if not ledger.empty:
     ledger["clv"] = ledger.odds / ledger.close - 1 if "close" in ledger else np.nan
     s = ledger.groupby("rule").agg(bets=("fs_mid", "size"), settled=("pnl", "count"), units=("pnl", "sum"), roi=("pnl", "mean"),

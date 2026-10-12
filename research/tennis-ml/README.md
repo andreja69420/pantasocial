@@ -642,6 +642,11 @@ name shares a name with the history of the id, and when the model is 30+ points 
 players have 30+ matches and played in the last 180 days. A gap filter alone would be wrong: in the backtests the bets
 with a gap over 30 points were the best ones (ROI +97% / +59% / +66% in 2024 / 2025 / 2026, 21 / 28 / 61 bets), so
 the big gap only triggers the stricter history check. On the 12-10 fixtures (302 players) the name check flagged none.
+From 12-10 09:28 UTC the loop only proposes bets (`REVIEW=1`, `paper/proposals.csv`); each one is looked at by hand
+before it reaches the ledger (`review.py DATA_DIR` shows both players' ids, names in the history, match counts, last
+10 results and every book's price; `review.py DATA_DIR ok FS_MID` logs it at that moment and rebuilds the Excel,
+`review.py DATA_DIR no FS_MID REASON` rejects it to `paper/skipped.csv`). A proposal whose match starts before the
+review is rejected.
 
 Bank rule for the Excel sheet (`ledger_xlsx.py` → `paper/opklade.xlsx`): start 100,000 dinars, stake = quarter Kelly
 × the bank at the moment the bet is logged, fixed from then on. The bank moves only when a bet is settled (the loop
