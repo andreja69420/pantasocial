@@ -212,6 +212,7 @@ if not ledger.empty:
     open_bets = ledger.result.fillna("") == ""
     # when the loop first saw the result: from then on the bank includes this bet (stakes of later bets only)
     ledger["settled_at"] = ledger["settled_at"].astype(object) if "settled_at" in ledger else pd.Series(index=ledger.index, dtype=object)
+    ledger["result"] = ledger["result"].astype(object)  # all empty until the first settlement, so read_csv makes it float
     for i in ledger.index[open_bets]:
         res = done.get(ledger.at[i, "fs_mid"])
         if res:
