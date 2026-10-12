@@ -1079,6 +1079,12 @@ EV>10% with a 50,000 cap: 1,602,908 / 2,124,881 / 2,226,122. A higher threshold 
 3-4x (EV>10%: 0.6-1.9 a day), so the bank grows slower and the cap is reached later or never; drawdowns are not
 smaller. In 2026 the extra ROI over EV>5% is only 3 points.
 
+2026 with every month starting again from 100,000 (quarter Kelly of the current bank, cap 30,000, plan rule;
+`paper/kelly_monthly_2026.txt`): end of month Jan 162,981, Feb 341,208, Mar 243,736, Apr 201,087, May 191,636,
+Jun 550,299, Jul 184,183, Aug 192,441, Sep 284,868, Oct 1-10 98,898. Every full month ended in profit (+84k to +450k);
+lowest point inside a month 88,379 (April). With a fixed stake base of 100,000 (no growth inside the month) the
+monthly profit is +52k to +206k.
+
 ## Leak check of the 2026 test (model r6_v3, six Serbian books)
 
 | 2026 matches | model picks the winner | market favourite wins | log-loss model | log-loss market |
