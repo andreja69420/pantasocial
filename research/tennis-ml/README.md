@@ -887,6 +887,112 @@ Model r6_v3 (never trained on 2026), both sides of every match, 5-point bins (be
   most with the market), which is why the betting stage blends it with the book. The blend P is right for EV>10%
   (54.1% vs 54.5%), 3 points low for EV>5%, 3 points high for EV>15% (190 bets, standard error about 3.6 points).
 
+## Calibration study: training, validation and calibration variants (overnight run)
+
+Question: can a different training / validation / calibration protocol beat the production protocol (r6_v3: train 2010..Y-2,
+early-stop and Platt on Y-1, ensemble XGB+LGBM+logistic)? Pre-registered rule: a variant wins only if its pooled (WTA+ATP)
+log-loss is lower on BOTH test years 2025 and 2026 (paired difference > 2 SE on at least one year, not worse on the other)
+and its ECE is not worse. Betting ROI on 2026 is a check, never the criterion. Odds are never a model feature. Code:
+`train3.py` (`--calib-years`, `--refit`, `--halflife`, `--save-va`), `blend_cv.py`; chart `calib_variants.py` →
+`paper/kalibracija_varijante.png`; full tables of every variant in `paper/calib_study.txt`. Production was not touched.
+
+![calibration variants](paper/kalibracija_varijante.png)
+
+**Variants** (both tours, test years 2025 and 2026, one training at a time, no failures):
+`cx_base` = baseline protocol re-run (2026 predictions identical to out_v3 r6_v3, max |dp| = 0 on 46,676 matches);
+`cx_cal2` = validate/calibrate on the 2 previous years; `cx_refit` = after early stopping retrain on train+validation
+years (iterations scaled by n_all/n_train), same Platt; `cx_hl8` = recency sample weights, half-life 8 years;
+`cx_cal2refit` = both.
+
+**Model alone, pooled WTA+ATP, paired against the baseline** (cx_base for 2025, r6_v3 for 2026; negative dLL = better;
+SE from the paired per-match differences; ECE with 5-point bins, bins < 30 dropped; I recomputed these from the parquet files
+and they match the per-variant reports):
+
+| variant | 2025 log-loss | 2025 dLL (SE), z | 2025 ECE | 2026 log-loss | 2026 dLL (SE), z | 2026 ECE |
+|---|---|---|---|---|---|---|
+| baseline | 0.5550 | - | 1.04% | 0.5583 | - | 0.69% |
+| cx_cal2 | 0.5551 | +0.00008 (0.00015), +0.5 | 0.93% | 0.5590 | +0.00071 (0.00017), +4.1 | 0.76% |
+| cx_hl8 | 0.5554 | +0.00033 (0.00015), +2.2 | 0.95% | 0.5585 | +0.00019 (0.00015), +1.2 | 0.58% |
+| **cx_refit** | 0.5546 | **-0.00047 (0.00015), -3.1** | 1.23% | 0.5578 | **-0.00044 (0.00017), -2.7** | 0.51% |
+| **cx_cal2refit** | 0.5544 | **-0.00060 (0.00016), -3.7** | 0.91% | 0.5581 | -0.00019 (0.00018), -1.1 | 0.70% |
+
+ECE differences vs baseline with a bootstrap SE (300 resamples of matches): cx_refit +0.20pp (SE 0.11) in 2025 and -0.18pp
+(0.15) in 2026; cx_cal2refit -0.12pp (0.12) and +0.01pp (0.15). ECE moves by about 0.1-0.2pp from the sampling alone.
+
+Where the gain comes from (paired dLL, pooled): Challenger / WTA 125 only: cx_refit -0.00130 (2025, z -4.1) and -0.00127
+(2026, z -4.0); cx_cal2refit -0.00183 (z -5.1) and -0.00139 (z -4.4). ITF and tour events: no consistent change (|z| < 1.5).
+WTA 2026 as a whole is not better (cx_refit -0.00014, cx_cal2refit +0.00056, z +1.8, driven by WTA ITF +0.00128, z +3.5).
+
+**Post-hoc calibrators** (fitted on the saved validation predictions of the baseline protocol; paired dLL against the
+current Platt, pooled): isotonic is worse in every variant (+0.0005 to +0.0011, z 3 to 5), Beta is identical (|dLL| <= 0.00002),
+Platt per level group and shrunk Platt per tourney level are equal or slightly worse (up to +0.00017, z about +2).
+Verdict: keep one global Platt. Platt refitted from the saved `_va` files reproduces train3's `p` exactly.
+
+**Betting check, six Serbian books, 2026, opening price, no ITF, EV>5% odds<=5** (not a criterion; SE of ROI about 2.4pp):
+
+| variant | bets | ROI (lower 90%) | EV>5% mean P vs won | EV>10% | EV>15% |
+|---|---|---|---|---|---|
+| baseline r6_v3 (= cx_base) | 1,869 | +17.2% (+13.2%) | 57.8% vs 61.1% | 54.1% vs 54.5% | 53.2% vs 50.0% |
+| cx_cal2 | 2,087 | +15.8% (+12.2%) | 59.2% vs 62.1% | 55.4% vs 54.9% | 53.5% vs 52.9% |
+| cx_refit | 1,817 | +16.8% (+12.7%) | 57.0% vs 60.3% | 53.8% vs 54.1% | 51.5% vs 54.2% |
+| cx_hl8 | 1,842 | +16.7% (+12.7%) | 57.5% vs 60.8% | 54.3% vs 54.9% | 52.6% vs 50.8% |
+| cx_cal2refit | 1,927 | +16.4% (+12.5%) | 58.2% vs 61.0% | 54.5% vs 55.1% | 53.0% vs 53.4% |
+
+All ROI differences are inside the noise; a 0.0005 log-loss gain does not show up in the betting results.
+
+### Selection rule applied
+
+| variant | log-loss both years | ECE not worse | verdict |
+|---|---|---|---|
+| cx_cal2 | no (2026 worse, z +4.1) | 2026 worse | **fails** |
+| cx_hl8 | no (worse both years, 2025 z +2.2) | within noise | **fails** |
+| cx_refit | yes (z -3.1 and -2.7) | 2025 +0.20pp (1.8 SE), 2026 -0.18pp | **fails the ECE clause strictly, passes it on the two-year mean (0.90% vs 0.88%)** |
+| cx_cal2refit | yes (z -3.7; 2026 not worse, z -1.1) | -0.12pp and +0.01pp, both inside the bootstrap SE | **passes as written** (ECE unchanged, not improved) |
+
+So the only variant that meets the pre-registered rule is `cx_cal2refit`, and it does so on the weak side: one year is a clear
+gain, the other is not distinguishable from zero, and the ECE clause holds only within noise. `cx_refit` has the more even
+log-loss gain (both years beyond 2.5 SE) and misses the ECE clause by 0.2pp, i.e. a decision on a borderline. What the two share
+is the refit step (retrain on the validation year too); the same changes without it (`cx_cal2`, `cx_hl8`) do not help, so the
+refit step is what carries the effect. Caveats: four variants were tried on two test years (one of the two passes can be chance),
+the gain is about 0.0005 log-loss (0.1% relative), it is concentrated in Challenger / WTA 125, WTA 2026 does not benefit, and the
+betting ROI is unchanged. This is a small effect, not an established improvement.
+
+### Betting-stage blend (`blend_cv.py`, `calib_exp/blend_report.md`, full tables in `paper/calib_study.txt`)
+
+2026, six Serbian books, best opening price, no ITF: 32,596 sides, 372 tournaments; out-of-sample splits (Jan-May vs Jun-Oct,
+4 time blocks, monthly walk-forward); SE clustered by tournament; about 40 variants were tried on one year.
+
+| variant | dLL vs production, e-3 (SE) | bets | ROI (SE) | ROI at the same N |
+|---|---|---|---|---|
+| production 0.44/0.64, best-price Shin | 0 | 1,869 | +17.2% (2.4) | +17.2% |
+| refit coefficients on 2026 | +0.06 (0.24) | 5,202 | +10.2% (1.5) | +16.8% |
+| coefficients fitted on TE Bet365 2014-25 | -0.03 (0.02) | 1,941 | +16.0% (2.4) | +16.5% |
+| per tour / per tour x level group | +0.61 (0.30) / +1.52 (0.55) | 5,266 / 5,425 | +10.1% | +15.2% / +16.3% |
+| consensus (mean of per-book Shin), 0.44/0.64 fixed | -0.83 (0.11) | 5,068 | +11.1% (1.5) | +17.5% (EV>10.2%) |
+| production + Platt / + isotonic | -0.24 (0.12) / +1.07 (0.47) | 4,439 / 5,276 | +11.8% / +7.9% | +18.4% / +12.8% |
+
+- 0.44/0.64 still hold: every refit has the same out-of-sample log-loss as production and its sign flips between split schemes;
+  fits from independent data (Bet365 TE, BetMGM) agree. Per-tour or per-level coefficients are overfit; isotonic is worse.
+- One real finding: taking the best price on each side makes the two Shin terms sum to 0.952 instead of 1, so production P is
+  too low on the sides we bet (EV>5%: mean P 57.8% vs won 61.1%, gap +3.4pp, SE 1.1). Using the mean of the per-book Shin
+  probabilities (bets still at the best price) removes the intercept (refit +0.000 (0.012)) and lowers log-loss by 0.83e-3
+  (SE 0.11), in both halves, all 4 blocks and all 7 walk months.
+- It does not raise profit per unit: with the same EV>5% rule it takes 5,068 bets at +11.1% ROI (lower 90% +8.6%) instead of
+  +17.2%; total profit still rises by +240 units (SE 57). Together with EV>10% the ROI matches production (+17.5% vs +17.2%).
+  The benefit is honest probabilities for Kelly sizing, not a higher ROI. Chosen after about 40 tries on one year.
+- ROI of production by period fell from +23.0% (Jan-Mar) to +10.6% (Jul-Oct), SE about 5 each: suggestive, not significant.
+
+### Recommendation (production unchanged: models, `paper_loop.sh` and the plan rule were not touched)
+
+1. Keep the production protocol and the 0.44/0.64 blend with the EV>5% rule. None of the tested training or calibration
+   changes is large enough to justify a switch: the best are 0.0005 log-loss, ROI-neutral, and the rule is met only on its weak side.
+2. Next step, forward test: train a `refit` shadow model (train on years up to the calibration year with iterations scaled up,
+   same Platt; `train3.py --refit`, about one extra fit per tour) and log its p next to the production p in the paper ledger
+   for 2-3 months; compare log-loss on Challenger / WTA 125 matches only (where the effect is claimed, about 12k matches/year).
+   Switch only if the live difference is again negative beyond 2 SE.
+3. For the blend: log both P versions (best-price Shin and consensus mean Shin) in the paper ledger; this needs the opening
+   prices of all books at bet time. Adopt the consensus P only together with EV>10% if flat-stake ROI matters, or for Kelly sizing.
+
 ## Calibration chart on test data (`calib_plot.py` → `paper/kalibracija.png`)
 
 Matches grouped by predicted win probability (5-point bins), predicted mean vs. actual win share, both sides of every
