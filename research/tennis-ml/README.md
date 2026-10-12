@@ -1093,6 +1093,19 @@ A: average +102k .. +766k a month, worst 5% of months -55k .. +234k, 0-17% of mo
 B: average +15k .. +235k, worst 5% -104k .. -138k, 21-48% of months in the red.
 C: average -54k .. -117k, worst 5% -151k .. -258k (bank down to 40k in a 293-bet month), 80-85% of months in the red.
 
+Whole 2026 (01-02 .. 10-10) from 300,000 under the practical risks (`paper/worst_case_year_300k.txt`; closing-price bets
+rebuilt with `eval_levels2026.py ... --geo=RS --close`, 987 bets ROI +5.8%; voided winners = stake back, median of 200 draws):
+
+| scenario | bets | end | largest drop |
+|---|---|---|---|
+| opening price, at most 30,000 a bet (the test) | 1,856 | 8,617,220 | 15.3% |
+| opening price, at most 10,000 (book limits) | 1,856 | 3,306,335 | 10.9% |
+| opening price, at most 5,000 | 1,856 | 1,850,823 | 7.2% |
+| opening price, 10% of winning bets voided, at most 30,000 | 1,856 | 5,430,275 | 17.0% |
+| closing price (opening price missed), at most 30,000 | 987 | 1,108,043 | 32.1% |
+| closing price, at most 10,000 | 987 | 697,693 | 23.2% |
+| all at once: closing price, at most 5,000, 10% of winners voided | 987 | 286,673 | 37.7% |
+
 ## Leak check of the 2026 test (model r6_v3, six Serbian books)
 
 | 2026 matches | model picks the winner | market favourite wins | log-loss model | log-loss market |
