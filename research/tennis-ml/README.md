@@ -663,7 +663,7 @@ below; the earlier "Van plana" bets joined it, so the bank and every later stake
   the old live build); the results update and the fixture features run on it with `F2_CLEAN_GAMES=1`
 - fixture rows: `features_incr.py` dry run also writes the prepared rows (`DRY_MATCHES`), `fx_live.py` appends each
   batch to the whole match table and runs the four modules (ratings / score / context / pbp in parallel processes,
-  about 2 min per tour), keeping only the fixture rows. Check: the 16 women's matches of the last day, removed from the
+  ~25-30 s per tour since 2026-10-12, see "Faster pass" below), keeping only the fixture rows. Check: the 16 women's matches of the last day, removed from the
   table and recomputed this way, equal the full-table module output in all 316 columns (largest difference 0)
 - models `models_v3` (`train_final.py`, same regex as r6_v3, 798 model columns, trained <= 2025, calibrated on 2026);
   `train_final.py` now reads only the 2010+ rows and the columns the selected features need (same 798 columns and
