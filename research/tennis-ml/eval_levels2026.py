@@ -9,6 +9,7 @@ usage: eval_levels2026.py DATA_DIR FS_DIR TAG:OUT_SUBDIR [TAG:OUT_SUBDIR ...]
     plus fs_mid, start (unix seconds) and book of the best price so a match can be joined to its per-book prices)
   --book=NAME[,NAME..]: those bookmakers' prices only (best of them); --close: closing prices (last before the start) instead of opening
   --geo=XX: the odds file of another Flashscore region ({tour}_fs_odds_XX.parquet, fs_odds.py --matches)
+  --year=YYYY: another season (FS_DIR/{tour}__{tour}_matches_fs_YYYY.csv, preds3_..._lower_YYYY.parquet; default 2026)
   FS_DIR: fs_results.py / fs_odds.py output for 2026-01-01.. ({tour}__{tour}_matches_fs_2026.csv, {tour}_fs_odds_GB.parquet)
 """
 import re
@@ -24,6 +25,7 @@ BOOK = next((a.split("=", 1)[1].split(",") for a in sys.argv if a.startswith("--
 CLOSE = "--close" in sys.argv  # the last price before the start instead of the opening price
 TOURS = next((a.split("=", 1)[1].split(",") for a in sys.argv if a.startswith("--tours=")), None)  # e.g. --tours=wta
 GEO = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--geo=")), "GB")  # Flashscore region of the odds file
+YEAR = int(next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--year=")), 2026))
 RUNS = [a.split(":") for a in sys.argv[3:] if not a.startswith("--")]
 NAMES = {"wta": {"G": "Grand Slam", "PM": "WTA 1000", "P": "WTA 500", "I": "WTA 250", "C": "WTA 125", "100": "W100",
                  "75": "W75", "50": "W50", "35": "W35", "15": "W15"},
@@ -53,7 +55,7 @@ out, cover, saved = [], [], []
 for tour in [t for t in ("atp", "wta") if not TOURS or t in TOURS]:
     M = pd.read_parquet(f"{D}/{RUNS[0][1]}/{tour}_matches.parquet",
                         columns=["tourney_id", "tourney_name", "tourney_date", "tourney_level", "winner_id", "loser_id"])
-    fs = pd.read_csv(f"{FS}/{tour}__{tour}_matches_fs_2026.csv", usecols=["fs_mid", "winner_id", "loser_id", "tourney_level", "tourney_name"])
+    fs = pd.read_csv(f"{FS}/{tour}__{tour}_matches_fs_{YEAR}.csv", usecols=["fs_mid", "winner_id", "loser_id", "tourney_level", "tourney_name"])
     O = pd.read_parquet(f"{FS}/{tour}_fs_odds_{GEO}.parquet")
     if BOOK:
         O = O[O.book.isin(BOOK)]
@@ -62,7 +64,7 @@ for tour in [t for t in ("atp", "wta") if not TOURS or t in TOURS]:
     fs = fs.merge(O.drop_duplicates("fs_mid")[["fs_mid", "start"]], on="fs_mid")
     fs["d"] = pd.to_datetime(fs.start, unit="s").dt.normalize()
     # level of Flashscore tour events from the archive's name -> level (2025-26)
-    arch = M[~M.tourney_id.astype(str).str.startswith("fs-") & (M.tourney_date >= 20250101)]
+    arch = M[~M.tourney_id.astype(str).str.startswith("fs-") & (M.tourney_date >= (YEAR - 1) * 10000 + 101)]
     arch = arch[arch.tourney_level.astype(str).isin(["G", "M", "PM", "P", "I", "A", "F"])]
     lv_by_name = arch.assign(n=arch.tourney_name.map(norm)).groupby("n").tourney_level.agg(lambda s: s.astype(str).mode()[0]).to_dict()
 
@@ -75,7 +77,7 @@ for tour in [t for t in ("atp", "wta") if not TOURS or t in TOURS]:
 
     preds = {}
     for tag, od in RUNS:
-        preds[tag] = pd.read_parquet(f"{D}/{od}/preds3_{tour}_ens_{tag}_lower_2026.parquet")[["p", "y", "stands"]]
+        preds[tag] = pd.read_parquet(f"{D}/{od}/preds3_{tour}_ens_{tag}_lower_{YEAR}.parquet")[["p", "y", "stands"]]
     idx = preds[RUNS[0][0]].index
     for tag in preds:
         idx = idx.intersection(preds[tag].index)

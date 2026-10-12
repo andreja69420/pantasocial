@@ -26,7 +26,7 @@ OUT, TOUR = sys.argv[1], sys.argv[2]
 GEO = sys.argv[3] if len(sys.argv) > 3 and not sys.argv[3].startswith("--") else "GB"
 FIX = int(sys.argv[sys.argv.index("--fixtures") + 1]) if "--fixtures" in sys.argv else 0
 DONE = int(sys.argv[sys.argv.index("--done") + 1]) if "--done" in sys.argv else -1
-NOCACHE = "--matches" in sys.argv  # another region's history: one pass, no page cache (the GB cache alone is 3.5 GB)
+NOCACHE = "--matches" in sys.argv or bool(os.environ.get("NOCACHE"))  # another region's history: one pass, no page cache (the GB cache alone is 3.5 GB)
 UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36",
       "Origin": "https://www.flashscore.com", "Referer": "https://www.flashscore.com/", "x-fsign": "SW9D1eZo"}
 CATS = {"atp": ("ITF MEN - SINGLES", "CHALLENGER MEN - SINGLES", "ATP - SINGLES"),

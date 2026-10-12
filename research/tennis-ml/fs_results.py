@@ -2,7 +2,7 @@
 Each tournament's results page embeds its full results feed (cjs.initialFeeds['results']); one request per tournament.
 Tournament slugs: Flashscore's category page plus the BetExplorer slug lists already cached (same slugs, same company).
 
-usage: fs_results.py RAW_DIR OUT_DIR TOUR FROM_DATE [TO_DATE]
+usage: fs_results.py RAW_DIR OUT_DIR TOUR FROM_DATE [TO_DATE]   (env SEASON=YYYY: that season's archive pages {slug}-YYYY)
   TOUR atp -> itf-men-singles, challenger-men-singles, atp-singles; wta -> itf-women-, challenger-women- (WTA 125), wta-singles
 Writes OUT_DIR/{tour}__{tour}_matches_fs_{year}.csv; page cache in OUT_DIR/fs_cache_{tour}.
 Serve stats, rankings, seeds, entry and minutes stay empty (the results-only model does not use them).
@@ -75,7 +75,8 @@ for cat in CATS:
     print(f"{cat}: {len(s)} tournament slugs", flush=True)
 t0 = time.time()
 with ThreadPoolExecutor(THREADS) as ex:
-    pages = list(ex.map(lambda cs: fetch(f"https://www.flashscore.com/tennis/{cs[0]}/{cs[1]}/results/"), slugs))
+    SEASON = os.environ.get("SEASON", "")  # a past season: the archive page of each event, e.g. lisbon-2024
+    pages = list(ex.map(lambda cs: fetch(f"https://www.flashscore.com/tennis/{cs[0]}/{cs[1]}{'-' + SEASON if SEASON else ''}/results/"), slugs))
 print(f"pages fetched in {time.time() - t0:.0f}s (rate {L.rate:.0f}/s)", flush=True)
 
 ids, BIO = sackmann_ids_bio(RAW, TOUR)

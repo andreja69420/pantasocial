@@ -993,6 +993,32 @@ betting ROI is unchanged. This is a small effect, not an established improvement
 3. For the blend: log both P versions (best-price Shin and consensus mean Shin) in the paper ledger; this needs the opening
    prices of all books at bet time. Adopt the consensus P only together with EV>10% if flat-stake ROI matters, or for Kelly sizing.
 
+## 2024 and 2025 at the Serbian books (second test model, production unchanged)
+
+Same protocol as the 2026 test, each season predicted by a model that never saw it: 2025 = train 2010-2023,
+early stop + Platt on 2024 (the `cx_base` run, whose 2026 part equals r6_v3 exactly); 2024 = train 2010-2022, Platt on
+2023 (`train3.py --odds-file=all2024_odds --years=2024`). Results: `fs_results.py` with `SEASON=YYYY` (the archive page
+of each event, 32-34k men's and 24-25k women's matches a season). Odds: `fs_odds.py ... RS` (region RS, history,
+`NOCACHE=1`, 4 scrapers x 37/s; 30-45 HTTP 429 pauses each, ~35-40 min). Flashscore keeps only some Serbian books for
+older matches: 2024 bet365 + Mozzart + Superbet, 2025 the same + SoccerBet + 1xBet (no AdmiralBet before 2026);
+margins 7-8% (bet365 5.6-6.9%), no pair below 100%. 2026 is shown with the same book subsets for a fair comparison.
+Plan rule, opening price, flat 1 unit (`eval_years.py`, full table `paper/eval_rs_2024_2026.txt`):
+
+| season (books) | bets without ITF | a day | ROI | lower 90% | Challenger | WTA 125 | tour ATP | tour WTA | ITF |
+|---|---|---|---|---|---|---|---|---|---|
+| 2024 (3) | 906 | 2.5 | **+21.0%** | +15.3% | 393 +27.4% | 103 +41.5% | 192 +1.1% | 218 +17.4% | 2,165 +11.1% |
+| 2026, same 3 | 1,252 | 4.4 | +16.3% | +11.4% | 674 +17.7% | 77 +19.7% | 205 +15.5% | 296 +12.6% | 1,762 +2.0% |
+| 2025 (5) | 1,922 | 5.3 | **+14.3%** | +10.6% | 1,059 +14.5% | 242 +14.3% | 312 +15.0% | 309 +12.8% | 3,995 +10.7% |
+| 2026, same 5 | 1,689 | 6.0 | +17.3% | +13.1% | 961 +19.9% | 91 +2.8% | 268 +14.1% | 369 +16.2% | 3,118 +6.3% |
+| 2026 (6) | 1,856 | 6.6 | +16.7% | +12.8% | 1,084 +18.4% | 102 +5.8% | 285 +13.8% | 385 +17.1% | 3,392 +5.2% |
+
+- The plan holds in all three seasons: +14% to +21% without ITF, lower 90% bound +10% or more every year, every
+  level group positive in every season. Challenger is the steady core (+14.5% .. +27%).
+- ITF was clearly positive in 2024-2025 (+11%) and weaker in 2026 (+2% .. +6%), so leaving it out stays the cautious choice.
+- Higher thresholds without ITF: EV>10% 2024 206 bets +45.8%, 2025 435 +26.7%, 2026 520 +19.7%.
+- Caveat: the blend coefficients (0.44 / 0.64) were fitted on TennisExplorer Bet365 2014-2024, so 2024 is not fully
+  independent for those two numbers; the model itself never saw the season it predicts.
+
 ## Leak check of the 2026 test (model r6_v3, six Serbian books)
 
 | 2026 matches | model picks the winner | market favourite wins | log-loss model | log-loss market |

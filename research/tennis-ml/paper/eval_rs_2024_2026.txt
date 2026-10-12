@@ -1,0 +1,51 @@
+                               bets   lo%  per_day  roi%  units
+2024 (3 kl.) Challenger       393.0  18.7      NaN  27.4  107.7
+             Davis/BJK         27.0 -22.7      NaN  11.4    3.1
+             ITF             2165.0   7.3      NaN  11.1  239.3
+             WTA 125          103.0  26.5      NaN  41.5   42.7
+             turniri ATP      192.0 -11.5      NaN   1.1    2.1
+             turniri WTA      218.0   5.4      NaN  17.4   37.9
+             BEZ ITF          906.0  15.3      2.5  21.0  190.4
+             SVE             3098.0  10.9      NaN  14.0  432.8
+             BEZ ITF EV>10%   206.0  31.0      NaN  45.8   94.4
+             BEZ ITF EV>15%    72.0  39.2      NaN  66.5   47.9
+2026 iste 3  Challenger       674.0  11.5      NaN  17.7  119.6
+             Davis/BJK         10.0  -8.1      NaN  64.2    6.4
+             ITF             1762.0  -2.1      NaN   2.0   35.7
+             WTA 125           77.0  -1.2      NaN  19.7   15.2
+             turniri ATP      205.0   2.2      NaN  15.5   31.8
+             turniri WTA      296.0   2.6      NaN  12.6   37.3
+             BEZ ITF         1252.0  11.4      4.4  16.3  203.9
+             SVE             3024.0   5.0      NaN   8.1  246.0
+             BEZ ITF EV>10%   358.0   7.2      NaN  17.6   62.9
+             BEZ ITF EV>15%   140.0   7.1      NaN  25.9   36.2
+2025 (5 kl.) Challenger      1059.0   9.7      NaN  14.5  153.2
+             Davis/BJK         18.0  -5.2      NaN  33.4    6.0
+             ITF             3995.0   8.3      NaN  10.7  427.0
+             WTA 125          242.0   5.1      NaN  14.3   34.7
+             turniri ATP      312.0   4.4      NaN  15.0   46.8
+             turniri WTA      309.0   3.7      NaN  12.8   39.4
+             BEZ ITF         1922.0  10.6      5.3  14.3  274.2
+             SVE             5935.0   9.9      NaN  11.9  707.2
+             BEZ ITF EV>10%   435.0  17.4      NaN  26.7  116.2
+             BEZ ITF EV>15%   118.0  18.1      NaN  37.3   44.0
+2026 iste 5  Challenger       961.0  14.6      NaN  19.9  191.4
+             Davis/BJK         12.0  17.7      NaN  83.9   10.1
+             ITF             3118.0   3.1      NaN   6.3  196.2
+             WTA 125           91.0 -15.8      NaN   2.8    2.6
+             turniri ATP      268.0   2.4      NaN  14.1   37.7
+             turniri WTA      369.0   7.3      NaN  16.2   59.8
+             BEZ ITF         1689.0  13.1      6.0  17.3  291.4
+             SVE             4819.0   7.8      NaN  10.3  497.8
+             BEZ ITF EV>10%   477.0   7.1      NaN  16.2   77.1
+             BEZ ITF EV>15%   175.0   4.1      NaN  20.7   36.2
+2026 (6 kl.) Challenger      1084.0  13.4      NaN  18.4  199.3
+             Davis/BJK         13.0  20.1      NaN  81.2   10.6
+             ITF             3392.0   2.2      NaN   5.2  177.0
+             WTA 125          102.0 -11.9      NaN   5.8    5.9
+             turniri ATP      285.0   2.4      NaN  13.8   39.5
+             turniri WTA      385.0   8.3      NaN  17.1   65.8
+             BEZ ITF         1856.0  12.8      6.6  16.7  310.4
+             SVE             5261.0   7.1      NaN   9.5  498.0
+             BEZ ITF EV>10%   520.0  11.0      NaN  19.7  102.6
+             BEZ ITF EV>15%   188.0   3.8      NaN  20.0   37.5
