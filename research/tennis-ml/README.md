@@ -1602,3 +1602,38 @@ after the open. "guard" = bet only while the current price is at most 3% above t
 - EV>8% with the price guard is the only variant positive at both t=0.25 and t=0.5 in all three years (+7..+32%,
   lower 90% bounds mostly above zero), at about a third of the bets.
 - Dropping WTA 125 does not help in any year (it is slightly worse), so it stays.
+
+### Missing results filled in (2026-10-13 night)
+
+**Bug.** `fs_results.py` read only the results feed embedded in each tournament page. Flashscore embeds the first
+chunk only, so for big events the rest was cut off: a Grand Slam's page holds its 127 main-draw matches and none of the
+qualifying, and some WTA 125 / Challenger events were missing in full. The daily feed of the loop (`fs_update.py`, last
+3 days) does not have this problem, so only June to early October 2026 was affected. Found on review: Rebeka Masarova
+showed no match between 18.7. and 11.10., while she played Wimbledon and US Open qualifying, Contrexeville, Montreux,
+Valencia and Tolentino (10 matches missing).
+
+**Fix.** `fs_results.py` now also reads the paged feed `x/feed/tr_2_{country_id}_{tournament_id}_{seasonId}_{page}`
+(ids from the page, pages until an empty one). Re-scraped from 2026-06-01 (WTA 2,671 tournament pages, ATP 2,827,
+~2.5 min per tour). Against the build: a match counts as missing when its Flashscore id is not in the build and the same
+winner / loser pair has no match within 10 days (rows from the Sackmann files have no Flashscore id).
+
+| | missing matches added | of them in events already in the build | biggest |
+|---|---|---|---|
+| WTA | 964 | 295 | US Open 114, Wimbledon 94, Ilkley 48, Contrexeville 43, Tolentino 43 |
+| ATP | 324 | 298 | US Open 113, Wimbledon 95, Stuttgart 12, Hertogenbosch 12 |
+
+Rebuild: raw dir `fx_raw_bf` = `fx_raw` + the rows the loop had added (`*_fsloop_2026.csv`, exported from the build)
++ the missing rows (`*_fsbf_2026.csv`, tournament date aligned to the build's date for events already in it), full
+`features2.py` (`F2_CLEAN_GAMES=1`, women then men, ~6 + 10 min, loop stopped meanwhile). Check: the new build holds
+every Flashscore id of the old one and exactly the 964 / 324 added ones, the rows without an id are unchanged
+(671,739 / 851,447). Swapped in as `out_live2` (old one kept as `out_live2_pre_bf`); the first pass rebuilt the saved
+rating state and ran without errors (86 s).
+
+Effect on the rejected proposal: Masarova vs Mintegi Del Olmo (Mallorca, 2.56 at 1xBet) model 53.1% -> 47.4%, blend
+38.6%, EV about -1%, so no bet (it was put back into review after the fix and no longer passes EV>5%).
+
+Open, not fixed yet:
+- qualifying matches from Flashscore get main-draw round codes (`round_code` reads "Quarter-finals" etc. without the
+  qualification header), so within one event a qualifier's Q3 can sort after their main-draw match
+- 217 duplicate rows in the 2026 WTA history (same day, players and score twice, e.g. Birmingham 125 qualifying),
+  from the Sackmann files
