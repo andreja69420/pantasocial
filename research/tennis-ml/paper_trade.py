@@ -13,8 +13,9 @@ Each run (meant to run every 30 min, so opening lines are caught while they stil
      mapped to a real id, at least 10 matches of history each, the Flashscore name shares a name with the history of
      that id, and when the model is 30+ points above the book (fair price) both have 30+ matches and played in the
      last 180 days (a big gap is where a split or wrong history shows up first)
-  5. pending bets: the book's latest price before the start is kept as the closing price (CLV); finished matches are
-     settled from Flashscore's daily results feed
+  5. pending bets: the book's latest price before the start is kept as the closing price (CLV); the kick-off time is
+     taken again from Flashscore (fixtures and the daily feeds, yesterday to tomorrow) and changed when it moved;
+     finished matches are settled from Flashscore's daily results feed
 Ledger: DATA_DIR/paper/ledger.csv. Summary printed per rule.
 
 usage: paper_trade.py DATA_DIR [DAYS_AHEAD=7]   (env SKIP_UPDATE=1: no results update)
@@ -250,11 +251,25 @@ if skipped:
     K.drop_duplicates(["fs_mid", "reason"]).to_csv(sk, index=False)
     for x in skipped:
         print(f"not logged {x['home']} - {x['away']} ({x['side']} {x['odds']}): {x['reason']}")
+def move_start(ledger, starts):
+    """starts: fs_mid -> Flashscore start (unix s); open bets whose start differs get the new one."""
+    for i in ledger.index[ledger.result.fillna("") == ""]:
+        t = starts.get(ledger.at[i, "fs_mid"])
+        if not t:
+            continue
+        new = str(pd.Timestamp(int(t), unit="s"))
+        if new != str(pd.Timestamp(ledger.at[i, "start"])):
+            print(f"start moved {ledger.at[i, 'home']} - {ledger.at[i, 'away']}: {ledger.at[i, 'start']} -> {new} UTC")
+            ledger.at[i, "start"] = new
+
+
 # pending bets: the book's latest price while the match has not started is the closing price so far (CLV)
 if not ledger.empty and seen:
     S = pd.concat(seen)
     S = S[S.start > time.time()]
     cur = {(r.fs_mid, r.book): (r.cur_h, r.cur_a) for r in S.itertuples()}
+    # kick-off times move (rain, a long match before, a new order of play): every pass takes Flashscore's current one
+    move_start(ledger, dict(zip(pd.concat(seen).fs_mid, pd.concat(seen).start)))
     for c in ("close", "close_seen_at"):
         if c not in ledger:
             ledger[c] = np.nan
@@ -276,18 +291,21 @@ if not ledger.empty and seen:
                 ledger.at[i, c] = v if v > 1 else np.nan
 # settle finished matches from the daily results feeds (today and the 3 days before)
 if not ledger.empty:
-    done = {}
-    for day in range(-3, 1):
+    done, starts = {}, {}
+    for day in range(-3, 2):
         try:
             with urllib.request.urlopen(urllib.request.Request(f"https://www.flashscore.com/x/feed/f_2_{day}_1_en_1", headers=UA),
                                         timeout=30) as resp:
                 text = resp.read().decode("utf-8", "ignore")
             for head, d in records(text):
+                if d.get("AD"):
+                    starts[d["AA"]] = d["AD"]
                 if d.get("AB") == "3":
                     hs, as_ = int(d.get("AG", 0) or 0), int(d.get("AH", 0) or 0)
                     done[d["AA"]] = ("void" if d.get("AC") not in ("3",) else ("home" if hs > as_ else "away"))
         except Exception as e:
             print("settlement feed error", e)
+    move_start(ledger, starts)  # also matches already under way or no longer listed with odds
     open_bets = ledger.result.fillna("") == ""
     # when the loop first saw the result: from then on the bank includes this bet (stakes of later bets only)
     ledger["settled_at"] = ledger["settled_at"].astype(object) if "settled_at" in ledger else pd.Series(index=ledger.index, dtype=object)

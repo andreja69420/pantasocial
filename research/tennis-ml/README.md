@@ -657,6 +657,12 @@ Excel) and feed a dashboard on claude.ai: bank, profit, ROI, won-lost, pending, 
 price before the match, the bank after every settled bet, totals per category and all bets (filter, search, sort).
 The trigger checks at :04 and :34 upload the new JSON after every pass.
 
+**Kick-off times refreshed every pass (2026-10-13)**: Flashscore often moves a match (order of play, "followed by",
+rain). Every pass now takes the current start of each open bet from the fixtures and the daily feeds (yesterday to
+tomorrow) and writes it to the ledger (`start moved ... -> ... UTC` in loop.log), so the Excel and the online table show
+the real time and "Čeka" / "U toku" is right. First check: 12 of the 19 open bets had a different time, e.g. Kotov -
+Kopriva 02:00 -> 06:10 UTC, Villanueva - Zarate 14:00 -> 22:30 UTC.
+
 **Every competition in the plan from 2026-10-11 evening** (after the whole-2026 test per level): one bank, same rule
 (EV>5% odds<=5 at the opening price, quarter Kelly), all six Flashscore categories (women's / men's ITF, Challenger,
 WTA 125, WTA and ATP tour incl. Grand Slams). One sheet, `Opklade`: overall summary (rows 2-3), per category profit, ROI and record (rows 5-7) and all bets
