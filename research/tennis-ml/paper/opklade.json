@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-13T15:01",
+ "as_of": "2026-10-13T15:33",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -292,7 +292,7 @@
   },
   {
    "id": "xEUe837k",
-   "start": "2026-10-13T15:00",
+   "start": "2026-10-13T15:10",
    "category": "WTA 125",
    "tournament": "Mallorca (Spain), clay",
    "pick": "Masarova Rebeka",
@@ -310,7 +310,7 @@
   },
   {
    "id": "ldSPNTln",
-   "start": "2026-10-13T15:40",
+   "start": "2026-10-13T15:55",
    "category": "Muški Challenger",
    "tournament": "Olbia (Italy), hard",
    "pick": "Butvilas Edas",
@@ -327,26 +327,8 @@
    "link": "https://www.flashscore.com/match/ldSPNTln/"
   },
   {
-   "id": "nNKYTol1",
-   "start": "2026-10-13T15:40",
-   "category": "Muški Challenger",
-   "tournament": "Catania (Italy), clay",
-   "pick": "Vives Marcos Pedro",
-   "opponent": "Cecchinato Marco",
-   "odds": 3.75,
-   "book": "Superbet",
-   "stake": 423,
-   "status": "Čeka",
-   "profit": null,
-   "p_model": 0.2801,
-   "ev": 0.0503,
-   "last_odds": 2.62,
-   "clv": 0.4313,
-   "link": "https://www.flashscore.com/match/nNKYTol1/"
-  },
-  {
    "id": "UmRFdguQ",
-   "start": "2026-10-13T15:55",
+   "start": "2026-10-13T16:00",
    "category": "Muški Challenger",
    "tournament": "Maia (Portugal), clay (indoor)",
    "pick": "Mikrut Luka",
@@ -361,6 +343,24 @@
    "last_odds": 1.25,
    "clv": 0.12,
    "link": "https://www.flashscore.com/match/UmRFdguQ/"
+  },
+  {
+   "id": "nNKYTol1",
+   "start": "2026-10-13T16:00",
+   "category": "Muški Challenger",
+   "tournament": "Catania (Italy), clay",
+   "pick": "Vives Marcos Pedro",
+   "opponent": "Cecchinato Marco",
+   "odds": 3.75,
+   "book": "Superbet",
+   "stake": 423,
+   "status": "Čeka",
+   "profit": null,
+   "p_model": 0.2801,
+   "ev": 0.0503,
+   "last_odds": 2.62,
+   "clv": 0.4313,
+   "link": "https://www.flashscore.com/match/nNKYTol1/"
   },
   {
    "id": "p2QjwKde",
@@ -394,8 +394,8 @@
    "profit": null,
    "p_model": 0.5536,
    "ev": 0.1348,
-   "last_odds": 1.5,
-   "clv": 0.3667,
+   "last_odds": 1.49,
+   "clv": 0.3758,
    "link": "https://www.flashscore.com/match/Y1aa7oGd/"
   },
   {
@@ -430,8 +430,8 @@
    "profit": null,
    "p_model": 0.3845,
    "ev": 0.0574,
-   "last_odds": 2.75,
-   "clv": 0.0,
+   "last_odds": 2.45,
+   "clv": 0.1224,
    "link": "https://www.flashscore.com/match/vgFuoojJ/"
   },
   {
@@ -451,6 +451,24 @@
    "last_odds": 1.53,
    "clv": 0.0458,
    "link": "https://www.flashscore.com/match/nmSkOv6t/"
+  },
+  {
+   "id": "GSVk4MV6",
+   "start": "2026-10-14T09:30",
+   "category": "WTA Tour",
+   "tournament": "Wuhan (China), hard",
+   "pick": "Krueger Ashlyn",
+   "opponent": "Tararudee Lanlana",
+   "odds": 2.27,
+   "book": "Superbet",
+   "stake": 1908,
+   "status": "Čeka",
+   "profit": null,
+   "p_model": 0.4864,
+   "ev": 0.104,
+   "last_odds": null,
+   "clv": null,
+   "link": "https://www.flashscore.com/match/GSVk4MV6/"
   },
   {
    "id": "8GXynuRq",
@@ -484,8 +502,8 @@
    "profit": null,
    "p_model": 0.3688,
    "ev": 0.0512,
-   "last_odds": 3.35,
-   "clv": -0.1493,
+   "last_odds": 3.5,
+   "clv": -0.1857,
    "link": "https://www.flashscore.com/match/2gwzN4qf/"
   },
   {
