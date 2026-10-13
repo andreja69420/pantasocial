@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-13T08:35",
+ "as_of": "2026-10-13T09:06",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -97,8 +97,8 @@
    "odds": 2.75,
    "book": "bet365",
    "stake": 734,
-   "status": "U toku",
-   "profit": null,
+   "status": "Povraćaj",
+   "profit": 0,
    "p_model": 0.3823,
    "ev": 0.0514,
    "last_odds": 2.75,
@@ -169,8 +169,8 @@
    "profit": null,
    "p_model": 0.2989,
    "ev": 0.0612,
-   "last_odds": 2.6,
-   "clv": 0.3654
+   "last_odds": 2.57,
+   "clv": 0.3813
   },
   {
    "id": "b5zIFoFF",
@@ -373,8 +373,8 @@
    "profit": null,
    "p_model": 0.5536,
    "ev": 0.1348,
-   "last_odds": 1.6,
-   "clv": 0.2812
+   "last_odds": 1.59,
+   "clv": 0.2893
   },
   {
    "id": "Onvs6Umd",
