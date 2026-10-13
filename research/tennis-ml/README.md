@@ -678,7 +678,11 @@ online. 18 merged (`fs_common.ALIASES`, Flashscore name -> history name; new res
 - not merged: Werner Caroline (a different player than Caroline Uebelhoer; she is not in the Sackmann files at all)
 `fix_aliases.py` rewrote the old rows (real id and history name) in every match file (fs_raw, its updates, fx_raw,
 base_raw, fs_full, fs_hist 2024-25; backup `alias_backup/before_fix.tgz`), then the base build was rebuilt from fx_raw
-(`out_live3`, F2_CLEAN_GAMES=1) and caught up with the loop's results before it replaced `out_live2`.
+(`out_live3`, F2_CLEAN_GAMES=1) and caught up with the loop's results before it replaced `out_live2`. Check after the swap: Svitolina 858 matches under one id (was 835 + 23),
+no fs_mid lost or added against the old build (two 2026-10-04 matches outside the feeds' 7 days re-added from the
+catch-up file), the pass runs as before (88 s, the ratings state rebuilt once). Svitolina - Samsonova now: model 67.5%
+for Svitolina vs book fair 69%, no value (with the split history the model gave Samsonova 47%, a false +11.7%).
+The old build is kept as `out_live2_pre_alias`.
 
 **Every competition in the plan from 2026-10-11 evening** (after the whole-2026 test per level): one bank, same rule
 (EV>5% odds<=5 at the opening price, quarter Kelly), all six Flashscore categories (women's / men's ITF, Challenger,

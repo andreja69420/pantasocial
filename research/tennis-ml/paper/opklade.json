@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-13T10:06",
+ "as_of": "2026-10-13T10:39",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -106,7 +106,7 @@
   },
   {
    "id": "pYlDEeyh",
-   "start": "2026-10-13T10:05",
+   "start": "2026-10-13T10:10",
    "category": "Muški Challenger",
    "tournament": "Catania (Italy), clay",
    "pick": "Searle Henry",
@@ -123,7 +123,7 @@
   },
   {
    "id": "r5GedELN",
-   "start": "2026-10-13T10:05",
+   "start": "2026-10-13T10:10",
    "category": "Muški Challenger",
    "tournament": "Catania (Italy), clay",
    "pick": "Papoe Radu Mihai",
@@ -140,7 +140,7 @@
   },
   {
    "id": "CnDUtODE",
-   "start": "2026-10-13T10:05",
+   "start": "2026-10-13T10:10",
    "category": "WTA 125",
    "tournament": "Mallorca (Spain), clay",
    "pick": "Pigossi Laura",
@@ -157,7 +157,7 @@
   },
   {
    "id": "jch4XuCj",
-   "start": "2026-10-13T10:05",
+   "start": "2026-10-13T10:10",
    "category": "WTA 125",
    "tournament": "Mallorca (Spain), clay",
    "pick": "Nguyen Tan Lucie",
@@ -373,8 +373,8 @@
    "profit": null,
    "p_model": 0.5536,
    "ev": 0.1348,
-   "last_odds": 1.59,
-   "clv": 0.2893
+   "last_odds": 1.5,
+   "clv": 0.3667
   },
   {
    "id": "Onvs6Umd",
@@ -390,8 +390,8 @@
    "profit": null,
    "p_model": 0.6636,
    "ev": 0.0551,
-   "last_odds": 1.42,
-   "clv": 0.1197
+   "last_odds": 1.36,
+   "clv": 0.1691
   },
   {
    "id": "OtZF6nRG",
