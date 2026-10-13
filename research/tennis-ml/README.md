@@ -1576,3 +1576,29 @@ The observed -3.5% is about 0.3 standard errors below +6%. The honest benchmark 
 6. **Decision rule.** Judge nothing before about 200 bets (3 to 4 weeks, se 8.8 pts). Then compare against +6%, not +17%.
 
 **Unmeasured:** book limits and voided-winner risk (a 10% random void costs about -5 pts), and the exact production-model edge.
+
+### Flashscore Serbian prices 2024-2026: opening price vs later prices, and the proposed fixes (`eval_path_years.py`)
+User request after the investigation: the plan rule (no ITF, EV>5%, odds<=5, best price) on Flashscore's Serbian-region prices
+for whole 2024 (3 books), 2025 (5 books) and 2026 (6 books), with walk-forward predictions (`preds3_*_r6_v3_lower_<year>`, a
+model that never saw that year). Input: the per-side tables the investigation built (`sides_book_<year>.parquet`). Prices
+between open and close are interpolated on the log-price path (t = 0 open, 1 close), as the loop meets them some time
+after the open. "guard" = bet only while the current price is at most 3% above the opening one. Flat 1 unit; full table
+`paper/eval_path_2024_2026.csv`. Reproduces the earlier opening numbers (2026 1,875 bets +17.8% vs 1,869 +17.2%).
+
+| rule | t | 2024 | 2025 | 2026 |
+|---|---|---|---|---|
+| plan EV>5% | open | 924 +20.2% | 1,970 +15.0% | 1,875 +17.8% |
+| plan EV>5% | 0.25 | 629 +18.5% | 1,367 +6.6% | 1,425 +9.0% |
+| plan EV>5% | 0.5 | 437 +19.5% | 918 -0.7% | 1,089 +4.0% |
+| plan EV>5% | close | 327 +16.2% | 720 -4.3% | 998 +8.1% |
+| EV>8% | open | 375 +38.5% | 776 +20.4% | 812 +19.9% |
+| EV>8% | 0.25 | 231 +28.4% | 500 +9.5% | 584 +10.6% |
+| EV>8% | 0.5 | 156 +24.0% | 325 -1.6% | 468 +10.2% |
+| EV>8% + guard | 0.25 | 222 +31.6% | 480 +13.2% | 563 +11.5% |
+| EV>8% + guard | 0.5 | 134 +31.1% | 267 +6.9% | 392 +11.1% |
+| EV>5% without WTA 125 | 0.25 | 566 +17.4% | 1,197 +6.1% | 1,344 +7.8% |
+
+- At the opening price every year earns +15..+20%; at later prices 2024 holds, 2025 falls to about zero, 2026 is in between.
+- EV>8% with the price guard is the only variant positive at both t=0.25 and t=0.5 in all three years (+7..+32%,
+  lower 90% bounds mostly above zero), at about a third of the bets.
+- Dropping WTA 125 does not help in any year (it is slightly worse), so it stays.
