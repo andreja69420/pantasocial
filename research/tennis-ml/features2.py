@@ -36,6 +36,11 @@ def load_matches():
 def prepare(m, first_order=0):
     """Normalise raw Sackmann-format rows: dates, round order, score flags; drop walkovers; chronological order."""
     m = m.dropna(subset=["winner_id", "loser_id", "tourney_date"]).copy()
+    # the Sackmann files repeat some matches (WTA qualifying / ITF rows, ~7,900 copies, mostly 1991-95 and 200-300 a
+    # year since 2024); the copy with a Flashscore id is kept, the original order is not changed
+    key = ["tourney_id", "winner_id", "loser_id", "round", "score"]
+    rank = m["fs_mid"].isna() if "fs_mid" in m else pd.Series(False, index=m.index)
+    m = m.loc[m.assign(_r=rank)[key + ["_r"]].sort_values("_r", kind="stable").drop_duplicates(key).index.sort_values()]
     m["date"] = pd.to_datetime(m["tourney_date"].astype(int).astype(str), format="%Y%m%d")
     m["rord"] = m["round"].map(ROUND_ORDER).fillna(5)
     m["score"] = m["score"].fillna("").astype(str)

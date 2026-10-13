@@ -13,7 +13,9 @@ from concurrent.futures import ThreadPoolExecutor
 
 import pandas as pd
 
-from fs_common import CATS, Limiter, add_bio, records, result_row, sackmann_ids_bio
+import json
+
+from fs_common import CATS, Limiter, add_bio, page_rounds, qual_rounds, records, result_row, sackmann_ids_bio
 
 D = sys.argv[1]
 DAYS = int(sys.argv[2]) if len(sys.argv) > 2 else 7
@@ -25,13 +27,32 @@ L = Limiter(float(os.environ.get("RATE", "150")))
 with ThreadPoolExecutor(8) as ex:
     feeds = list(ex.map(lambda off: L.get(f"https://www.flashscore.com/x/feed/f_2_{off}_1_en_1"), range(-DAYS, 1)))
 pairs = [(h, d) for text in feeds for h, d in records(text)]
+# the daily feed has no round: it comes from the results page of each tournament with a finished match not yet built
+have_all = set()
+for tour in ("wta", "atp"):
+    have_all |= set(pd.read_parquet(os.path.join(D, os.environ.get("LIVE_OUT", "out_live"), f"{tour}_matches.parquet"),
+                                    columns=["fs_mid"]).fs_mid.dropna().astype(str))
+todo = [(h, d) for h, d in pairs if d.get("AB") == "3" and d["AA"] not in have_all and h["ZA"].split(":")[0].strip() in CATS]
+by_path = {}
+for h, d in todo:
+    by_path.setdefault(h.get("ZL", ""), set()).add(d["AA"])
+with ThreadPoolExecutor(8) as ex:
+    found = list(ex.map(lambda pw: page_rounds(L, [pw[0]], pw[1]), [(p, w) for p, w in by_path.items() if p]))
+er = {k: v for f, _ in found for k, v in f.items()}
+pairs = [({**h, "ZA": er[d["AA"]][0]}, {**d, "ER": er[d["AA"]][1]}) if d["AA"] in er else (h, d) for h, d in pairs]
+# rounds per qualifying stage, kept across passes: the first round leaves the 3-day window before the last is played
+QF = os.path.join(D, "fs_raw", "qual_rounds.json")
+nq = qual_rounds(pairs, json.load(open(QF)) if os.path.exists(QF) else {})
+for _, q in found:
+    nq.update({k: max(v, nq.get(k, 0)) for k, v in q.items()})
+json.dump(nq, open(QF, "w"))
 for tour in ("wta", "atp"):
     base = pd.read_parquet(os.path.join(D, os.environ.get("LIVE_OUT", "out_live"), f"{tour}_matches.parquet"),
                            columns=["tourney_id", "tourney_date", "winner_id", "loser_id", "fs_mid"])
     have = set(base.fs_mid.dropna().astype(str))
     ids, BIO = sackmann_ids_bio(os.path.join(D, "live_raw"), tour)
     rows = [r for h, d in pairs if CATS.get(h["ZA"].split(":")[0].strip(), ("",))[0] == tour and d["AA"] not in have
-            and (r := result_row(h, d, ids))]
+            and (r := result_row(h, d, ids, nq))]
     if not rows:
         print(f"{tour}: no new finished matches", flush=True)
         continue

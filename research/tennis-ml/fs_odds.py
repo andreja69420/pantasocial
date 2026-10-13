@@ -72,6 +72,9 @@ elif FIX:
         texts += [page_feed(p, "fixtures") for p in ex.map(get, [f"https://www.flashscore.com/tennis/{c}/{t}/fixtures/" for c, t in tours])]
     for text in texts:
         for head, d in feed_records(text):
+            if d.get("AA") in matches and not matches[d["AA"]]["round"] and d.get("ER"):
+                # the daily feed has no round; the tournament's fixtures page (read after it) has
+                matches[d["AA"]].update(round=d["ER"], tournament=head["ZA"])
             if head["ZA"].split(":")[0].strip() in CATS and d.get("AB") == "1" and d["AA"] not in matches:
                 matches[d["AA"]] = {"fs_mid": d["AA"], "home_pid": d.get("JA"), "away_pid": d.get("JB"),
                                     "home": d.get("WU", d.get("AE")), "away": d.get("WV", d.get("AF")),

@@ -24,6 +24,7 @@ env LIVE_OUT=feature build dir (default out_live), MODELS=model dir (default mod
 BOOKS=comma-separated bookmakers to bet with (default: every book of the region), SKIP_CATS=comma-separated Flashscore
 categories not bet (e.g. ITF MEN - SINGLES,ITF WOMEN - SINGLES)
 """
+import json
 import os
 import pickle
 import re
@@ -36,7 +37,7 @@ import urllib.request
 import numpy as np
 import pandas as pd
 
-from fs_common import UA, NameIds, apply_aliases, key, level, player_name, records, round_code, tournament
+from fs_common import UA, NameIds, apply_aliases, key, level, player_name, qual_rounds, records, round_code, tournament
 
 D = sys.argv[1]
 DAYS = int(sys.argv[2]) if len(sys.argv) > 2 else 7
@@ -113,6 +114,9 @@ for tour in ("wta", "atp"):
     bio = bio.dropna(subset=["id"]).sort_values("date").groupby("id").last()
     tstart = base.assign(tid=base.tourney_id.astype(str)).groupby("tid").tourney_date.min()
     fx = O.drop_duplicates("fs_mid").copy()
+    QF = os.path.join(D, "fs_raw", "qual_rounds.json")
+    nq = qual_rounds((({"ZA": z}, {"ER": e}) for z, e in zip(fx.tournament, fx["round"])),
+                     json.load(open(QF)) if os.path.exists(QF) else {})
     rows = []
     for r in fx.itertuples():
         d = {"WU": r.home, "WV": r.away}
@@ -135,7 +139,7 @@ for tour in ("wta", "atp"):
         row = {"tourney_id": tid, "tourney_name": tname, "surface": surf, "draw_size": "", "tourney_level": level(cat, tname),
                "tourney_date": int(tstart.get(tid, int(day.strftime("%Y%m%d")))), "match_num": 999,
                "winner_id": hid, "winner_name": nh.title(), "loser_id": aid, "loser_name": na.title(),
-               "score": "6-0 6-0", "best_of": 3, "round": round_code({"ER": r.round}), "fs_mid": r.fs_mid}
+               "score": "6-0 6-0", "best_of": 3, "round": round_code({"ER": r.round}, r.tournament, nq), "fs_mid": r.fs_mid}
         for side, pid in (("winner", hid), ("loser", aid)):
             if pid in bio.index:
                 b = bio.loc[pid]

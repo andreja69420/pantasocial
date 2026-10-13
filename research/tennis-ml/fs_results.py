@@ -19,7 +19,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 import pandas as pd
 
-from fs_common import Limiter, add_bio, records, page_feed, result_row, sackmann_ids_bio
+from fs_common import Limiter, add_bio, page_feed, paged_results, qual_rounds, records, result_row, sackmann_ids_bio
 
 RAW, OUT, TOUR, FROM = sys.argv[1:5]
 TO = sys.argv[5] if len(sys.argv) > 5 else "2099-12-31"
@@ -80,29 +80,14 @@ with ThreadPoolExecutor(THREADS) as ex:
 print(f"pages fetched in {time.time() - t0:.0f}s (rate {L.rate:.0f}/s)", flush=True)
 
 
-def more(page):
-    """The embedded feed holds only the first chunk of results (a Grand Slam's main draw, its qualifying is cut off);
-    the rest comes from the paged feed tr_2_{country}_{tournament}_{season}_{page}, read until a page is empty."""
-    ids_ = [re.search(p, page or "") for p in (r"country_id\s*=\s*(\d+)", r"tournament_id\s*=\s*\"(\w+)\"", r"seasonId:\s*(\d+)")]
-    if not all(ids_):
-        return []
-    c, t, s = (m.group(1) for m in ids_)
-    feeds = []
-    for p in range(1, 30):
-        body = L.get(f"https://www.flashscore.com/x/feed/tr_2_{c}_{t}_{s}_{p}_3_en_1", {**UA, "x-fsign": "SW9D1eZo"})
-        if "~AA÷" not in body:
-            break
-        feeds.append(body)
-    return feeds
-
-
 t0 = time.time()
 with ThreadPoolExecutor(THREADS) as ex:
-    pages = [page_feed(p) for p in pages] + [f for fs in ex.map(more, pages) for f in fs]
+    pages = [page_feed(p) for p in pages] + [f for fs in ex.map(lambda p: paged_results(L, p), pages) for f in fs]
 print(f"paged results fetched in {time.time() - t0:.0f}s ({len(pages)} feeds)", flush=True)
 
 ids, BIO = sackmann_ids_bio(RAW, TOUR)
-out = [r for page in pages for head, d in records(page) if (r := result_row(head, d, ids))]
+nq = qual_rounds(hd for page in pages for hd in records(page))
+out = [r for page in pages for head, d in records(page) if (r := result_row(head, d, ids, nq))]
 O = pd.DataFrame(out)
 O = O[(O.date >= FROM) & (O.date <= TO)].drop_duplicates("fs_mid")
 unmapped = int(O.pop("unmapped").sum())

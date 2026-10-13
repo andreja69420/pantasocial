@@ -1632,8 +1632,24 @@ rating state and ran without errors (86 s).
 Effect on the rejected proposal: Masarova vs Mintegi Del Olmo (Mallorca, 2.56 at 1xBet) model 53.1% -> 47.4%, blend
 38.6%, EV about -1%, so no bet (it was put back into review after the fix and no longer passes EV>5%).
 
-Open, not fixed yet:
-- qualifying matches from Flashscore get main-draw round codes (`round_code` reads "Quarter-finals" etc. without the
-  qualification header), so within one event a qualifier's Q3 can sort after their main-draw match
-- 217 duplicate rows in the 2026 WTA history (same day, players and score twice, e.g. Birmingham 125 qualifying),
-  from the Sackmann files
+**Round labels and duplicates fixed (same night, second rebuild).**
+- Flashscore names the rounds of a qualifying stage from the end of each small bracket ("Quarter-finals",
+  "Semi-finals", "Final" for a three-round qualifying); they were stored as main-draw QF / SF / F, so a qualifier's
+  matches sorted after the main draw and counted as late main-draw rounds (`rord`, the context features). Now
+  `fs_common.round_code` gives Q1..Qn, with n = the number of rounds of that stage (`qual_rounds`, from every record
+  of the stage; the results update keeps it in `fs_raw/qual_rounds.json`, since the first round leaves the 3-day
+  window before the last one is played). Check: Masarova's US Open match = Q1, Mallorca qualifying = 2 rounds.
+- **The daily feed has no round at all**, so every result the loop added since it started and **every fixture the
+  model priced was labelled R32** (`round_code` fallback): a train/serve difference in `rord` and the context
+  features for all live bets so far. Now `fs_update.py` takes the round from the results page of each tournament with
+  a new result (`fs_common.page_rounds`, one request per tournament, paged feed when needed) and `fs_odds.py` fills it
+  from the tournament's fixtures page. First pass after the fix: fixtures R16 25 / R32 14 (women), R16 37 / R32 15 /
+  QF 2 (men), was R32 for all.
+- Rounds of the existing Flashscore rows rewritten by match id from a re-scrape of 2026 (women 355 + 83 loop rows +
+  407 backfill changed, men 1,906 + 122 + 295).
+- `features2.prepare` drops exact duplicates (same event, players, round, score; the copy with a Flashscore id is
+  kept): women 7,891 copies (mostly 1991-95, 200-300 a year since 2024, Sackmann WTA qualifying / ITF rows), men 17.
+- Rebuild from `fx_raw_bf` (now the raw dir of the live build: `fx_raw` + loop rows + backfill, rounds corrected).
+  Check against the previous build: women 681,516 -> 673,624 (7,891 duplicates + 1 loop row of the 22:06 pass), men
+  865,867 -> 865,848 (17 + 2), no duplicate left, the 3 loop rows re-added by the next pass with their rounds. Old
+  build kept as `out_live2_pre_fix`. The models are unchanged (trained on <= 2025 with the duplicates in).

@@ -70,6 +70,44 @@ def page_feed(page, name="results"):
     return m.group(1) if m else ""
 
 
+def paged_results(L, page, want=None):
+    """The results feed embedded in a tournament page holds only the first chunk (a Grand Slam's main draw, its
+    qualifying is cut off); the rest comes from the paged feed tr_2_{country}_{tournament}_{season}_{page}, read until a
+    page is empty (or until every match id in want has been seen)."""
+    ids_ = [re.search(p, page or "") for p in (r"country_id\s*=\s*(\d+)", r"tournament_id\s*=\s*\"(\w+)\"", r"seasonId:\s*(\d+)")]
+    if not all(ids_):
+        return []
+    c, t, s = (m.group(1) for m in ids_)
+    feeds, want = [], set(want) if want is not None else None
+    for p in range(1, 30):
+        body = L.get(f"https://www.flashscore.com/x/feed/tr_2_{c}_{t}_{s}_{p}_3_en_1", {**UA, "x-fsign": "SW9D1eZo"})
+        if "~AA÷" not in body:
+            break
+        feeds.append(body)
+        if want is not None:
+            want -= {d["AA"] for _, d in records(body)}
+            if not want:
+                break
+    return feeds
+
+
+def page_rounds(L, paths, want):
+    """{match id: (stage header ZA, round ER)} from the results pages of the tournaments at paths (the daily feed has no
+    round), plus {ZA: number of qualifying rounds} of those stages"""
+    out, pairs = {}, []
+    for path in paths:
+        page = L.get(f"https://www.flashscore.com{path}results/")
+        feeds = [page_feed(page)]
+        left = set(want) - {d["AA"] for _, d in records(feeds[0])}
+        if left:
+            feeds += paged_results(L, page, left)
+        for f in feeds:
+            for h, d in records(f):
+                pairs.append((h, d))
+                out[d["AA"]] = (h["ZA"], d.get("ER", ""))
+    return out, qual_rounds(pairs)
+
+
 def level(cat, tname):
     m = re.match(r"[WM](\d+)", tname)
     if cat.startswith("itf"):
@@ -99,9 +137,31 @@ def synthetic_id(name):
     return 900000000 + zlib.crc32(key(name).encode()) % 90000000
 
 
-def round_code(d):
+# a qualifying stage on Flashscore is split into small brackets, its rounds named from the end of each bracket
+# ("Quarter-finals", "Semi-finals", "Final" for three rounds); Sackmann counts from the start (Q1, Q2, Q3)
+QDIST = {"final": 0, "semi-finals": 1, "quarter-finals": 2, "1/8-finals": 3, "1/16-finals": 4, "1/32-finals": 5}
+
+
+def is_qual(za):
+    return "qualification" in za.lower()
+
+
+def qual_rounds(pairs, known=None):
+    """{ZA header of a qualifying stage: number of rounds} from every record seen (any status), merged with known"""
+    n = dict(known or {})
+    for h, d in pairs:
+        dist = QDIST.get(d.get("ER", "").strip().lower())
+        if is_qual(h.get("ZA", "")) and dist is not None:
+            n[h["ZA"]] = max(n.get(h["ZA"], 0), dist + 1)
+    return n
+
+
+def round_code(d, za="", nq=None):
     er = d.get("ER", "").strip().lower()
-    return ROUNDS.get(er, "Q1" if "qualif" in er else "R32")
+    if is_qual(za) and er in QDIST:
+        n = (nq or {}).get(za) or max(2, QDIST[er] + 1)
+        return f"Q{max(1, n - QDIST[er])}"
+    return ROUNDS.get(er, "Q1" if "qualif" in er or is_qual(za) else "R32")
 
 
 class NameIds(dict):
@@ -219,7 +279,7 @@ def add_bio(O, BIO, day_col="date"):
     return O
 
 
-def result_row(head, d, ids):
+def result_row(head, d, ids, nq=None):
     """Sackmann-format row of a finished (or retired) match, None for walkovers / cancelled / unfinished."""
     if d.get("AB") != "3" or d.get("AC") not in ("3", "8"):
         return None
@@ -244,7 +304,7 @@ def result_row(head, d, ids):
             "winner_id": ids.get(key(w)) or synthetic_id(w), "winner_name": canonical(w),
             "loser_id": ids.get(key(l)) or synthetic_id(l), "loser_name": canonical(l),
             "score": " ".join(sets) + (" RET" if ret else ""), "best_of": 5 if hs + as_ > 3 and not ret else 3,
-            "round": round_code(d), "date": day, "fs_mid": d["AA"],
+            "round": round_code(d, head.get("ZA", ""), nq), "date": day, "fs_mid": d["AA"],
             "unmapped": (ids.get(key(w)) is None) + (ids.get(key(l)) is None)}
 
 
