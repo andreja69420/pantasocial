@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-13T22:35",
+ "as_of": "2026-10-13T23:07",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -390,8 +390,8 @@
    "odds": 2.05,
    "book": "1xBet",
    "stake": 3013,
-   "status": "U toku",
-   "profit": null,
+   "status": "Dobijeno",
+   "profit": 3164,
    "p_model": 0.5536,
    "ev": 0.1348,
    "last_odds": 1.49,
@@ -400,7 +400,7 @@
   },
   {
    "id": "Onvs6Umd",
-   "start": "2026-10-14T01:25",
+   "start": "2026-10-14T01:40",
    "category": "Muški Challenger",
    "tournament": "Santa Cruz 2 (Bolivia), clay",
    "pick": "Villanueva Gonzalo",
@@ -523,6 +523,24 @@
    "last_odds": 1.31,
    "clv": 0.1145,
    "link": "https://www.flashscore.com/match/OtZF6nRG/"
+  },
+  {
+   "id": "MJaMsDvJ",
+   "start": "2026-10-15T10:00",
+   "category": "WTA 125",
+   "tournament": "Rovereto (Italy), hard (indoor)",
+   "pick": "Kostovic Teodora",
+   "opponent": "Kubka Martyna",
+   "odds": 2.24,
+   "book": "1xBet",
+   "stake": 2001,
+   "status": "Čeka",
+   "profit": null,
+   "p_model": 0.4939,
+   "ev": 0.1064,
+   "last_odds": null,
+   "clv": null,
+   "link": "https://www.flashscore.com/match/MJaMsDvJ/"
   },
   {
    "id": "6sANNgxQ",
