@@ -1,10 +1,12 @@
-"""Manual review of the bets paper_trade.py proposes (REVIEW=1): nothing reaches the ledger before someone has looked at
-both players.
+"""Manual review of the bets paper_trade.py proposes (REVIEW=1). Since 2026-10-13 every proposal the model makes goes into
+the ledger (the user's wish); the reviewer only records whether they would have played it (ledger column `claude`, da/ne,
+reason in `review`), so at the end of the month we can see whether the review would have helped.
 
   review.py DATA_DIR                    pending proposals: the bet, every book's price, model vs book, and per player
                                         the ids and names of the history, matches, last match, bio and the last 10 results
-  review.py DATA_DIR ok FS_MID [NOTE]   into the ledger (logged now); ledger copied to paper/ and the Excel rebuilt
-  review.py DATA_DIR no FS_MID REASON   rejected: to paper/skipped.csv with the reason
+  review.py DATA_DIR ok FS_MID [NOTE]   into the ledger (logged now), claude=da; ledger copied to paper/, Excel rebuilt
+  review.py DATA_DIR ne FS_MID REASON   into the ledger as well, but claude=ne: the reviewer would not have played it
+  review.py DATA_DIR no FS_MID REASON   not logged, to paper/skipped.csv: only for data errors (wrong player, wrong match)
 A proposal whose match has already started is rejected on its own when the list is shown.
 """
 import os
@@ -42,7 +44,7 @@ def publish():
                    cwd=HERE, check=True, capture_output=True)
 
 
-if CMD in ("ok", "no"):
+if CMD in ("ok", "ne", "no"):
     # a pass reads the ledger and the proposals at its start and writes them at its end: never write in between
     if any("paper_trade.py" in a for a in subprocess.run(["ps", "-eo", "args"], capture_output=True, text=True).stdout.splitlines()):
         sys.exit("a paper_trade.py pass is running; try again when it has finished")
@@ -50,9 +52,10 @@ if CMD in ("ok", "no"):
     row = P[P.fs_mid == mid]
     if row.empty:
         sys.exit(f"{mid} is not a pending proposal")
-    if CMD == "ok":
+    if CMD in ("ok", "ne"):
         L = pd.read_csv(LEDGER) if os.path.exists(LEDGER) else pd.DataFrame()
-        add = row.drop(columns=["id_home", "id_away"]).assign(logged_at=now, review=" ".join(sys.argv[4:]) or "ok")
+        add = row.drop(columns=["id_home", "id_away"]).assign(logged_at=now, review=" ".join(sys.argv[4:]) or "ok",
+                                                              claude="da" if CMD == "ok" else "ne")
         # every book's current price for our side right away, so the "Sve kvote" sheet is not empty until the next pass
         r0 = add.iloc[0]
         fx = pd.read_parquet(os.path.join(D, "fs_raw", f"{r0.tour}_fs_fixture_odds_{GEO}.parquet"))
@@ -66,7 +69,7 @@ if CMD in ("ok", "no"):
     else:
         reject(row, "manual review: " + " ".join(sys.argv[4:]))
     save_props(P[P.fs_mid != mid])
-    print(f"{mid}: {'logged' if CMD == 'ok' else 'rejected'}")
+    print(f"{mid}: {dict(ok='logged', ne='logged, Claude would not play it', no='rejected')[CMD]}")
     sys.exit()
 
 if P.empty:

@@ -679,6 +679,17 @@ A separate watcher (`watch.py`, run by Claude as a monitor every minute) reads t
 phone notification when one of our matches starts, after each set, and at the end. The user had it switched off the
 same day, so it is not run.
 
+**Every model bet is logged; the review only records an opinion (2026-10-13)**: the user wants every bet the model
+proposes in the paper table, so we can see at the end of the month whether Claude's review helps. Claude still reviews
+each proposal, but now only records a verdict in the ledger (column `claude`: `da` = would have played it, `ne` = would
+not, with the reason in `review`), with `review.py DATA_DIR ok|ne FS_MID NOTE`.
+- `no` (not logged) is now only for data errors such as a wrong player or wrong match.
+- The automatic data checks in paper_trade.py (synthetic id, too few matches) still stop a bet.
+- The 25 bets logged so far were all approved, so they are `claude = da`.
+- Monnet - Yaneva (rejected at 10:07) was taken out of skipped.csv, so the next pass proposes it again if it still has
+  EV > 5%.
+- End of month: compare profit and ROI of `da` vs `ne`.
+
 **Split players merged (2026-10-13)**: Flashscore writes some players under another name than the history (married or
 maiden name, another spelling), so their Flashscore matches since 2026-06 got a synthetic id and they started again
 from zero. Found when the loop stopped Monfils Elina - Samsonova: "Monfils Elina" is Elina Svitolina (835 matches as
