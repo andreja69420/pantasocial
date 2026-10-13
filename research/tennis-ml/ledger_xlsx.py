@@ -113,7 +113,8 @@ ws.cell(row=5, column=1, value=f"Početna banka {BANK:,.0f} · četvrtina Kelly-
 ws.cell(row=5, column=1).font = font(size=9, color=MUTED)
 
 COLS = [("Početak", 13, "dd.mm. hh:mm"), ("Turnir", 34, "@"), ("Igramo na", 22, "@"), ("Protiv", 22, "@"), ("Kvota", 8, "0.00"),
-        ("Ulog", 10, "#,##0"), ("Rezultat", 12, "@"), ("Dobit", 11, "+#,##0;-#,##0;0"), ("Kladionica", 14, "@")]
+        ("Ulog", 10, "#,##0"), ("Rezultat", 12, "@"), ("Dobit", 11, "+#,##0;-#,##0;0"), ("Kladionica", 14, "@"),
+        ("Flashscore", 12, "@")]
 RIGHT = {"Kvota", "Ulog", "Dobit"}
 r0 = 8
 header(ws, r0 - 1, [c for c, _, _ in COLS], [w for _, w, _ in COLS], RIGHT)
@@ -122,7 +123,7 @@ for i, b in enumerate(L.itertuples()):
     pick, opp = (b.home, b.away) if b.side == "home" else (b.away, b.home)
     tname = b.tournament.split(":", 1)[-1].strip()
     vals = [bg(b.start), tname, player_name({"WU": pick}, "h").title(), player_name({"WU": opp}, "h").title(), float(b.odds),
-            int(b.stake), b.res, None if np.isnan(b.profit) else int(b.profit), BOOK_NAMES.get(b.book, b.book)]
+            int(b.stake), b.res, None if np.isnan(b.profit) else int(b.profit), BOOK_NAMES.get(b.book, b.book), "otvori"]
     for j, v in enumerate(vals, 1):
         cell = ws.cell(row=r, column=j, value=v)
         cell.number_format = COLS[j - 1][2]
@@ -131,6 +132,9 @@ for i, b in enumerate(L.itertuples()):
         cell.alignment = Alignment(horizontal="right" if COLS[j - 1][0] in RIGHT else "left", vertical="center", indent=1)
         if i % 2:
             cell.fill = fill(BAND)
+    # the match on Flashscore: on a phone it opens the app, where a star turns on its notifications
+    link = ws.cell(row=r, column=len(COLS))
+    link.hyperlink, link.font = f"https://www.flashscore.com/match/{b.fs_mid}/", font(color="1F5FBF", underline="single")
     fg, bgc = STATUS.get(b.res, (INK, BAND))
     st = ws.cell(row=r, column=7)
     st.font, st.fill = font(bold=True, color=fg), fill(bgc)
@@ -139,7 +143,7 @@ for i, b in enumerate(L.itertuples()):
     ws.row_dimensions[r].height = 20
 last = r0 + max(len(L), 1) - 1
 ws.freeze_panes = ws.cell(row=r0, column=1)
-ws.auto_filter.ref = f"A{r0 - 1}:I{last}"
+ws.auto_filter.ref = f"A{r0 - 1}:J{last}"
 ws.page_setup.orientation = "landscape"
 ws.page_setup.fitToWidth, ws.page_setup.fitToHeight = 1, 0
 ws.sheet_properties.pageSetUpPr.fitToPage = True
@@ -212,7 +216,8 @@ for b in L.itertuples():
                  "odds": float(b.odds), "book": BOOK_NAMES.get(b.book, b.book), "stake": int(b.stake),
                  "status": b.res, "profit": None if np.isnan(b.profit) else int(b.profit),
                  "p_model": round(float(b.q_blend), 4), "ev": round(float(b.ev), 4), "last_odds": last,
-                 "clv": None if not last else round(float(b.odds) / last - 1, 4)})
+                 "clv": None if not last else round(float(b.odds) / last - 1, 4),
+                 "link": f"https://www.flashscore.com/match/{b.fs_mid}/"})
 with open(os.path.splitext(OUT)[0] + ".json", "w") as f:
     json.dump({"bank_start": BANK, "as_of": f"{bg(now):%Y-%m-%dT%H:%M}", "rows": rows}, f, ensure_ascii=False, indent=1)
 print(f"{len(L)} bets -> {OUT}")

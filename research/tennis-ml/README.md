@@ -656,6 +656,9 @@ stores the time it first saw the result, `settled_at`), and the new bank applies
 Excel) and feed a dashboard on claude.ai: bank, profit, ROI, won-lost, pending, average price edge over the last
 price before the match, the bank after every settled bet, totals per category and all bets (filter, search, sort).
 The trigger checks at :04 and :34 upload the new JSON after every pass.
+Each bet links to its Flashscore match (Excel column "Flashscore", the player's name on the online table): on a phone
+it opens the Flashscore app, where the star turns on that match's notifications (no account needed). The checks also
+send a phone notification when a bet is logged or settled.
 
 **Kick-off times refreshed every pass (2026-10-13)**: Flashscore often moves a match (order of play, "followed by",
 rain). Every pass now takes the current start of each open bet from the fixtures and the daily feeds (yesterday to
