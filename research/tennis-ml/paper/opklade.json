@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-13T18:48",
+ "as_of": "2026-10-13T19:07",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -523,6 +523,24 @@
    "last_odds": 1.31,
    "clv": 0.1145,
    "link": "https://www.flashscore.com/match/OtZF6nRG/"
+  },
+  {
+   "id": "6sANNgxQ",
+   "start": "2026-10-15T11:00",
+   "category": "Muški Challenger",
+   "tournament": "Olbia (Italy), hard",
+   "pick": "Fearnley Jacob",
+   "opponent": "Kumstat Jan",
+   "odds": 1.55,
+   "book": "1xBet",
+   "stake": 2278,
+   "status": "Čeka",
+   "profit": null,
+   "p_model": 0.681,
+   "ev": 0.0556,
+   "last_odds": null,
+   "clv": null,
+   "link": "https://www.flashscore.com/match/6sANNgxQ/"
   }
  ]
 }
