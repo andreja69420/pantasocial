@@ -19,7 +19,7 @@ from concurrent.futures import ThreadPoolExecutor
 import numpy as np
 import pandas as pd
 
-from fs_common import UA, Limiter, key, level, page_feed, player_name, records, sackmann_ids_bio, synthetic_id, tournament
+from fs_common import UA, Limiter, canonical, key, level, page_feed, player_name, records, sackmann_ids_bio, synthetic_id, tournament
 
 D, YEARS = sys.argv[1], [int(y) for y in sys.argv[2].split(",")]
 OUT = os.path.join(D, "fs_raw", "stats")
@@ -150,7 +150,7 @@ for tour in ("wta", "atp"):
         names = (m["home"], m["away"])
         r = {k: m[k] for k in ("fs_mid", "date", "cat", "tourney_name", "level")}
         for side, pre in ((w, "winner"), (1 - w, "loser")):
-            r[f"{pre}_name"] = names[side].title()
+            r[f"{pre}_name"] = canonical(names[side])
             r[f"{pre}_id"] = ids.get(key(names[side])) or synthetic_id(names[side])
             s = pre[0]
             for st in ("ace", "df", "1stIn", "1stWon", "2ndIn", "2ndWon", "SvGms", "SvGmsWon", "bpSaved", "bpFaced"):

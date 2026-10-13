@@ -24,6 +24,36 @@ def key(name):
     return " ".join(sorted(re.sub(r"[^a-z]+", " ", s).split()))
 
 
+# Flashscore names of players whose history is under another name (married or maiden name, another spelling) -> the
+# name in the history. Without this they get a synthetic id and start again from zero. Found 2026-10-13 by matching
+# every synthetic id with 3+ matches against real players who stopped shortly before it appeared; each pair checked
+# by hand (name change confirmed online where it is not just a spelling).
+ALIASES = {
+    "wta": {"Monfils Elina": "Elina Svitolina", "Van De Winkel Hanne": "Hanne Vandewinkel", "Minnen Greetje": "Greet Minnen",
+            "Serban Raluca Georgiana": "Raluka Serban", "Shapatava Sophia": "Sofia Shapatava", "Webb Stefi": "Stefani Webb",
+            "Choi On Yu": "Onyu Choi", "Dell Edera Francesca": "Francesca Delledera", "Sanders Storm": "Storm Hunter",
+            "Kucmova Aneta": "Aneta Kladivova", "Lemaitre Tiphanie": "Tiphanie Fiquet"},
+    "atp": {"Wolf Jeffrey John": "J J Wolf", "Schwarzler Joel Josef": "Joel Schwaerzler", "Mashtakov Nikita": "Mykyta Mashtakov",
+            "Singh Digvijay": "Digvijaypratap Singh", "Klok Denis": "Denys Klok", "Dell Elba Vito": "Vito Dellelba",
+            "Hulme Matthew": "Matt Hulme"},
+}
+_ALIAS_KEY = {key(a): b for t in ALIASES.values() for a, b in t.items()}
+
+
+def canonical(name):
+    """the history's name of a Flashscore name with an alias, else the Flashscore name in title case"""
+    return _ALIAS_KEY.get(key(name), str(name).title())
+
+
+def apply_aliases(ids):
+    """name key -> id map: each alias gets the id of the name it stands for"""
+    for t in ALIASES.values():
+        for a, b in t.items():
+            if key(b) in ids:
+                ids[key(a)] = ids[key(b)]
+    return ids
+
+
 def records(text):
     """(header, match) pairs of a Flashscore feed: ~ separates records, ¬ fields, ÷ key and value."""
     head = None
@@ -164,7 +194,7 @@ def sackmann_ids_bio(raw, tour, extra=()):
         if c["sig"] == sig:
             ids.update(c["ids"])
             ids.last.update(c["last"])
-            return ids, c["bio"]
+            return apply_aliases(ids), c["bio"]
     for d in [pd.read_csv(f, low_memory=False) for f in files] + list(extra):
         for c in ("winner", "loser"):
             ids.add(d[f"{c}_name"].map({n: key(n) for n in d[f"{c}_name"].unique()}), d[f"{c}_id"],
@@ -176,7 +206,7 @@ def sackmann_ids_bio(raw, tour, extra=()):
         with open(cache + ".tmp", "wb") as fh:
             pickle.dump({"sig": sig, "ids": dict(ids), "last": ids.last, "bio": bio}, fh)
         os.replace(cache + ".tmp", cache)
-    return ids, bio
+    return apply_aliases(ids), bio
 
 
 def add_bio(O, BIO, day_col="date"):
@@ -211,8 +241,8 @@ def result_row(head, d, ids):
     day = pd.Timestamp(int(d["AD"]), unit="s").strftime("%Y-%m-%d")
     return {"tourney_id": f"fs-{slug}-{day[:4]}", "tourney_name": tname, "surface": surf, "draw_size": "",
             "tourney_level": level(cat, tname), "tourney_date": "", "match_num": 0,
-            "winner_id": ids.get(key(w)) or synthetic_id(w), "winner_name": w.title(),
-            "loser_id": ids.get(key(l)) or synthetic_id(l), "loser_name": l.title(),
+            "winner_id": ids.get(key(w)) or synthetic_id(w), "winner_name": canonical(w),
+            "loser_id": ids.get(key(l)) or synthetic_id(l), "loser_name": canonical(l),
             "score": " ".join(sets) + (" RET" if ret else ""), "best_of": 5 if hs + as_ > 3 and not ret else 3,
             "round": round_code(d), "date": day, "fs_mid": d["AA"],
             "unmapped": (ids.get(key(w)) is None) + (ids.get(key(l)) is None)}

@@ -663,6 +663,23 @@ tomorrow) and writes it to the ledger (`start moved ... -> ... UTC` in loop.log)
 the real time and "Čeka" / "U toku" is right. First check: 12 of the 19 open bets had a different time, e.g. Kotov -
 Kopriva 02:00 -> 06:10 UTC, Villanueva - Zarate 14:00 -> 22:30 UTC.
 
+**Split players merged (2026-10-13)**: Flashscore writes some players under another name than the history (married or
+maiden name, another spelling), so their Flashscore matches since 2026-06 got a synthetic id and they started again
+from zero. Found when the loop stopped Monfils Elina - Samsonova: "Monfils Elina" is Elina Svitolina (835 matches as
+Svitolina up to 2026-05-25, 23 more since June under a synthetic id). Every synthetic id with 3+ matches was matched
+against real players who stopped shortly before it appeared; each candidate checked by hand, name changes confirmed
+online. 18 merged (`fs_common.ALIASES`, Flashscore name -> history name; new results and fixtures use it):
+- WTA: Monfils Elina = Elina Svitolina, Sanders Storm = Storm Hunter, Kucmova Aneta = Aneta Kladivova (maiden name),
+  Lemaitre Tiphanie = Tiphanie Fiquet, Van De Winkel Hanne = Hanne Vandewinkel, Minnen Greetje = Greet Minnen,
+  Serban Raluca Georgiana = Raluka Serban, Shapatava Sophia = Sofia Shapatava, Webb Stefi = Stefani Webb,
+  Choi On Yu = Onyu Choi, Dell Edera Francesca = Francesca Delledera
+- ATP: Wolf Jeffrey John = J J Wolf, Schwarzler Joel Josef = Joel Schwaerzler, Mashtakov Nikita = Mykyta Mashtakov,
+  Singh Digvijay = Digvijaypratap Singh, Klok Denis = Denys Klok, Dell Elba Vito = Vito Dellelba, Hulme Matthew = Matt Hulme
+- not merged: Werner Caroline (a different player than Caroline Uebelhoer; she is not in the Sackmann files at all)
+`fix_aliases.py` rewrote the old rows (real id and history name) in every match file (fs_raw, its updates, fx_raw,
+base_raw, fs_full, fs_hist 2024-25; backup `alias_backup/before_fix.tgz`), then the base build was rebuilt from fx_raw
+(`out_live3`, F2_CLEAN_GAMES=1) and caught up with the loop's results before it replaced `out_live2`.
+
 **Every competition in the plan from 2026-10-11 evening** (after the whole-2026 test per level): one bank, same rule
 (EV>5% odds<=5 at the opening price, quarter Kelly), all six Flashscore categories (women's / men's ITF, Challenger,
 WTA 125, WTA and ATP tour incl. Grand Slams). One sheet, `Opklade`: overall summary (rows 2-3), per category profit, ROI and record (rows 5-7) and all bets

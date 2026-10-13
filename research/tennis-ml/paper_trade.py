@@ -35,7 +35,7 @@ import urllib.request
 import numpy as np
 import pandas as pd
 
-from fs_common import UA, NameIds, key, level, player_name, records, round_code, tournament
+from fs_common import UA, NameIds, apply_aliases, key, level, player_name, records, round_code, tournament
 
 D = sys.argv[1]
 DAYS = int(sys.argv[2]) if len(sys.argv) > 2 else 7
@@ -103,6 +103,7 @@ for tour in ("wta", "atp"):
     # a later result can give a known player a synthetic id (>= 9e8); the real id with the full history must win
     names = names.assign(real=names.id < 9e8).sort_values(["real", "d"])
     ids.add(names.k, names.id, names.d.values)
+    apply_aliases(ids)
     hist = pd.concat([pd.DataFrame({"id": base[f"{c}_id"], "date": base.date, "name": nk[c]}) for c in ("winner", "loser")])
     n_hist, last_hist = hist.groupby("id").size(), hist.groupby("id").date.max()
     id_names = hist.groupby("id").name.agg(set)
