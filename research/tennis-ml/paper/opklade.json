@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-13T17:06",
+ "as_of": "2026-10-13T17:36",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -336,8 +336,8 @@
    "odds": 1.4,
    "book": "bet365",
    "stake": 3756,
-   "status": "U toku",
-   "profit": null,
+   "status": "Dobijeno",
+   "profit": 1502,
    "p_model": 0.7572,
    "ev": 0.0601,
    "last_odds": 1.25,
