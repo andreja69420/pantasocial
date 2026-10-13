@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-13T10:45",
+ "as_of": "2026-10-13T11:10",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -237,24 +237,6 @@
    "link": "https://www.flashscore.com/match/ddOosTcT/"
   },
   {
-   "id": "ldSPNTln",
-   "start": "2026-10-13T13:00",
-   "category": "Muški Challenger",
-   "tournament": "Olbia (Italy), hard",
-   "pick": "Butvilas Edas",
-   "opponent": "Kumstat Jan",
-   "odds": 1.8,
-   "book": "bet365",
-   "stake": 1885,
-   "status": "Čeka",
-   "profit": null,
-   "p_model": 0.5891,
-   "ev": 0.0603,
-   "last_odds": 1.62,
-   "clv": 0.1111,
-   "link": "https://www.flashscore.com/match/ldSPNTln/"
-  },
-  {
    "id": "KhQrJKL7",
    "start": "2026-10-13T13:00",
    "category": "WTA 125",
@@ -271,6 +253,24 @@
    "last_odds": 2.22,
    "clv": 0.0721,
    "link": "https://www.flashscore.com/match/KhQrJKL7/"
+  },
+  {
+   "id": "ldSPNTln",
+   "start": "2026-10-13T13:10",
+   "category": "Muški Challenger",
+   "tournament": "Olbia (Italy), hard",
+   "pick": "Butvilas Edas",
+   "opponent": "Kumstat Jan",
+   "odds": 1.8,
+   "book": "bet365",
+   "stake": 1885,
+   "status": "Čeka",
+   "profit": null,
+   "p_model": 0.5891,
+   "ev": 0.0603,
+   "last_odds": 1.62,
+   "clv": 0.1111,
+   "link": "https://www.flashscore.com/match/ldSPNTln/"
   },
   {
    "id": "pESRUWxA",
@@ -433,6 +433,24 @@
    "last_odds": 1.31,
    "clv": 0.1145,
    "link": "https://www.flashscore.com/match/OtZF6nRG/"
+  },
+  {
+   "id": "nmSkOv6t",
+   "start": "2026-10-14T04:00",
+   "category": "Muški Challenger",
+   "tournament": "Jinan (China), hard",
+   "pick": "Kopriva Vit",
+   "opponent": "Smith Keegan",
+   "odds": 1.6,
+   "book": "Superbet",
+   "stake": 2453,
+   "status": "Čeka",
+   "profit": null,
+   "p_model": 0.6642,
+   "ev": 0.0627,
+   "last_odds": null,
+   "clv": null,
+   "link": "https://www.flashscore.com/match/nmSkOv6t/"
   }
  ]
 }
