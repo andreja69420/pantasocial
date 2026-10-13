@@ -1468,3 +1468,111 @@ live data checks of `paper_trade.py` applied after the fact.
   +15.7%, negative weeks 13 / 10 / 6. Each month from 300,000 (quarter Kelly, at most 30,000): mean full month 227k
   instead of 275k, one negative month in 33 (Dec 2025, -8k), year totals 1.89M / 3.03M / 2.57M instead of 2.22M / 3.08M /
   3.77M. 2026 loses most (June 1.07M -> 0.56M), because the split identities cluster on the grass season.
+
+## Why live paper trading loses while the backtest shows +17% (investigation 2026-10-13, 7 agents)
+Five independent investigators (variance, leaks, train/serve skew, price realism, decay), one skeptic who re-ran every
+claimed bug (same-event leak and opening-vs-closing price confirmed; Flashscore-path degradation only partly), one
+synthesis. Scripts and outputs: scratchpad `investigate/`. Verdict as written by the synthesis:
+
+
+**Short answer.** It is not a code bug. It is mostly bad luck on a tiny sample, on top of an expectation that was never +17% for this loop. The +17.2% is the return at the Serbian books' *opening* price, early in the year, and the loop buys the *current* price in the recent period. Realistic live expectation is about +6% flat ROI per bet (plausible range 0 to +11%).
+
+### Corrected live figures
+The ledger on 10-13 shows 28 logged bets, 12 settled (11 non-void): 5 won, 6 lost, 1 void. Bank was 95,566 on `paper/opklade.json` at 14:30 Belgrade. A later snapshot has 13 non-void settled, 5 won, bank 93,138. Flat ROI is -3.5% to -18%, depending on the snapshot.
+
+### (1) Code bug or leak
+No bug or leak explains the live loss. The code does have a real look-ahead leak and several small train/serve skews.
+
+**Backtest look-ahead (real, small)**
+- **Cause:** `fs_common.py:242` and `fs_results.py:88` put qualifying and main draw under one `tourney_id`, and qualifying rounds are labelled SF/F. `features2.py:46` therefore orders a qualifier's early match *after* his later main-draw matches.
+- **Scope:** It affects only Flashscore-sourced rows (from 2026-06-08): 10.1% of ATP and 3.2% of WTA rows. In 98.9% (ATP) and 97.5% (WTA) of one-sided cases the contaminated player is the winner.
+- **Effect on the headline:** 202 of the 1,869 bets are affected, worth +54.7 of 321 profit units. Dropping them gives +15.98% on 1,667 bets (lower 90% bound +11.8%).
+- **Other small leaks:**
+  - `best_of` is derived from the result, `fs_common.py:246`: about +0.4 pt.
+  - WTA duplicate rows: up to +0.3 pt.
+- **Total:** about -1.2 to -1.7 pts. The leak does not create the edge. Retraining on 2026 Flashscore rows would teach the model the leak, so fix it first.
+
+**Train/serve skew (negligible)**
+- A bit-exact replay of the live path reproduced the 12:29 UTC pass with 0 differing cells.
+- The production model run through the live code on 2026 gives +17.6% on 1,789 bets, against +18.2% on 1,827 for `r6_v3`.
+- Individual skews each move p by at most 0.7 pt, with no direction:
+  - Empty round, so every fixture is coded R32.
+  - Wrong level and main flag on tour events.
+  - Flip orientation re-drawn on every pass, which adds about 0.15 pt of EV over the backtest.
+  - Placeholder-result leak into the hindsight-Elo feature.
+
+**Caveat on the model.** The production `models_v3` cannot be backtested honestly, because it is calibrated on 2026. The live bets are its first real out-of-sample test.
+
+### (2) Price realism and adverse selection (the biggest structural gap)
+- **Opening versus closing:** The rule earns +17.2% at the opening price. At the closing price it earns +6.4% (EV>5%, 999 bets). The same 1,869 bets held to their own close return +0.1%.
+- **Intermediate prices:** Re-selecting bets along the open-to-close path gives +17.3% at the open, +8.1% at 25%, +3.3% at 50%, +3.7% at 75% and +6.6% at the close. The lower 90% bounds at 50% and 75% are negative.
+- **Where the profit sits:** Bets whose price later shortened by more than 15% earned +33% (781 bets). Bets whose price stayed flat or lengthened lost 4 to 6%.
+- **Live entry points:** The loop buys the current price, `paper_trade.py:182-190`. Only 8 of 28 bets (29%) were at the exact open. 16 (57%) were bought after the price had lengthened against us (mean +12.9%); 4 were bought after it shortened. Mean odds/open is +6.8%. The loop first sees a match a median of 22 to 37 h before the start.
+- **CLV:** Live CLV is +11.9% (+12.3% on the 27 bets with a close), matching the recent backtest's open-price CLV of about 13%. The loop does capture the price movement. It just starts later on the path.
+- **Blend mismatch (measured by the skeptic):**
+  - A refit on 32,200 non-ITF match sides gives weights of model 0.48 and market 0.62 with the *opening* fair price, matching the production 0.44/0.64.
+  - With the *closing* fair price the weights are model 0.13 and market 0.95.
+  - Live applies the opening-fitted weights to the current pair, so it over-weights the model at later prices.
+  - The blend predicts about 10 to 11% EV at every point on the path, but realised ROI is 17.3% at the open and only 3 to 8% from t=0.25 onward.
+- **Adverse-selection wording:** I would not call the extra "survivor" effect significant. Survivors at the close earn +2.2%, against +7.2% for fresh close-only bets, and that difference is not significant. The solid finding is the CLV-to-ROI relation: the open-price profit sits where the market later moved toward the bet.
+- **Size of the effect:** Roughly -5 to -10 pts versus the headline, which overlaps with the decay in the next section.
+
+### Decay and segment effects (also real)
+- **CLV decay:** Plan-bet CLV falls from 16.8% in January to 7.0% in October (-1.11 pts per month, se 0.15). The same bets in 2024 and 2025 were flat.
+- **ROI decay:** Open-price ROI is +23.2% in Jan-Jun and +9.4% in Jul-Oct (n=664, last 6 weeks +10.8%). At the close, the last 6 weeks return -6.3%. A second reconstruction of the same period gives +21.0% and +10.4%.
+- **Source switch:** The skill drop coincides with the switch from Sackmann to Flashscore results on 2026-06-08.
+  - The open-to-close slope on the model gap falls from 0.485 to 0.320; the Elo-only slope is unchanged.
+  - Flashscore rows lack rank (NaN in 100%) and have serve stats missing in 37% (ATP) and 54% (WTA).
+  - The cause is not identified, and the Jul-Oct +5.3% clean-bet figure is noisy.
+- **Live segment mix:** Live is 64% WTA and 46% WTA 125. Mean odds are 2.38, against 2.04 in the backtest. The backtest has only 102 WTA 125 bets (+5.8%, lower 90% bound -11.9%), and the test base has zero WTA 125 matches in Jul-Sep even though the events exist. This is a base gap, so the largest live segment is the least verified.
+- **Optimism in the headline:**
+  - The rule was fixed after seeing 2026.
+  - Realised ROI (+17.2%) exceeds the blend's own claimed EV (+10.0%).
+
+### (3) Variance with about 12 bets
+- Wins are 5 against 5.25 expected under `q_blend` (sd 1.56); P(wins ≤ 5) = 0.57.
+- Chance of doing this badly or worse:
+
+| Hypothesis | Flat ROI ≤ -3.5% | Kelly-weighted ROI ≤ -20% |
+|---|---|---|
+| `q_blend` is right | 0.40 | 0.20 |
+| No edge | 0.58 | 0.36 |
+| Backtest +17% (bootstrap) | 0.26 | 0.12 |
+
+- For the larger 13-bet snapshot (ROI -18%), the chance is 0.11 to 0.13 under `q_blend` or the backtest, and 0.26 with no edge.
+- The Kelly loss of about -20% comes from two high-EV losers, Arango (4,300 staked) and Bondar (3,583 staked).
+- The log-likelihood ratio of blend to no edge is 0.87, so the sample cannot separate edge from no edge. Only the raw `q_model` is mildly disfavoured (P = 0.06 to 0.16), and bets are not placed on it.
+- Per-bet sd is about 1.1 to 1.25, so the se on ROI is about 30 pts at 13 bets, 8.8 pts at 200 bets and 6.2 pts at 400.
+- At roughly 10 to 12 bets per day:
+  - Rejecting 0 when the truth is +17% needs 226 to 326 bets (3 to 4 weeks).
+  - Telling +17% from +6% needs 570 to 830 bets (about 2 months).
+  - Telling +6% from 0 needs 1,700 to 2,500 bets (4 to 7 months).
+
+### (4) Realistic expected ROI as the loop runs now
+About **+6% flat per bet, plausible range 0 to +11%**, and the Kelly-weighted figure is similar. Three estimates support this:
+- Price angle: the CLV map gives +10.6 to +12.6%, and about +7% after decay and frictions.
+- Decay angle: +3 to +9%.
+- Leak and selection bias remove another 1 to 3 pts from the headline.
+
+The observed -3.5% is about 0.3 standard errors below +6%. The honest benchmark for the loop is +6%, not +17%.
+
+### (5) Fixes ranked by impact
+1. **Correct the blend for the price it is applied to, and raise the EV threshold.**
+   - The blend predicts about 10% EV but realises 3 to 8% at later prices. Refit or time-condition the weights, using 0.48/0.62 at the open and 0.13/0.95 at the close.
+   - Until then, raise the EV threshold from 5% to at least 8%. Backtest bets at EV 5 to 7% earn +17.4% at the open but only +0.9% at the close (443 bets, lower 90% bound -7.3%). Live EV has median 6.1%, and 71% of live bets are under 8%.
+2. **Get closer to the opening price.**
+   - Open +17%, close +6%, and the loop sees a match 22 to 37 h before the start. Poll more often, and bet only on the first sight of a match.
+   - Add a guard such as current odds ≤ open × 1.03 as a hedge. The data does not prove it: settled bets with drift ≥5% went 2 of 6 (-1.65 units) against 3 of 7 (-0.73) for the rest, which is noise. The rule therefore needs ledger validation. Log the opening price and first-look time per bet.
+3. **Quarantine WTA 125, or cap its stakes, until verified.** It is 46% of live bets, with only 102 backtest bets (+5.8%, lower 90% bound -11.9%).
+4. **Cap stake size and EV.** The two largest-EV bets (7,883 staked) produce the whole Kelly drawdown, and the 15 to 30% EV band earns only +7.9% at the open (147 bets). Capping costs nothing in backtest: flat +16.9% against Kelly-weighted +16.5%. Size stakes off a shrunk edge of about 5%, not the claimed 8 to 10%.
+5. **Code hygiene (does not change the edge today, but required before retraining).**
+   - Split qualifying from main draw in `tourney_id` and `tourney_date`.
+   - Stop deriving `best_of` from the result.
+   - Pass the real round for fixtures, instead of coding all R32.
+   - Set the correct level and main flag for tour fixtures.
+   - Fix the orientation per match, or average both orientations.
+   - Fill the Flashscore feature gaps (rank, serve stats, country). The 0.485 to 0.320 slope drop suggests this is where the lost skill is.
+   - All of this needs a features rebuild, so it must not run while the loop is live.
+6. **Decision rule.** Judge nothing before about 200 bets (3 to 4 weeks, se 8.8 pts). Then compare against +6%, not +17%.
+
+**Unmeasured:** book limits and voided-winner risk (a 10% random void costs about -5 pts), and the exact production-model edge.
