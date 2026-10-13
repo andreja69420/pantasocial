@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-13T16:32",
+ "as_of": "2026-10-13T16:54",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -300,8 +300,8 @@
    "odds": 1.67,
    "book": "AdmiralBet",
    "stake": 2133,
-   "status": "U toku",
-   "profit": null,
+   "status": "Dobijeno",
+   "profit": 1429,
    "p_model": 0.633,
    "ev": 0.0572,
    "last_odds": 1.65,
@@ -471,24 +471,6 @@
    "link": "https://www.flashscore.com/match/GSVk4MV6/"
   },
   {
-   "id": "8GXynuRq",
-   "start": "2026-10-14T10:00",
-   "category": "WTA 125",
-   "tournament": "Rovereto (Italy), hard (indoor)",
-   "pick": "Bandecchi Susan",
-   "opponent": "Knutson Gabriela",
-   "odds": 1.95,
-   "book": "AdmiralBet",
-   "stake": 1597,
-   "status": "Čeka",
-   "profit": null,
-   "p_model": 0.5452,
-   "ev": 0.0631,
-   "last_odds": 1.95,
-   "clv": 0.0,
-   "link": "https://www.flashscore.com/match/8GXynuRq/"
-  },
-  {
    "id": "2gwzN4qf",
    "start": "2026-10-14T11:00",
    "category": "WTA 125",
@@ -505,6 +487,24 @@
    "last_odds": 3.1,
    "clv": -0.0806,
    "link": "https://www.flashscore.com/match/2gwzN4qf/"
+  },
+  {
+   "id": "8GXynuRq",
+   "start": "2026-10-14T12:30",
+   "category": "WTA 125",
+   "tournament": "Rovereto (Italy), hard (indoor)",
+   "pick": "Bandecchi Susan",
+   "opponent": "Knutson Gabriela",
+   "odds": 1.95,
+   "book": "AdmiralBet",
+   "stake": 1597,
+   "status": "Čeka",
+   "profit": null,
+   "p_model": 0.5452,
+   "ev": 0.0631,
+   "last_odds": 1.95,
+   "clv": 0.0,
+   "link": "https://www.flashscore.com/match/8GXynuRq/"
   },
   {
    "id": "OtZF6nRG",
