@@ -738,7 +738,9 @@ used to walk all 680k / 865k matches again to reach today's state of every playe
 redirect to itself; `Limiter.get` counted the HTTP 307 as a server error, paused 30 s and retried, five times, and the
 pause also held every odds request behind it (~15% of passes had a 33 s odds step, this evening every pass). A 3xx that
 does not resolve is now handled like 404 (no page, no pause, no retry); pauses stay for 429 / 5xx / connection errors.
-Same matches and prices (169 men's matches, 662 book prices).
+Same matches and prices (169 men's matches, 662 book prices). A request with no answer is now a slow answer (lower rate,
+ask again, no pause; odds requests wait 10 s, they normally answer in under 1 s); the remaining ~30 s stalls at night
+are HTTP 429 from the odds API, a real error, so they keep the 30 s pause.
 
 **Pass now ~40 s without new results** (odds 7 s, the two tours 5 + 4 + 7 s and 4 + 5 + 8 s for fixture rows,
 `features_incr`, `fx_live` + model), was 142 s at the start of the evening.

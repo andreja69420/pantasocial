@@ -258,7 +258,7 @@ class Limiter:
             print(f"  ! error ({why}) -> {self.rate:.0f}/s, pause {self.PAUSE}s", flush=True)
 
     def get(self, url, headers=None, timeout=30):
-        """Body of url ('' for 400/404, an endless redirect or after 5 failed tries). 408/5xx = backend gave up on one slow
+        """Body of url ('' for 400/404, an endless redirect or after 5 failed tries). 408/5xx and a timeout = one slow
         query: retry, no pause."""
         import time
         import urllib.error
@@ -282,5 +282,9 @@ class Limiter:
                     continue
                 self.error(f"HTTP {e.code}")
             except Exception as e:
+                # no answer within the timeout is a slow answer: lower the rate and ask again, no pause
+                if isinstance(e, TimeoutError) or isinstance(getattr(e, "reason", None), TimeoutError):
+                    self.slow()
+                    continue
                 self.error(type(e).__name__)
         return ""

@@ -36,7 +36,7 @@ URLCATS = {"atp": ("itf-men-singles", "challenger-men-singles", "atp-singles"),
 
 
 L = Limiter(float(os.environ.get("RATE", "150")))
-get = lambda url: L.get(url, UA)
+get = lambda url: L.get(url, UA, timeout=float(os.environ.get("TIMEOUT", "10")))  # answers take <1 s; a hung one is retried
 
 
 def feed_records(text):
