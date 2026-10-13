@@ -26,6 +26,7 @@ categories not bet (e.g. ITF MEN - SINGLES,ITF WOMEN - SINGLES)
 """
 import os
 import pickle
+import re
 import subprocess
 import sys
 import time
@@ -308,6 +309,20 @@ if not ledger.empty:
             print("settlement feed error", e)
     move_start(ledger, starts)  # also matches already under way or no longer listed with odds
     open_bets = ledger.result.fillna("") == ""
+    # the daily feeds lag the match's own feed by up to ~20 min; ask each started open bet directly
+    for mid in ledger.fs_mid[open_bets & (pd.to_datetime(ledger.start) < pd.Timestamp.now("UTC").tz_localize(None))]:
+        if mid in done:
+            continue
+        try:
+            h = dict(UA); h["x-fsign"] = "SW9D1eZo"
+            with urllib.request.urlopen(urllib.request.Request(f"https://www.flashscore.com/x/feed/dc_1_{mid}", headers=h),
+                                        timeout=20) as resp:
+                d = dict(re.findall(r"(\w+)÷([^¬]*)", resp.read().decode("utf-8", "ignore")))
+            if d.get("DA") == "3":
+                hs, as_ = int(d.get("DE", 0) or 0), int(d.get("DF", 0) or 0)
+                done[mid] = "void" if d.get("DB") != "3" else ("home" if hs > as_ else "away")
+        except Exception as e:
+            print("match feed error", mid, e)
     # when the loop first saw the result: from then on the bank includes this bet (stakes of later bets only)
     ledger["settled_at"] = ledger["settled_at"].astype(object) if "settled_at" in ledger else pd.Series(index=ledger.index, dtype=object)
     ledger["result"] = ledger["result"].astype(object)  # all empty until the first settlement, so read_csv makes it float

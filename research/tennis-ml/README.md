@@ -666,6 +666,18 @@ tomorrow) and writes it to the ledger (`start moved ... -> ... UTC` in loop.log)
 the real time and "Čeka" / "U toku" is right. First check: 12 of the 19 open bets had a different time, e.g. Kotov -
 Kopriva 02:00 -> 06:10 UTC, Villanueva - Zarate 14:00 -> 22:30 UTC.
 
+**Faster settlement from each match's own feed (2026-10-13)**: the daily Flashscore feeds showed Papoe - Ribecai as
+still live about 15 minutes after it ended. Each pass now also reads the `dc_1_<match id>` feed of every open bet whose
+start has passed:
+- `DA` = 3 means finished;
+- `DB` = 3 means it was completed normally (any other value, e.g. 8 for a retirement, settles as void);
+- `DE`/`DF` are the sets won.
+
+All 9 bets settled so far give the same result from this feed.
+
+A separate watcher (`watch.py`, run by Claude as a monitor every minute) reads the same feeds and sends the user a
+phone notification when one of our matches starts, after each set, and at the end.
+
 **Split players merged (2026-10-13)**: Flashscore writes some players under another name than the history (married or
 maiden name, another spelling), so their Flashscore matches since 2026-06 got a synthetic id and they started again
 from zero. Found when the loop stopped Monfils Elina - Samsonova: "Monfils Elina" is Elina Svitolina (835 matches as
