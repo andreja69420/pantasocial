@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-13T11:10",
+ "as_of": "2026-10-13T11:36",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -156,8 +156,8 @@
    "odds": 3.25,
    "book": "AdmiralBet",
    "stake": 648,
-   "status": "U toku",
-   "profit": null,
+   "status": "Izgubljeno",
+   "profit": -648,
    "p_model": 0.3261,
    "ev": 0.0597,
    "last_odds": 3.05,
@@ -174,8 +174,8 @@
    "odds": 3.55,
    "book": "Superbet",
    "stake": 555,
-   "status": "U toku",
-   "profit": null,
+   "status": "Dobijeno",
+   "profit": 1415,
    "p_model": 0.2989,
    "ev": 0.0612,
    "last_odds": 2.57,
@@ -192,7 +192,7 @@
    "odds": 1.33,
    "book": "bet365",
    "stake": 4035,
-   "status": "Čeka",
+   "status": "U toku",
    "profit": null,
    "p_model": 0.7919,
    "ev": 0.0533,
@@ -237,24 +237,6 @@
    "link": "https://www.flashscore.com/match/ddOosTcT/"
   },
   {
-   "id": "KhQrJKL7",
-   "start": "2026-10-13T13:00",
-   "category": "WTA 125",
-   "tournament": "Mallorca (Spain), clay",
-   "pick": "Anastasiya Konstantinovna Soboleva",
-   "opponent": "Mintegi Del Olmo Ane",
-   "odds": 2.38,
-   "book": "AdmiralBet",
-   "stake": 927,
-   "status": "Čeka",
-   "profit": null,
-   "p_model": 0.4417,
-   "ev": 0.0512,
-   "last_odds": 2.22,
-   "clv": 0.0721,
-   "link": "https://www.flashscore.com/match/KhQrJKL7/"
-  },
-  {
    "id": "ldSPNTln",
    "start": "2026-10-13T13:10",
    "category": "Muški Challenger",
@@ -271,6 +253,24 @@
    "last_odds": 1.62,
    "clv": 0.1111,
    "link": "https://www.flashscore.com/match/ldSPNTln/"
+  },
+  {
+   "id": "KhQrJKL7",
+   "start": "2026-10-13T13:10",
+   "category": "WTA 125",
+   "tournament": "Mallorca (Spain), clay",
+   "pick": "Anastasiya Konstantinovna Soboleva",
+   "opponent": "Mintegi Del Olmo Ane",
+   "odds": 2.38,
+   "book": "AdmiralBet",
+   "stake": 927,
+   "status": "Čeka",
+   "profit": null,
+   "p_model": 0.4417,
+   "ev": 0.0512,
+   "last_odds": 2.22,
+   "clv": 0.0721,
+   "link": "https://www.flashscore.com/match/KhQrJKL7/"
   },
   {
    "id": "pESRUWxA",
@@ -448,8 +448,8 @@
    "profit": null,
    "p_model": 0.6642,
    "ev": 0.0627,
-   "last_odds": null,
-   "clv": null,
+   "last_odds": 1.6,
+   "clv": 0.0,
    "link": "https://www.flashscore.com/match/nmSkOv6t/"
   }
  ]
