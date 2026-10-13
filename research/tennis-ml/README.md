@@ -688,7 +688,8 @@ not, with the reason in `review`), with `review.py DATA_DIR ok|ne FS_MID NOTE`.
   under that id is really theirs (names, no second player of the same name, no merged or split player), and its last
   results match what Flashscore shows for them.
 - The automatic data checks in paper_trade.py (synthetic id, too few matches) still stop a bet.
-- The 25 bets logged so far were all approved, so they are `claude = da`.
+- Of the 25 bets logged before this change, 19 were logged before manual review existed (2026-10-11 21:21 to 10-12
+  08:38, empty `review`), so their `claude` is empty; the 6 reviewed ones are `da`.
 - Monnet - Yaneva (rejected at 10:07) was taken out of skipped.csv, so the next pass proposes it again if it still has
   EV > 5%.
 - End of month: compare profit and ROI of `da` vs `ne`.
