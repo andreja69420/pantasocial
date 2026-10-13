@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-13T13:10",
+ "as_of": "2026-10-13T13:35",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -192,8 +192,8 @@
    "odds": 1.33,
    "book": "bet365",
    "stake": 4035,
-   "status": "U toku",
-   "profit": null,
+   "status": "Dobijeno",
+   "profit": 1332,
    "p_model": 0.7919,
    "ev": 0.0533,
    "last_odds": 1.22,
@@ -237,8 +237,26 @@
    "link": "https://www.flashscore.com/match/ddOosTcT/"
   },
   {
+   "id": "KhQrJKL7",
+   "start": "2026-10-13T13:40",
+   "category": "WTA 125",
+   "tournament": "Mallorca (Spain), clay",
+   "pick": "Anastasiya Konstantinovna Soboleva",
+   "opponent": "Mintegi Del Olmo Ane",
+   "odds": 2.38,
+   "book": "AdmiralBet",
+   "stake": 927,
+   "status": "Čeka",
+   "profit": null,
+   "p_model": 0.4417,
+   "ev": 0.0512,
+   "last_odds": 2.22,
+   "clv": 0.0721,
+   "link": "https://www.flashscore.com/match/KhQrJKL7/"
+  },
+  {
    "id": "pESRUWxA",
-   "start": "2026-10-13T13:30",
+   "start": "2026-10-13T13:55",
    "category": "WTA 125",
    "tournament": "Lisbon (Portugal), clay",
    "pick": "Georgia Pedone",
@@ -256,7 +274,7 @@
   },
   {
    "id": "ldSPNTln",
-   "start": "2026-10-13T13:40",
+   "start": "2026-10-13T14:20",
    "category": "Muški Challenger",
    "tournament": "Olbia (Italy), hard",
    "pick": "Butvilas Edas",
@@ -271,24 +289,6 @@
    "last_odds": 1.62,
    "clv": 0.1111,
    "link": "https://www.flashscore.com/match/ldSPNTln/"
-  },
-  {
-   "id": "KhQrJKL7",
-   "start": "2026-10-13T13:40",
-   "category": "WTA 125",
-   "tournament": "Mallorca (Spain), clay",
-   "pick": "Anastasiya Konstantinovna Soboleva",
-   "opponent": "Mintegi Del Olmo Ane",
-   "odds": 2.38,
-   "book": "AdmiralBet",
-   "stake": 927,
-   "status": "Čeka",
-   "profit": null,
-   "p_model": 0.4417,
-   "ev": 0.0512,
-   "last_odds": 2.22,
-   "clv": 0.0721,
-   "link": "https://www.flashscore.com/match/KhQrJKL7/"
   },
   {
    "id": "nNKYTol1",
@@ -310,7 +310,7 @@
   },
   {
    "id": "Sldl1SwH",
-   "start": "2026-10-13T14:30",
+   "start": "2026-10-13T14:55",
    "category": "WTA Tour",
    "tournament": "Wuhan (China), hard",
    "pick": "Wang Xiyu",
@@ -430,8 +430,8 @@
    "profit": null,
    "p_model": 0.6642,
    "ev": 0.0627,
-   "last_odds": 1.6,
-   "clv": 0.0,
+   "last_odds": 1.53,
+   "clv": 0.0458,
    "link": "https://www.flashscore.com/match/nmSkOv6t/"
   },
   {
@@ -466,8 +466,8 @@
    "profit": null,
    "p_model": 0.3688,
    "ev": 0.0512,
-   "last_odds": null,
-   "clv": null,
+   "last_odds": 2.85,
+   "clv": 0.0,
    "link": "https://www.flashscore.com/match/2gwzN4qf/"
   },
   {
