@@ -683,7 +683,10 @@ same day, so it is not run.
 proposes in the paper table, so we can see at the end of the month whether Claude's review helps. Claude still reviews
 each proposal, but now only records a verdict in the ledger (column `claude`: `da` = would have played it, `ne` = would
 not, with the reason in `review`), with `review.py DATA_DIR ok|ne FS_MID NOTE`.
-- `no` (not logged) is now only for data errors such as a wrong player or wrong match.
+- `no` (not logged) is now only for data errors such as a wrong player or wrong match. This data check stays
+  Claude's job (the user confirmed it): a bet goes in only if both players' ids are the right players, the history
+  under that id is really theirs (names, no second player of the same name, no merged or split player), and its last
+  results match what Flashscore shows for them.
 - The automatic data checks in paper_trade.py (synthetic id, too few matches) still stop a bet.
 - The 25 bets logged so far were all approved, so they are `claude = da`.
 - Monnet - Yaneva (rejected at 10:07) was taken out of skipped.csv, so the next pass proposes it again if it still has
