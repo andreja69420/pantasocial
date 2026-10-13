@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-13T07:34",
+ "as_of": "2026-10-13T07:48",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -390,8 +390,8 @@
    "profit": null,
    "p_model": 0.5536,
    "ev": 0.1348,
-   "last_odds": 1.85,
-   "clv": 0.1081
+   "last_odds": 1.8,
+   "clv": 0.1389
   },
   {
    "id": "OtZF6nRG",
