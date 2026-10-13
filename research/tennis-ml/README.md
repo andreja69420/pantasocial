@@ -676,7 +676,8 @@ start has passed:
 All 9 bets settled so far give the same result from this feed.
 
 A separate watcher (`watch.py`, run by Claude as a monitor every minute) reads the same feeds and sends the user a
-phone notification when one of our matches starts, after each set, and at the end.
+phone notification when one of our matches starts, after each set, and at the end. The user had it switched off the
+same day, so it is not run.
 
 **Split players merged (2026-10-13)**: Flashscore writes some players under another name than the history (married or
 maiden name, another spelling), so their Flashscore matches since 2026-06 got a synthetic id and they started again
