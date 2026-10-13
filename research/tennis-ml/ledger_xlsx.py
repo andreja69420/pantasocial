@@ -7,7 +7,10 @@ then (settled = when the loop first saw the result), so a settled bet changes on
 are values (computed here), so every viewer shows them.
 
 usage: ledger_xlsx.py LEDGER_CSV OUT_XLSX [BANK=100000]   (dinars)
+The same rows also go to OUT_XLSX with .json in place of .xlsx, the data of the online dashboard.
 """
+import json
+import os
 import sys
 
 import numpy as np
@@ -199,4 +202,17 @@ for sh in (wc, wk):
     sh.page_setup.fitToWidth, sh.page_setup.fitToHeight = 1, 0
     sh.sheet_properties.pageSetUpPr.fitToPage = True
 wb.save(OUT)
+rows = []
+for b in L.itertuples():
+    pick, opp = (b.home, b.away) if b.side == "home" else (b.away, b.home)
+    last = None if pd.isna(b.close) else float(b.close)
+    rows.append({"id": b.fs_mid, "start": f"{bg(b.start):%Y-%m-%dT%H:%M}", "category": b.cat,
+                 "tournament": b.tournament.split(":", 1)[-1].strip(),
+                 "pick": player_name({"WU": pick}, "h").title(), "opponent": player_name({"WU": opp}, "h").title(),
+                 "odds": float(b.odds), "book": BOOK_NAMES.get(b.book, b.book), "stake": int(b.stake),
+                 "status": b.res, "profit": None if np.isnan(b.profit) else int(b.profit),
+                 "p_model": round(float(b.q_blend), 4), "ev": round(float(b.ev), 4), "last_odds": last,
+                 "clv": None if not last else round(float(b.odds) / last - 1, 4)})
+with open(os.path.splitext(OUT)[0] + ".json", "w") as f:
+    json.dump({"bank_start": BANK, "as_of": f"{bg(now):%Y-%m-%dT%H:%M}", "rows": rows}, f, ensure_ascii=False, indent=1)
 print(f"{len(L)} bets -> {OUT}")

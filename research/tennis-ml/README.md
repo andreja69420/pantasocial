@@ -652,6 +652,11 @@ Bank rule for the Excel sheet (`ledger_xlsx.py` → `paper/opklade.xlsx`): start
 × the bank at the moment the bet is logged, fixed from then on. The bank moves only when a bet is settled (the loop
 stores the time it first saw the result, `settled_at`), and the new bank applies only to bets logged after that.
 
+**Online table (2026-10-13)**: the same rows also go to `paper/opklade.json` (written by `ledger_xlsx.py` next to the
+Excel) and feed a dashboard on claude.ai: bank, profit, ROI, won-lost, pending, average price edge over the last
+price before the match, the bank after every settled bet, totals per category and all bets (filter, search, sort).
+The trigger checks at :04 and :34 upload the new JSON after every pass.
+
 **Every competition in the plan from 2026-10-11 evening** (after the whole-2026 test per level): one bank, same rule
 (EV>5% odds<=5 at the opening price, quarter Kelly), all six Flashscore categories (women's / men's ITF, Challenger,
 WTA 125, WTA and ATP tour incl. Grand Slams). One sheet, `Opklade`: overall summary (rows 2-3), per category profit, ROI and record (rows 5-7) and all bets
