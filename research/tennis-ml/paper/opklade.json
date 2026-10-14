@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-14T08:06",
+ "as_of": "2026-10-14T08:37",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -448,8 +448,8 @@
    "profit": null,
    "p_model": 0.6642,
    "ev": 0.0627,
-   "last_odds": 1.49,
-   "clv": 0.0738,
+   "last_odds": 1.5,
+   "clv": 0.0667,
    "link": "https://www.flashscore.com/match/nmSkOv6t/"
   },
   {
@@ -523,6 +523,24 @@
    "last_odds": 1.3,
    "clv": 0.1231,
    "link": "https://www.flashscore.com/match/OtZF6nRG/"
+  },
+  {
+   "id": "4tAyTon2",
+   "start": "2026-10-15T04:00",
+   "category": "Muški Challenger",
+   "tournament": "Jinan (China), hard",
+   "pick": "Cilic Marin",
+   "opponent": "Watanuki Yosuke",
+   "odds": 1.7,
+   "book": "Superbet",
+   "stake": 1702,
+   "status": "Čeka",
+   "profit": null,
+   "p_model": 0.6191,
+   "ev": 0.0524,
+   "last_odds": null,
+   "clv": null,
+   "link": "https://www.flashscore.com/match/4tAyTon2/"
   },
   {
    "id": "MJaMsDvJ",
