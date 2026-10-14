@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-14T06:05",
+ "as_of": "2026-10-14T06:35",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -418,7 +418,7 @@
   },
   {
    "id": "vgFuoojJ",
-   "start": "2026-10-14T06:30",
+   "start": "2026-10-14T06:45",
    "category": "WTA Tour",
    "tournament": "Wuhan (China), hard",
    "pick": "Paolini Jasmine",
