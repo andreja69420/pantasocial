@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-14T15:36",
+ "as_of": "2026-10-14T16:06",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -480,8 +480,8 @@
    "odds": 1.95,
    "book": "AdmiralBet",
    "stake": 1597,
-   "status": "U toku",
-   "profit": null,
+   "status": "Izgubljeno",
+   "profit": -1597,
    "p_model": 0.5452,
    "ev": 0.0631,
    "last_odds": 1.99,
@@ -508,7 +508,7 @@
   },
   {
    "id": "OtZF6nRG",
-   "start": "2026-10-14T15:45",
+   "start": "2026-10-14T16:10",
    "category": "WTA Tour",
    "tournament": "Wuhan (China), hard",
    "pick": "Fernandez Leylah Annie",
@@ -520,8 +520,8 @@
    "profit": null,
    "p_model": 0.7605,
    "ev": 0.1104,
-   "last_odds": 1.26,
-   "clv": 0.1587,
+   "last_odds": 1.28,
+   "clv": 0.1406,
    "link": "https://www.flashscore.com/match/OtZF6nRG/"
   },
   {
