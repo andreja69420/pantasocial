@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-14T18:08",
+ "as_of": "2026-10-14T18:39",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -556,13 +556,13 @@
    "profit": null,
    "p_model": 0.6191,
    "ev": 0.0524,
-   "last_odds": 1.47,
-   "clv": 0.1565,
+   "last_odds": 1.62,
+   "clv": 0.0494,
    "link": "https://www.flashscore.com/match/4tAyTon2/"
   },
   {
    "id": "MJaMsDvJ",
-   "start": "2026-10-15T10:00",
+   "start": "2026-10-15T12:00",
    "category": "WTA 125",
    "tournament": "Rovereto (Italy), hard (indoor)",
    "pick": "Kostovic Teodora",
