@@ -1653,3 +1653,43 @@ Effect on the rejected proposal: Masarova vs Mintegi Del Olmo (Mallorca, 2.56 at
   Check against the previous build: women 681,516 -> 673,624 (7,891 duplicates + 1 loop row of the 22:06 pass), men
   865,867 -> 865,848 (17 + 2), no duplicate left, the 3 loop rows re-added by the next pass with their rounds. Old
   build kept as `out_live2_pre_fix`. The models are unchanged (trained on <= 2025 with the duplicates in).
+
+## Retest on the rebuilt base to 2026-10-14, and live predictions against it (2026-10-14)
+Question: does a model that never saw 2026 play the same bets as the live loop, now that the last days are in the test?
+Steps (all in `scratchpad/retest`, production untouched): snapshot of `out_live2` (rebuilt base with the backfill, round and
+duplicate fixes, 125 rows appended by `features_incr` until 10-14 15:21 UTC) -> `fx_ratings/score/context/pbp` -> `fx_merge.py`
+(now reads the appended rows too: `design.read_f2`, and does not link the `_f2_parts` directory) -> `out_v4`, 631 columns as
+before. Serbian prices (`fs_odds.py ... RS --done 8`) added 337 ATP and 260 WTA finished matches to the 2026 file, the 2026
+results csv is the union of the Flashscore files and the loop's updates (to 10-14).
+- **Holdout** (`train3.py ens`, train <= 2024, calibrate 2025, the 798 features of r6_v3, tag `r6_v4`; 13 min WTA, 15 min ATP).
+- **Candidate** (`train_final.py`, train <= 2025, calibrate 2026 to 10-14, `models_v4`, 5-8 min a tour): validation log-loss
+  ATP 0.5628 (models_v3 0.5642), WTA 0.5490 (0.5483): same quality. **Not swapped in.**
+- Background jobs die when the session is idle (the container stops): a training has to run while a turn waits for it.
+
+**Whole 2026 with the corrected base** (`eval_levels2026.py ... --geo=RS --bets`, `paper/eval_v4_levels2026.txt`), plan rule
+(six Serbian books, best opening price, EV>5%, odds<=5, no ITF):
+
+| period | bets | flat ROI | lower 90% |
+|---|---|---|---|
+| 01-04 .. 10-14 | 1,784 | **+17.6%** | +13.4% |
+| 01-04 .. 10-10 | 1,764 | +17.0% | +12.8% |
+| 10-11 .. 10-14 | 20 | +66% | (3 days, noise) |
+
+Before: r6_v3, +17.2% on 1,869 bets to 10-10. All competitions, six books, odds<=5: 5,098 bets +9.3% (before 5,261, +9.5%). The
+backtest does not change with the corrected data.
+
+**Live ledger against the models** (`replay_models.py` runs a saved model over finished matches, `compare_live.py`,
+`paper/compare_live_prod.txt`, `paper/compare_live_cand.txt`). 552 matches priced 10-12 .. 10-14:
+- At the opening price the holdout would play 15 bets (12 won) and `models_v3` re-run on the corrected data 16 (13 won); **13 are
+  the same bets**. The candidate plays 16, 12 of them the same as the holdout (it was calibrated on these days, so not clean).
+  The two models agree on the side we bet (mean q 0.559 vs 0.555).
+- The live loop played 7 of those 16. The 9 it did not play all won: at its current price the EV was below 5% or it did not
+  see them in time (opening versus current price, as in the 10-13 investigation).
+- The live q of the 25 settled bets is higher than the replayed q of the same model: mean 0.608 against 0.559 (+4.8 points,
+  mean absolute 5.1). The largest gaps are the largest stakes: Bondar 0.67 -> 0.50, Arango 0.71 -> 0.505, Wang 0.755 -> 0.61,
+  Knutson (the Bandecchi bet) 0.625 -> 0.49. All 25 were logged 10-11 .. 10-13, before the backfill: the histories were
+  incomplete (match counts in the ledger at bet time against the build now: Pohankova 52 vs 62, Knutson 296 vs 312,
+  Bandecchi 523 vs 532). The cause is probably the missing matches, which are now filled; not proven match by match because the
+  pre-backfill build was deleted.
+- With the corrected q the same prices give 11-12 of the 25 bets (EV>5%, blend); the dropped ones include Bondar, Arango,
+  Wang and Knutson (stakes 3.6k, 4.3k, 3.9k, 1.6k, all lost). Samples of 11-14 bets: the ROI of the two groups is noise.
