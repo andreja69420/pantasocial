@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-14T05:05",
+ "as_of": "2026-10-14T05:36",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -556,8 +556,8 @@
    "profit": null,
    "p_model": 0.681,
    "ev": 0.0556,
-   "last_odds": 1.49,
-   "clv": 0.0403,
+   "last_odds": 1.48,
+   "clv": 0.0473,
    "link": "https://www.flashscore.com/match/6sANNgxQ/"
   }
  ]
