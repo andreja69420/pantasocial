@@ -1726,3 +1726,31 @@ tourney_id, name, date, level, surface) and the rest in events the build lacks. 
 normally on it. Production models `models_v3` are NOT retrained (trained <= 2025 on the old history). The raw dir for every
 later rebuild is now `fx_raw_fill`; both trigger prompts say so.
 Note: `fs_update.py` without `LIVE_OUT=out_live2` updates the stale `out_live` directory.
+
+## Fill redone with a duplicate test by score, and extended back to 2010 (2026-10-14 evening)
+**Correction of the section above.** The first fill (9,668 rows, 18:15 UTC) contained duplicates: the audit's "missing" counts
+are an upper bound, because Flashscore spells some players differently from Sackmann (other ids and names) and a match the
+build holds then looks missing. A check against the pre-fill build showed about 14% of those rows were in the build already
+under another identity. `fs_fill.py` now drops a Flashscore row when the build has the same score (tie-break detail and
+retirement tail ignored) within 45 days and the same winner and loser, or one of them and a made-up id (> 900000) for the
+other; names are compared word-order free. `--clean BUILD` applies the test to existing fill files, `--fresh` rewrites the
+files of the given years. That build (`out_live2_fill1`) is replaced.
+
+**2010-2023 audited and filled** (`run_hist.sh`: Flashscore archive pages + paged results feed one season at a time, both tours at
+75/s each, cache deleted after each season; `paper/audit_fs_2010_2023.txt`). Flashscore matches that are in none of the
+lookups ("missing", upper bound, %): ATP 2010 9.3, 2011 18.9, 2012 13.8, 2013 10.2, 2014 7.3, 2015 9.9, 2016 9.3, 2017 10.5,
+2018 10.3, 2019 7.0, 2020 5.8, 2021 5.3, 2022 5.5, 2023 4.9; WTA 13.8, 21.9, 15.2, 12.1, 18.0, 15.8, 12.6, 10.5, 10.0, 8.6,
+9.0, 7.1, 5.0, 5.0. After removing team events (Davis Cup, BJK Cup, ...) and the duplicates, the fill is **ATP 11,384 and WTA
+8,399 matches for 2010-2026** (2010-22 ATP 7,... in the table of new rows by year from `cmp_build.py`: ATP 2010 99, 2011 1,277,
+2012 1,251, 2013 528, 2014 159, 2015 298, 2016 291, 2017 270, 2018 457, 2019 329, 2020 347, 2021 470, 2022 608, 2023 627,
+2024 985, 2025 2,513, 2026 875; WTA 92, 767, 812, 239, 472, 337, 253, 182, 327, 146, 317, 359, 281, 517, 657, 2,071, 570).
+The new rows are mostly first rounds and qualifying (ATP R32 4,170, Q1 2,171, R16 1,983), ITF and Challenger (ATP: C 2,790,
+15 2,759, S 2,613, A 1,418, 25 1,414, M 215, G 175). About 9% of the rows involve a made-up player id (a player Sackmann
+does not know).
+
+**Build** `out_live6` from `fx_raw_fill` (WTA 8 min, ATP 10 min), checked with `cmp_build.py` against `out_live2_pre_fill`:
+WTA 673,761 -> 682,023 (+8,399 new, -137 loop rows), ATP 865,995 -> 877,232 (+11,384, -147), no duplicates, the lost rows were only
+Flashscore rows of the loop; after `LIVE_OUT=out_live2 F2_CLEAN_GAMES=1 python3 fs_update.py $B 14` (ATP 877,385 rows, WTA 682,170)
+**no Flashscore id is lost**. Swapped in as `out_live2` at 19:20 UTC, the loop passes on it without errors. Not retrained:
+`models_v3` was trained on the old, thinner history; the next step is a retrain and the same test to 10-14 to see whether the
+complete history helps.
