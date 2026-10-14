@@ -1754,3 +1754,27 @@ Flashscore rows of the loop; after `LIVE_OUT=out_live2 F2_CLEAN_GAMES=1 python3 
 **no Flashscore id is lost**. Swapped in as `out_live2` at 19:20 UTC, the loop passes on it without errors. Not retrained:
 `models_v3` was trained on the old, thinner history; the next step is a retrain and the same test to 10-14 to see whether the
 complete history helps.
+
+## Retrain and retest on the completed history (2026-10-14 night)
+Snapshot of the new `out_live2` (877,385 ATP / 682,171 WTA rows to 10-14) -> `fx_ratings/score/context/pbp` -> `fx_merge.py` ->
+`out_v5` (631 columns), then the same two trainings as before: **holdout** (`train3.py ens`, train <= 2024, calibrate 2025,
+tag `r6_v5`, 798 features; WTA 15 min, ATP 15 min) and **candidate** (`train_final.py`, train <= 2025, calibrate on 2026 to 10-14,
+`models_v5`, 7 and 6 min). Evaluation as before (`eval_levels2026.py --geo=RS --bets`, `paper/eval_v5_levels2026.txt`); the 2026 Serbian prices
+and results files are the ones of the 10-14 test plus the Flashscore rows of the fill.
+
+| Plan rule (six Serbian books, best opening price, EV>5%, odds<=5, no ITF) | bets | flat ROI | lower 90% |
+|---|---|---|---|
+| old base (r6_v4), whole 2026 | 1,784 | +17.6% | +13.4% |
+| **completed history (r6_v5), whole 2026** | 1,733 | **+16.3%** | +12.2% |
+| old base, to 10-10 / new, to 10-10 | 1,764 / 1,712 | +17.0% / +16.0% | |
+| old base, 10-11 .. 10-14 / new | 20 / 21 | +66% / +46% | (3 days, noise) |
+
+Same bets: 1,222 in both, 562 only on the old base, 511 only on the new (the EV threshold is crossed in both directions).
+**Log-loss on the same 45,049 holdout matches: 0.5600 -> 0.5588** (ATP 0.5648 -> 0.5632, WTA 0.5531 -> 0.5526). Candidate against
+`models_v3` on the same 2026 rows (both calibrated on them): ATP 0.5602 -> 0.5589, WTA 0.5471 -> 0.5467. Meaning: the complete
+history gives a slightly better model (about -0.001 log-loss) and the same betting result within noise (ROI difference 1.3
+points, the standard error of one ROI is 2.7). **`models_v3` stays in production** (so the paper-trading result remains the
+out-of-sample test of one model); `models_v5` is in `scratchpad/tennis/models_v5` and can be switched in with `MODELS=models_v5`.
+Audit after the fill (`run_after.sh`, same Flashscore lists against the new build): "missing" fell from ATP 26,829 to 15,429
+and WTA 19,249 to 10,853 matches (2010-2026); what is left is mostly team events (left out) and players spelled differently
+(the fill removes those by score), so the real remaining gap is smaller than this upper bound.
