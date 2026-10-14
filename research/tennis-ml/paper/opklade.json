@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-14T08:37",
+ "as_of": "2026-10-14T09:06",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -436,7 +436,7 @@
   },
   {
    "id": "nmSkOv6t",
-   "start": "2026-10-14T09:00",
+   "start": "2026-10-14T09:15",
    "category": "Muški Challenger",
    "tournament": "Jinan (China), hard",
    "pick": "Kopriva Vit",
@@ -451,24 +451,6 @@
    "last_odds": 1.5,
    "clv": 0.0667,
    "link": "https://www.flashscore.com/match/nmSkOv6t/"
-  },
-  {
-   "id": "GSVk4MV6",
-   "start": "2026-10-14T10:30",
-   "category": "WTA Tour",
-   "tournament": "Wuhan (China), hard",
-   "pick": "Krueger Ashlyn",
-   "opponent": "Tararudee Lanlana",
-   "odds": 2.27,
-   "book": "Superbet",
-   "stake": 1908,
-   "status": "Čeka",
-   "profit": null,
-   "p_model": 0.4864,
-   "ev": 0.104,
-   "last_odds": 1.75,
-   "clv": 0.2971,
-   "link": "https://www.flashscore.com/match/GSVk4MV6/"
   },
   {
    "id": "2gwzN4qf",
@@ -487,6 +469,24 @@
    "last_odds": 2.46,
    "clv": 0.1585,
    "link": "https://www.flashscore.com/match/2gwzN4qf/"
+  },
+  {
+   "id": "GSVk4MV6",
+   "start": "2026-10-14T11:15",
+   "category": "WTA Tour",
+   "tournament": "Wuhan (China), hard",
+   "pick": "Krueger Ashlyn",
+   "opponent": "Tararudee Lanlana",
+   "odds": 2.27,
+   "book": "Superbet",
+   "stake": 1908,
+   "status": "Čeka",
+   "profit": null,
+   "p_model": 0.4864,
+   "ev": 0.104,
+   "last_odds": 1.8,
+   "clv": 0.2611,
+   "link": "https://www.flashscore.com/match/GSVk4MV6/"
   },
   {
    "id": "8GXynuRq",
@@ -538,8 +538,8 @@
    "profit": null,
    "p_model": 0.6191,
    "ev": 0.0524,
-   "last_odds": null,
-   "clv": null,
+   "last_odds": 1.7,
+   "clv": 0.0,
    "link": "https://www.flashscore.com/match/4tAyTon2/"
   },
   {
@@ -556,8 +556,8 @@
    "profit": null,
    "p_model": 0.4939,
    "ev": 0.1064,
-   "last_odds": 1.84,
-   "clv": 0.2174,
+   "last_odds": 1.74,
+   "clv": 0.2874,
    "link": "https://www.flashscore.com/match/MJaMsDvJ/"
   },
   {
