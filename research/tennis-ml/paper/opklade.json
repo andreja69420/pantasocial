@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-14T10:07",
+ "as_of": "2026-10-14T10:36",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -543,6 +543,24 @@
    "link": "https://www.flashscore.com/match/4tAyTon2/"
   },
   {
+   "id": "Q3fQfAg2",
+   "start": "2026-10-15T04:00",
+   "category": "WTA Tour",
+   "tournament": "Wuhan (China), hard",
+   "pick": "Shnaider Diana",
+   "opponent": "Muchova Karolina",
+   "odds": 2.55,
+   "book": "Superbet",
+   "stake": 1549,
+   "status": "Čeka",
+   "profit": null,
+   "p_model": 0.4329,
+   "ev": 0.104,
+   "last_odds": null,
+   "clv": null,
+   "link": "https://www.flashscore.com/match/Q3fQfAg2/"
+  },
+  {
    "id": "MJaMsDvJ",
    "start": "2026-10-15T10:00",
    "category": "WTA 125",
@@ -556,8 +574,8 @@
    "profit": null,
    "p_model": 0.4939,
    "ev": 0.1064,
-   "last_odds": 1.74,
-   "clv": 0.2874,
+   "last_odds": 1.75,
+   "clv": 0.28,
    "link": "https://www.flashscore.com/match/MJaMsDvJ/"
   },
   {
@@ -574,8 +592,8 @@
    "profit": null,
    "p_model": 0.681,
    "ev": 0.0556,
-   "last_odds": 1.45,
-   "clv": 0.069,
+   "last_odds": 1.46,
+   "clv": 0.0616,
    "link": "https://www.flashscore.com/match/6sANNgxQ/"
   }
  ]
