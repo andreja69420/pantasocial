@@ -1693,3 +1693,36 @@ backtest does not change with the corrected data.
   pre-backfill build was deleted.
 - With the corrected q the same prices give 11-12 of the 25 bets (EV>5%, blend); the dropped ones include Bondar, Arango,
   Wang and Knutson (stakes 3.6k, 4.3k, 3.9k, 1.6k, all lost). Samples of 11-14 bets: the ROI of the two groups is noise.
+
+## Full Flashscore audit of the last three years, and the missing matches filled in (2026-10-14)
+`fs_results.py` (SEASON=YYYY archive pages + the paged results feed, qualifying included) over every event whose slug
+Flashscore or BetExplorer lists, October 2023 .. 2026-10-14, compared with the build by `fs_audit.py` (Flashscore match id,
+then winner/loser ids, then normalised names, event date within 30 days; the reverse direction counts build rows Flashscore
+lacks). Logs: `paper/audit_fs_2023_2026.txt`, events: `paper/audit_events_2023_2025.csv`.
+
+| season | Flashscore matches | missing from the build |
+|---|---|---|
+| 2023-10-14 .. 12-31 (thin: Flashscore archive pages for only 19 ATP / 135 WTA events) | 4,515 | 170 |
+| 2024 | 57,821 | 3,860 (6.7%) |
+| 2025 | 59,744 | 6,143 (10.3%) |
+| 2026 to 10-14 | 49,640 | 1,888 (3.8%) |
+
+2023-25: 3,365 events, 1,561 complete, 1,705 with missing matches (mostly first rounds R32 / R16 / Q1), 99 not in the build
+at all (3,960 matches, 1,845 of them Davis Cup / Billie Jean King Cup). By type: ITF 6,041, Challenger and tour 4,132.
+A sample of 300 missing matches from partly-missing events: 97% are really not in the build under any date. Limits: only
+events whose slug is known today are listed; a few big events with two editions under one slug (Indian Wells, Shanghai)
+may be counted twice because of the 30-day date window, so the figures are an upper bound for those and a lower bound
+for events that disappeared from the calendar.
+
+**Fill** (`fs_fill.py`): team events (Davis Cup, Billie Jean King Cup, United Cup, Laver Cup, ATP Cup, Hopman Cup) are left
+out (1,991 matches), 752 matches with the same pair of players within 120 days of a build row are dropped (a date
+artefact, not a gap); 9,668 matches remain (ATP 5,428, WTA 4,240), 8,131 of them attached to the build's event (its
+tourney_id, name, date, level, surface) and the rest in events the build lacks. New raw dir `fx_raw_fill` = `fx_raw_bf` plus
+`*_matches_fsfill_YYYY.csv` (a few rows of main-file events went into that year's main file again). Build `out_live5`
+(`features2.py`, `F2_CLEAN_GAMES=1`, 7 min WTA, 10 min ATP), checked with `cmp_build.py`: ATP 865,995 -> 871,276 rows, WTA
+673,761 -> 677,864, +9,668 new rows exactly, no duplicates left; the only old Flashscore ids absent were 284 loop rows of
+10-06 .. 10-14, re-added by `LIVE_OUT=out_live2 F2_CLEAN_GAMES=1 python3 fs_update.py $B 14` (ATP 871,424 rows, WTA 678,004;
+**no Flashscore id lost**). Swapped in as `out_live2` at 18:15 UTC (old build `out_live2_pre_fill`), the loop passes
+normally on it. Production models `models_v3` are NOT retrained (trained <= 2025 on the old history). The raw dir for every
+later rebuild is now `fx_raw_fill`; both trigger prompts say so.
+Note: `fs_update.py` without `LIVE_OUT=out_live2` updates the stale `out_live` directory.
