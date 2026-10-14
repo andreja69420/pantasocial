@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-14T11:05",
+ "as_of": "2026-10-14T11:36",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -454,7 +454,7 @@
   },
   {
    "id": "2gwzN4qf",
-   "start": "2026-10-14T11:05",
+   "start": "2026-10-14T11:10",
    "category": "WTA 125",
    "tournament": "Mallorca (Spain), clay",
    "pick": "Monnet Carole",
@@ -472,7 +472,7 @@
   },
   {
    "id": "GSVk4MV6",
-   "start": "2026-10-14T11:15",
+   "start": "2026-10-14T12:15",
    "category": "WTA Tour",
    "tournament": "Wuhan (China), hard",
    "pick": "Krueger Ashlyn",
@@ -484,13 +484,13 @@
    "profit": null,
    "p_model": 0.4864,
    "ev": 0.104,
-   "last_odds": 1.8,
-   "clv": 0.2611,
+   "last_odds": 1.78,
+   "clv": 0.2753,
    "link": "https://www.flashscore.com/match/GSVk4MV6/"
   },
   {
    "id": "8GXynuRq",
-   "start": "2026-10-14T12:30",
+   "start": "2026-10-14T12:45",
    "category": "WTA 125",
    "tournament": "Rovereto (Italy), hard (indoor)",
    "pick": "Bandecchi Susan",
@@ -538,8 +538,8 @@
    "profit": null,
    "p_model": 0.4329,
    "ev": 0.104,
-   "last_odds": 2.35,
-   "clv": 0.0851,
+   "last_odds": 2.3,
+   "clv": 0.1087,
    "link": "https://www.flashscore.com/match/Q3fQfAg2/"
   },
   {
