@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-14T07:06",
+ "as_of": "2026-10-14T07:36",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -418,7 +418,7 @@
   },
   {
    "id": "vgFuoojJ",
-   "start": "2026-10-14T07:30",
+   "start": "2026-10-14T07:35",
    "category": "WTA Tour",
    "tournament": "Wuhan (China), hard",
    "pick": "Paolini Jasmine",
@@ -426,7 +426,7 @@
    "odds": 2.75,
    "book": "MozzartBet",
    "stake": 784,
-   "status": "Čeka",
+   "status": "U toku",
    "profit": null,
    "p_model": 0.3845,
    "ev": 0.0574,
