@@ -1741,7 +1741,7 @@ files of the given years. That build (`out_live2_fill1`) is replaced.
 lookups ("missing", upper bound, %): ATP 2010 9.3, 2011 18.9, 2012 13.8, 2013 10.2, 2014 7.3, 2015 9.9, 2016 9.3, 2017 10.5,
 2018 10.3, 2019 7.0, 2020 5.8, 2021 5.3, 2022 5.5, 2023 4.9; WTA 13.8, 21.9, 15.2, 12.1, 18.0, 15.8, 12.6, 10.5, 10.0, 8.6,
 9.0, 7.1, 5.0, 5.0. After removing team events (Davis Cup, BJK Cup, ...) and the duplicates, the fill is **ATP 11,384 and WTA
-8,399 matches for 2010-2026** (2010-22 ATP 7,... in the table of new rows by year from `cmp_build.py`: ATP 2010 99, 2011 1,277,
+8,399 matches for 2010-2026** (new rows by year, from `cmp_build.py`: ATP 2010 99, 2011 1,277,
 2012 1,251, 2013 528, 2014 159, 2015 298, 2016 291, 2017 270, 2018 457, 2019 329, 2020 347, 2021 470, 2022 608, 2023 627,
 2024 985, 2025 2,513, 2026 875; WTA 92, 767, 812, 239, 472, 337, 253, 182, 327, 146, 317, 359, 281, 517, 657, 2,071, 570).
 The new rows are mostly first rounds and qualifying (ATP R32 4,170, Q1 2,171, R16 1,983), ITF and Challenger (ATP: C 2,790,
