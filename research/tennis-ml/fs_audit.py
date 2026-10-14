@@ -2,7 +2,9 @@
 plus the paged results feed, qualifying included) is looked up in the build (`{tour}_matches.parquet`):
   1. by Flashscore match id (the build carries fs_mid for rows joined to Flashscore stats and for all Flashscore rows),
   2. by (winner_id, loser_id) with the event date within 30 days,
-  3. by normalised player names with the event date within 30 days.
+  3. by player names (word order and accents ignored) with the event date within 30 days.
+The count is an upper bound: players Flashscore spells differently from Sackmann get other ids and names, so a match can be
+counted missing while the build holds it (fs_fill.py removes those by score).
 A match found by none of them is missing. The reverse direction (build rows of the same events that Flashscore does not
 list) shows where Flashscore itself is incomplete.
 
@@ -21,7 +23,7 @@ BUILD, FSCSV, TOUR, OUT = sys.argv[1:5]
 FROM = pd.Timestamp(sys.argv[5]) if len(sys.argv) > 5 else None
 TO = pd.Timestamp(sys.argv[6]) if len(sys.argv) > 6 else None
 WIN = pd.Timedelta(days=30)
-norm = lambda s: re.sub(r"[^a-z]+", "", unicodedata.normalize("NFKD", str(s)).encode("ascii", "ignore").decode().lower())
+norm = lambda s: "".join(sorted(re.findall(r"[a-z]+", unicodedata.normalize("NFKD", str(s)).encode("ascii", "ignore").decode().lower())))  # order-free
 
 
 def td(s):
