@@ -1720,8 +1720,8 @@ artefact, not a gap); 9,668 matches remain (ATP 5,428, WTA 4,240), 8,131 of them
 tourney_id, name, date, level, surface) and the rest in events the build lacks. New raw dir `fx_raw_fill` = `fx_raw_bf` plus
 `*_matches_fsfill_YYYY.csv` (a few rows of main-file events went into that year's main file again). Build `out_live5`
 (`features2.py`, `F2_CLEAN_GAMES=1`, 7 min WTA, 10 min ATP), checked with `cmp_build.py`: ATP 865,995 -> 871,276 rows, WTA
-673,761 -> 677,864, +9,668 new rows exactly, no duplicates left; the only old Flashscore ids absent were 284 loop rows of
-10-06 .. 10-14, re-added by `LIVE_OUT=out_live2 F2_CLEAN_GAMES=1 python3 fs_update.py $B 14` (ATP 871,424 rows, WTA 678,004;
+673,761 -> 677,864, +9,668 new rows exactly, no duplicates left; the only old Flashscore ids absent were 284 loop rows (4 Shanghai R16 rows dated 09-06 and rows of
+10-10 .. 10-14), re-added by `LIVE_OUT=out_live2 F2_CLEAN_GAMES=1 python3 fs_update.py $B 14` (ATP 871,424 rows, WTA 678,004;
 **no Flashscore id lost**). Swapped in as `out_live2` at 18:15 UTC (old build `out_live2_pre_fill`), the loop passes
 normally on it. Production models `models_v3` are NOT retrained (trained <= 2025 on the old history). The raw dir for every
 later rebuild is now `fx_raw_fill`; both trigger prompts say so.
