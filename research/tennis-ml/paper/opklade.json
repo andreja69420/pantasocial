@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-15T15:06",
+ "as_of": "2026-10-15T15:35",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -562,7 +562,7 @@
   },
   {
    "id": "6sANNgxQ",
-   "start": "2026-10-15T15:20",
+   "start": "2026-10-15T15:45",
    "category": "Muški Challenger",
    "tournament": "Olbia (Italy), hard",
    "pick": "Fearnley Jacob",
