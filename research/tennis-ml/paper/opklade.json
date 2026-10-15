@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-15T17:06",
+ "as_of": "2026-10-15T17:35",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -570,8 +570,8 @@
    "odds": 1.55,
    "book": "1xBet",
    "stake": 2278,
-   "status": "U toku",
-   "profit": null,
+   "status": "Dobijeno",
+   "profit": 1253,
    "p_model": 0.681,
    "ev": 0.0556,
    "last_odds": 1.4,
@@ -592,8 +592,8 @@
    "profit": null,
    "p_model": 0.4986,
    "ev": 0.1417,
-   "last_odds": 2.29,
-   "clv": 0.0,
+   "last_odds": 1.89,
+   "clv": 0.2116,
    "link": "https://www.flashscore.com/match/bD0wPbHb/"
   }
  ]
