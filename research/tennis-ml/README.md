@@ -1794,3 +1794,26 @@ Same bets 1,486; 246 only quick, 247 only slow. The slow setting gains about 0.0
 the noise (one ROI standard error is about 2.7 points). `models_v6` is saved in `scratchpad/tennis/models_v6`
 (`MODELS=models_v6` switches it in); **`models_v3` stays in production** so the paper test remains one model's out-of-sample
 result. Table per level: `paper/eval_v6_levels2026.txt`.
+
+## Production switched to models_v6; Challenger/tour event ids fixed (2026-10-15)
+**Model.** `paper_loop.sh` now runs `models_v6` (slow training on the completed history, same 798 features as `models_v3`),
+bets are tagged `v6` (`models_v3` bets are tagged `novi`). The bets logged before 07:38 Belgrade time were played with `models_v3`.
+
+**Data error found in the first review with v6.** Zverev - De Minaur and Gea - Davidovich Fokina (Shanghai Masters) showed the
+Shanghai matches dated 2026-09-06, *before* the players' Beijing and Davis Cup matches. Cause: the Flashscore event id was
+`fs-<slug>-<year>`, and a city can hold a tour event and a Challenger under one slug in one season (Shanghai: Challenger
+09-06..09-13 and Masters 10-05..10-14; Mallorca: ATP 250 06-20 and Challenger 08-31). One id = one date (the first match of
+both), so the Masters matches (123) got the Challenger's date, and so did the fixtures (`paper_trade.py` takes the event date
+from the build). Only these two events were mixed (checked: no other `fs-` id with two levels, all ITF ids hold one week).
+Rest days, recent form and ratings of the Shanghai players were therefore wrong; the two bets were not logged
+(`review.py no`), the edge disappeared after the fix (0 proposals, v6 on the corrected build).
+
+**Fix.** `fs_common.event_id()`: Challenger ids are `fs-ch-<slug>-<year>` (tour ids unchanged), used by `result_row` and
+`paper_trade.py` (`fs_stats.py` strips the prefix). `fs_fix_ids.py` migrated the raw files (every `fs`, `fsbf`, `fsloop`,
+`fsfill` file: 4,452+... Challenger rows to `fs-ch-` ids, the dates of the shared events from a fresh 2026 scrape,
+`fs_results.py` now also writes `{tour}_match_dates.csv` with the true day of every match) into `scratchpad/tennis/fx_raw_fix`.
+Rebuild (`features2.py`, `F2_CLEAN_GAMES=1`, WTA 449 s, ATP 706 s) -> checked with `cmp_build.py`: no Flashscore id lost except the
+196/176 matches the loop had added after the raw snapshot, which `fs_update.py 14` added again (877,428 / 682,199 rows as
+before); the Shanghai Masters now starts 2026-10-05, after Beijing (09-28). The nx state (`.fx_state`) was rebuilt by the
+first `fx_live` pass on the new build. Raw dir for later rebuilds: `fx_raw_fix`.
+Left alone: Davis Cup / Billie Jean King Cup ties (team events, one id for the whole season, not bet on).

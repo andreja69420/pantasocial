@@ -279,6 +279,12 @@ def add_bio(O, BIO, day_col="date"):
     return O
 
 
+def event_id(cat, slug, year):
+    """Id of a Flashscore event. A city can hold a tour event and a Challenger under the same slug in one season (Shanghai,
+    Mallorca): the Challenger id carries "ch" so the two events keep their own dates (the date of an id is its first match)."""
+    return f"fs-ch-{slug}-{year}" if cat.startswith("challenger") else f"fs-{slug}-{year}"
+
+
 def result_row(head, d, ids, nq=None):
     """Sackmann-format row of a finished (or retired) match, None for walkovers / cancelled / unfinished."""
     if d.get("AB") != "3" or d.get("AC") not in ("3", "8"):
@@ -299,7 +305,7 @@ def result_row(head, d, ids, nq=None):
     hname, aname = player_name(d, "h"), player_name(d, "a")
     w, l = (hname, aname) if hw else (aname, hname)
     day = pd.Timestamp(int(d["AD"]), unit="s").strftime("%Y-%m-%d")
-    return {"tourney_id": f"fs-{slug}-{day[:4]}", "tourney_name": tname, "surface": surf, "draw_size": "",
+    return {"tourney_id": event_id(cat, slug, day[:4]), "tourney_name": tname, "surface": surf, "draw_size": "",
             "tourney_level": level(cat, tname), "tourney_date": "", "match_num": 0,
             "winner_id": ids.get(key(w)) or synthetic_id(w), "winner_name": canonical(w),
             "loser_id": ids.get(key(l)) or synthetic_id(l), "loser_name": canonical(l),

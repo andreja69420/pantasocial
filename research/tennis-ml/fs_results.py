@@ -95,6 +95,7 @@ O = add_bio(O, BIO)
 O["tourney_date"] = pd.to_datetime(O.groupby("tourney_id").date.transform("min")).dt.strftime("%Y%m%d")
 O = O.sort_values(["tourney_date", "tourney_id", "date"])
 O["match_num"] = O.groupby("tourney_id").cumcount()
+O[["fs_mid", "tourney_id", "tourney_level", "date"]].to_csv(os.path.join(OUT, f"{TOUR}_match_dates.csv"), index=False)  # true day of every match
 for y, g in O.groupby(O.date.str[:4]):
     g.drop(columns=["date"]).to_csv(os.path.join(OUT, f"{TOUR}__{TOUR}_matches_fs_{y}.csv"), index=False)
 print(f"{len(O)} matches {O.date.min()}..{O.date.max()} written; by level {O.tourney_level.value_counts().head(8).to_dict()}; "

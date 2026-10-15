@@ -110,7 +110,7 @@ def season_pages(tour):
         slugs |= {(cat, x) for x in s}
     M = pd.read_parquet(os.path.join(D, "out_live", f"{tour}_matches.parquet"), columns=["tourney_id", "tourney_level"])
     for tid, lv in M[M.tourney_id.astype(str).str.startswith("fs-")].drop_duplicates("tourney_id").itertuples(index=False):
-        slug = re.sub(r"^fs-|-\d{4}$", "", tid)
+        slug = re.sub(r"^fs-(ch-)?|-\d{4}$", "", tid)
         cat = TOURS[tour][0] if lv[:1].isdigit() else (TOURS[tour][1] if lv == "C" else TOURS[tour][2])
         slugs.add((cat, slug))
     cur = max(YEARS)

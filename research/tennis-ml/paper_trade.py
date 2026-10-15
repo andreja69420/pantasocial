@@ -37,7 +37,7 @@ import urllib.request
 import numpy as np
 import pandas as pd
 
-from fs_common import UA, NameIds, apply_aliases, key, level, player_name, qual_rounds, records, round_code, tournament
+from fs_common import UA, NameIds, apply_aliases, event_id, key, level, player_name, qual_rounds, records, round_code, tournament
 
 D = sys.argv[1]
 DAYS = int(sys.argv[2]) if len(sys.argv) > 2 else 7
@@ -135,7 +135,7 @@ for tour in ("wta", "atp"):
             chk[f"id_{s_}"] = int(pid)
         checks[r.fs_mid] = chk
         cat, slug, tname, surf = tournament({"ZA": r.tournament, "ZL": r.path})
-        tid = f"fs-{slug}-{day.year}"
+        tid = event_id(cat, slug, day.year)
         row = {"tourney_id": tid, "tourney_name": tname, "surface": surf, "draw_size": "", "tourney_level": level(cat, tname),
                "tourney_date": int(tstart.get(tid, int(day.strftime("%Y%m%d")))), "match_num": 999,
                "winner_id": hid, "winner_name": nh.title(), "loser_id": aid, "loser_name": na.title(),
