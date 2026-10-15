@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-15T08:20",
+ "as_of": "2026-10-15T08:36",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -559,24 +559,6 @@
    "last_odds": 1.55,
    "clv": 0.0968,
    "link": "https://www.flashscore.com/match/4tAyTon2/"
-  },
-  {
-   "id": "MJaMsDvJ",
-   "start": "2026-10-15T12:00",
-   "category": "WTA 125",
-   "tournament": "Rovereto (Italy), hard (indoor)",
-   "pick": "Kostovic Teodora",
-   "opponent": "Kubka Martyna",
-   "odds": 2.24,
-   "book": "1xBet",
-   "stake": 2001,
-   "status": "Čeka",
-   "profit": null,
-   "p_model": 0.4939,
-   "ev": 0.1064,
-   "last_odds": 1.47,
-   "clv": 0.5238,
-   "link": "https://www.flashscore.com/match/MJaMsDvJ/"
   },
   {
    "id": "6sANNgxQ",
