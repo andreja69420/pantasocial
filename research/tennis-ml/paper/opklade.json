@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-15T05:05",
+ "as_of": "2026-10-15T05:35",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -526,7 +526,7 @@
   },
   {
    "id": "Q3fQfAg2",
-   "start": "2026-10-15T05:00",
+   "start": "2026-10-15T05:05",
    "category": "WTA Tour",
    "tournament": "Wuhan (China), hard",
    "pick": "Shnaider Diana",
