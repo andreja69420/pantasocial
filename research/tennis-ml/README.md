@@ -1778,3 +1778,19 @@ out-of-sample test of one model); `models_v5` is in `scratchpad/tennis/models_v5
 Audit after the fill (`run_after.sh`, same Flashscore lists against the new build): "missing" fell from ATP 26,829 to 15,429
 and WTA 19,249 to 10,853 matches (2010-2026); what is left is mostly team events (left out) and players spelled differently
 (the fill removes those by score), so the real remaining gap is smaller than this upper bound.
+
+## Full (slow) training setting on the completed history (2026-10-15)
+Same data (`out_v5`) and same 798 features as `models_v5`, but the README-adopted slow setting: `--lr-mult=0.333 --trees=6000
+--patience=2000` (learning rates 0.02 xgb / 0.0167 lgbm instead of 0.06 / 0.05). Candidate `models_v6` (train <= 2025, calibrate
+on 2026 to 10-14): WTA 2914 s, ATP 2830 s; holdout tag `r6_v6` (train <= 2024, calibrate 2025): WTA 5036 s, ATP 6831 s.
+
+| | quick (v5) | slow (v6) |
+|---|---|---|
+| candidate log-loss, ATP / WTA (2026 rows) | 0.5588 / 0.5465 | **0.5582 / 0.5460** |
+| holdout log-loss, ATP / WTA | 0.5592 / 0.5468 | **0.5588 / 0.5464** |
+| plan rule, whole 2026 (six books, EV>5%, odds<=5, no ITF) | 1,733 bets, +16.3%, lower 90% +12.2% | 1,734 bets, **+16.6%**, lower 90% +12.5% |
+
+Same bets 1,486; 246 only quick, 247 only slow. The slow setting gains about 0.0005 log-loss and 0.3 ROI points, far inside
+the noise (one ROI standard error is about 2.7 points). `models_v6` is saved in `scratchpad/tennis/models_v6`
+(`MODELS=models_v6` switches it in); **`models_v3` stays in production** so the paper test remains one model's out-of-sample
+result. Table per level: `paper/eval_v6_levels2026.txt`.
