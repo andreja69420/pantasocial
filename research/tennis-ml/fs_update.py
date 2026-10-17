@@ -15,7 +15,10 @@ import pandas as pd
 
 import json
 
-from fs_common import CATS, Limiter, add_bio, page_rounds, qual_rounds, records, result_row, sackmann_ids_bio
+import fs_country
+import fs_rank
+from fs_common import CATS, Limiter, add_bio, event_id, home_won, page_rounds, qual_rounds, records, result_row, sackmann_ids_bio, tournament
+from fs_statlib import match_stats, stat_columns
 
 D = sys.argv[1]
 DAYS = int(sys.argv[2]) if len(sys.argv) > 2 else 7
@@ -27,6 +30,12 @@ L = Limiter(float(os.environ.get("RATE", "150")))
 with ThreadPoolExecutor(8) as ex:
     feeds = list(ex.map(lambda off: L.get(f"https://www.flashscore.com/x/feed/f_2_{off}_1_en_1"), range(-DAYS, 1)))
 pairs = [(h, d) for text in feeds for h, d in records(text)]
+# venue countries from the category headers (the event ids carry none), and the current rankings (new list = new file)
+fs_country.update(pairs, lambda h: (lambda t: event_id(t[0], t[1], "0000") if t[0] else None)(tournament(h)))
+try:
+    fs_rank.run(D, L)
+except Exception as e:  # a failed ranking page must not stop the results update
+    print(f"rankings not updated: {e!r}"[:200], flush=True)
 # the daily feed has no round: it comes from the results page of each tournament with a finished match not yet built
 have_all = set()
 for tour in ("wta", "atp"):
@@ -58,6 +67,18 @@ for tour in ("wta", "atp"):
         continue
     O = add_bio(pd.DataFrame(rows), BIO)
     O.pop("unmapped")
+    # rank and ranking points of the latest list (Flashscore rows carry none); box score / point-by-point log of each match
+    for c in ("winner", "loser"):
+        O[f"{c}_rank"], O[f"{c}_rank_points"] = fs_rank.ranks_asof(D, tour, O[f"{c}_id"].values, O.date.values)
+    hw = {d["AA"]: home_won(d) for _, d in pairs}
+    with ThreadPoolExecutor(16) as ex:
+        ST = list(ex.map(lambda mid: match_stats(L, mid), O.fs_mid))
+    S = pd.DataFrame([stat_columns(b, p, hw[mid]) for mid, (b, p) in zip(O.fs_mid, ST)], index=O.index)
+    S = S[[f"{s}_{c}" for s in ("w", "l") for c in ("ace", "df", "svpt", "1stIn", "1stWon", "2ndWon", "SvGms", "bpSaved", "bpFaced")]
+          + [c for c in S.columns if "_pbp_" in c]]
+    O = pd.concat([O, S], axis=1)
+    print(f"{tour}: stats for {len(O)} new matches: box {int(S.w_SvGms.notna().sum())}, point-by-point {int(S.w_pbp_SvGms.notna().sum())}; "
+          f"ranks {int(O.winner_rank.notna().sum())}", flush=True)
     # tournament start date: from the build when the tournament is already in it, else its first new match day
     start = base.assign(tid=base.tourney_id.astype(str)).groupby("tid").tourney_date.min().astype(int)
     first = pd.to_datetime(O.groupby("tourney_id").date.transform("min")).dt.strftime("%Y%m%d").astype(int)

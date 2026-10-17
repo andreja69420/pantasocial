@@ -285,6 +285,12 @@ def event_id(cat, slug, year):
     return f"fs-ch-{slug}-{year}" if cat.startswith("challenger") else f"fs-{slug}-{year}"
 
 
+def home_won(d):
+    """True when the home player won (set score, else the winner flag of a retirement / tiebreak-only record)."""
+    hs, as_ = int(d.get("AG", 0) or 0), int(d.get("AH", 0) or 0)
+    return hs > as_ if hs != as_ else d.get("AS") == "1"
+
+
 def result_row(head, d, ids, nq=None):
     """Sackmann-format row of a finished (or retired) match, None for walkovers / cancelled / unfinished."""
     if d.get("AB") != "3" or d.get("AC") not in ("3", "8"):
@@ -294,7 +300,7 @@ def result_row(head, d, ids, nq=None):
         return None
     hs, as_ = int(d.get("AG", 0) or 0), int(d.get("AH", 0) or 0)
     ret = d.get("AC") == "8"
-    hw = hs > as_ if hs != as_ else d.get("AS") == "1"
+    hw = home_won(d)
     sets = []
     for a, b in (("BA", "BB"), ("BC", "BD"), ("BE", "BF"), ("BG", "BH"), ("BI", "BJ")):
         if a in d and b in d and (d[a] or d[b]):

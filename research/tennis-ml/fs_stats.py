@@ -4,6 +4,7 @@ there is no box score, the point-by-point log (most ITF matches from ~2024-25 on
 service points played/won, service games, holds and break points faced/saved are counted exactly (tiebreak points too).
 
 usage: fs_stats.py DATA_DIR YEARS            e.g. fs_stats.py $B 2023,2024,2025,2026
+  COUNTRY_ONLY=1: only read the season pages and add the venues' countries to event_country.json (fs_country.py)
   slugs: Flashscore category pages + BetExplorer slug caches (DATA_DIR/bxo*) + Flashscore tourney ids in the build;
   season pages {slug}-{year}/results/ (the current season is the bare slug). Writes DATA_DIR/fs_raw/stats/{tour}_fs_stats.parquet
   with winner/loser ids (Sackmann ids via NameIds), Sackmann stat columns w_/l_ (box score) and w_pbp_/l_pbp_ (point by point).
@@ -19,7 +20,8 @@ from concurrent.futures import ThreadPoolExecutor
 import numpy as np
 import pandas as pd
 
-from fs_common import UA, Limiter, canonical, key, level, page_feed, player_name, records, sackmann_ids_bio, synthetic_id, tournament
+from fs_common import UA, Limiter, canonical, event_id, key, level, page_feed, player_name, records, sackmann_ids_bio, synthetic_id, tournament
+import fs_country
 
 D, YEARS = sys.argv[1], [int(y) for y in sys.argv[2].split(",")]
 OUT = os.path.join(D, "fs_raw", "stats")
@@ -30,73 +32,7 @@ TOURS = {"atp": ["itf-men-singles", "challenger-men-singles", "atp-singles"],
          "wta": ["itf-women-singles", "challenger-women-singles", "wta-singles"]}
 BX = {"itf-men-singles": ["bxo_mitf", "bxo25_mitf"], "challenger-men-singles": ["bxo_chal", "bxo25_chal"],
       "itf-women-singles": ["bxo_witf", "bxo25_witf"]}
-BOX = {"Aces": "ace", "Double Faults": "df", "1st serve points won": ("1stWon", "1stIn"), "2nd serve points won": ("2ndWon", "2ndIn"),
-       "Break Points Saved": ("bpSaved", "bpFaced"), "Service games won": ("SvGmsWon", "SvGms")}
-PT = {"0": 0, "15": 1, "30": 2, "40": 3, "A": 4}
-
-
-def fields(text):
-    return [dict(x.split("÷", 1) for x in rec.split("¬") if "÷" in x) for rec in text.split("~")]
-
-
-def box(text):
-    """{(side, stat): value} of the whole-match section, side 0 = home, 1 = away."""
-    out = {}
-    for d in fields(text):
-        if d.get("SE", "Match") != "Match":
-            break
-        st = BOX.get(d.get("SG"))
-        if not st:
-            continue
-        for side, v in enumerate((d.get("SH", ""), d.get("SI", ""))):
-            m = re.search(r"\((\d+)/(\d+)\)", v) or re.fullmatch(r"(\d+)/(\d+)", v.strip())
-            if isinstance(st, tuple) and m:
-                out[side, st[0]], out[side, st[1]] = int(m.group(1)), int(m.group(2))
-            elif isinstance(st, str) and v.strip().isdigit():
-                out[side, st] = int(v)
-    return out
-
-
-def pbp(text):
-    """Serve counts per side from the point-by-point log: svpt, svwon, SvGms, holds, bpFaced, bpSaved, tbpt, tbwon."""
-    c = np.zeros((2, 8), dtype=int)
-    tb = False
-    for d in fields(text):
-        if "HB" in d:
-            tb = d["HB"].startswith("Tiebreak")
-        if "HG" not in d or "HK" not in d:
-            continue
-        srv, win = int(d["HG"]) - 1, int(d["HK"]) - 1
-        if tb:  # one row per tiebreak point
-            c[srv, 6] += 1
-            c[srv, 7] += win == srv
-            continue
-        c[srv, 2] += 1
-        c[srv, 3] += win == srv
-        if "HL" not in d:
-            continue
-        states = [(0, 0)]
-        for s in d["HL"].split(","):
-            h, _, a = re.sub(r"\|B\d\|", "", s).strip().partition(":")
-            if h.strip() not in PT or a.strip() not in PT:
-                states = None
-                break
-            states.append((PT[h.strip()], PT[a.strip()]))
-        if not states:
-            continue
-        for i, (h, a) in enumerate(states):
-            if i + 1 < len(states):
-                h2, a2 = states[i + 1]
-                pw = 0 if (h2 > h or a2 < a) else 1
-            else:
-                pw = win
-            sv, rc = (h, a) if srv == 0 else (a, h)
-            bp = (rc == 3 and sv < 3) or rc == 4
-            c[srv, 0] += 1
-            c[srv, 1] += pw == srv
-            c[srv, 4] += bp
-            c[srv, 5] += bp and pw == srv
-    return c if c[:, 2].sum() else None
+from fs_statlib import BOX, PT, box, fields, match_stats, pbp  # noqa: E402,F401
 
 
 def season_pages(tour):
@@ -123,8 +59,10 @@ for tour in ("wta", "atp"):
     with ThreadPoolExecutor(THREADS) as ex:
         feeds = list(ex.map(lambda u: page_feed(L.get(u, UA)), urls))
     ms = {}
+    heads = []
     for f in feeds:
         for head, d in records(f):
+            heads.append((head, d))
             if d.get("AB") != "3" or d.get("AC") not in ("3", "8") or tournament(head)[0] is None:
                 continue
             hs, as_ = int(d.get("AG", 0) or 0), int(d.get("AH", 0) or 0)
@@ -132,17 +70,17 @@ for tour in ("wta", "atp"):
             ms[d["AA"]] = {"fs_mid": d["AA"], "date": pd.Timestamp(int(d["AD"]), unit="s").normalize(), "cat": cat, "tourney_name": tname,
                            "level": level(cat, tname), "home": player_name(d, "h"), "away": player_name(d, "a"),
                            "home_won": hs > as_ if hs != as_ else d.get("AS") == "1"}
+    n_new = fs_country.update(heads, lambda h: (lambda t: event_id(t[0], t[1], "0000") if t[0] else None)(tournament(h)))
+    print(f"{tour}: event countries, {n_new} new venues ({len(fs_country.load())} in the map)", flush=True)
+    if os.environ.get("COUNTRY_ONLY"):
+        continue
     M = pd.DataFrame(ms.values())
     M = M[M.date.dt.year.isin(YEARS)].reset_index(drop=True)
     print(f"{tour}: {len(urls)} season pages, {len(M)} finished matches {M.date.min():%Y-%m-%d}..{M.date.max():%Y-%m-%d} "
           f"({time.time() - t0:.0f}s, rate {L.rate:.0f}/s)", flush=True)
 
-    def stats(mid):
-        b = box(L.get(f"https://www.flashscore.com/x/feed/df_st_1_{mid}", UA))
-        return b, (None if "SvGms" in {k for _, k in b} else pbp(L.get(f"https://www.flashscore.com/x/feed/df_mh_1_{mid}", UA)))
-
     with ThreadPoolExecutor(THREADS) as ex:
-        S = list(ex.map(stats, M.fs_mid))
+        S = list(ex.map(lambda mid: match_stats(L, mid), M.fs_mid))
     ids, _ = sackmann_ids_bio(os.path.join(D, "live_raw"), tour)
     rows = []
     for m, (b, p) in zip(M.to_dict("records"), S):

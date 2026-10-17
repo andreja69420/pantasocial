@@ -187,6 +187,20 @@ def gcummax(gid, v, scale=BIG):
     return np.maximum.accumulate(g + v.astype(np.int64)) - g
 
 
+_FSM = None
+
+
+def _fs_event_countries():
+    global _FSM
+    if _FSM is None:
+        try:
+            from fs_country import load
+            _FSM = load()
+        except Exception:
+            _FSM = {}
+    return _FSM
+
+
 def _is_wta(M):
     return bool(M["tourney_level"].astype(str).isin(["PM", "T1", "T2", "10", "W"]).any())
 
@@ -198,6 +212,11 @@ def event_country(M, ev, td_m, nm_key, W, L, wio, lio):
     first = np.unique(ev, return_index=True)[1]
     tid = M["tourney_id"].values[first]
     parsed = code_index(pd.Series(tid).str.extract(_PARSE_ID)[0].fillna(""))
+    # Flashscore events (fs-<slug>-<year>) carry no country in the id: the one named in their category header (fs_country.py)
+    fsm = _fs_event_countries()
+    if fsm:
+        ks = pd.Series(tid).astype(str).str.replace(r"-\d{4}$", "", regex=True).map(fsm).fillna("")
+        parsed = np.where(parsed < 0, code_index(ks), parsed)
     ev_td = td_m[first]
     ev_key = nm_key[first]
     pl = np.concatenate([ev, ev]).astype(np.int64) * (1 << 24)
