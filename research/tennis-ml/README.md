@@ -1829,3 +1829,35 @@ ledger is its own table). Regenerate: `python3 weekly_test.py DATA_DIR BETS_2026
 `opklade.json`, one row per bet: players, tournament, round, odds, book, model and blend probability, stake, result, score, profit,
 bank after the day; 4,545 bets, sums match the month table). The page lets you click a month (or a week bar / week row) and
 shows its cards, bank by day, categories and every bet, sortable and searchable.
+
+## Gaps filled (rank, serve statistics, venue country) and models_v7 against models_v6 (2026-10-17)
+
+**What is now in the live path.** New matches get their box score / point-by-point log (`fs_statlib.py`, `fs_update.py`), the
+rank and ranking points of the latest weekly list (`fs_rank.py`, `ranks_asof`), and the venue country from the Flashscore
+category header (`fs_country.py`, `event_country.json`, ~4,700 events, read by `fx_context.event_country`). Fixture rows get the
+rank columns too (`paper_trade.py`). Corrected framing: the missing statistics were a smaller gap than I first said (ITF never has a
+box score, and the old stats already ran to 10-11); the real gap was the last week plus rank and country.
+
+**Does it help? (train <= 2025, test 2026, same recipe, `retest2/eval_*.txt`).** Rank alone: no (ATP ROI at EV>2% +8.6% against
++7.7%, WTA +3.9% against +4.5%, noise). Rank plus serve statistics ("full"): pooled plan-rule ROI +2.6 points, P(diff <= 0) =
+3.8%, log-loss -0.0001 .. -0.0002. A mild gain, not a different model.
+
+**models_v7 = full set, quick setting, trained to 2025, calibrated on 2026 to 10-17** (`retrain.sh DATA_DIR v7 full quick`, 912
+features, WTA 401,147 rows / ATP 455,996, about 9 min a tour). Production stays on models_v6. Replay on all 2026 matches
+(`replay_models.py`, `paper/compare_v6_v7.txt`; both models were calibrated / early-stopped on these rows, so the gap is slightly
+flattering for both and cannot be read as a clean out-of-sample test):
+
+| | n | v6 log-loss | v7 log-loss | diff | P(v7 not better) |
+|---|---|---|---|---|---|
+| WTA 2026 | 20,811 | 0.5470 | 0.5468 | -0.0002 | 0.21 |
+| WTA since 07-01 | 7,688 | 0.5506 | 0.5498 | -0.0007 | 0.05 |
+| ATP 2026 | 29,765 | 0.5594 | 0.5588 | -0.0006 | 0.01 |
+| ATP since 07-01 | 11,547 | 0.5622 | 0.5611 | -0.0011 | 0.00 |
+
+The two models agree almost everywhere (correlation of the probabilities 0.997), so they would play nearly the same bets. v7 is
+slightly better in log-loss, consistently in the later months. Not switched; the clean test is to price the live fixtures with both
+models from now on and compare on the settled ones.
+
+**Build rebuild note.** The first rebuild (stats re-fetched to 10-17) cut the matches from 10-05 on so that `fs_update.py` would re-add
+them with rank and stats, but the daily feed only reaches back about 7 days, so 10-05..10-09 had to be restored from the old build
+(`restore_lost.py`). Lesson: never cut rows the feed cannot give back.
