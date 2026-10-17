@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-17T21:41",
+ "as_of": "2026-10-17T22:06",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -631,6 +631,24 @@
    "last_odds": 1.46,
    "clv": 0.2877,
    "link": "https://www.flashscore.com/match/I53cA1Hk/"
+  },
+  {
+   "id": "KWMIFGX1",
+   "start": "2026-10-18T15:00",
+   "category": "ATP Tour",
+   "tournament": "Brussels (Belgium) - Qualification, hard (indoor)",
+   "pick": "Basavareddy Nishesh",
+   "opponent": "Dougaz Aziz",
+   "odds": 1.42,
+   "book": "Superbet",
+   "stake": 4588,
+   "status": "Čeka",
+   "profit": null,
+   "p_model": 0.7627,
+   "ev": 0.083,
+   "last_odds": null,
+   "clv": null,
+   "link": "https://www.flashscore.com/match/KWMIFGX1/"
   },
   {
    "id": "bkMXBpID",
