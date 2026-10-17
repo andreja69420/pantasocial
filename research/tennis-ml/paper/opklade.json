@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-17T10:06",
+ "as_of": "2026-10-17T10:36",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -606,8 +606,8 @@
    "odds": 2.1,
    "book": "Superbet",
    "stake": 1648,
-   "status": "U toku",
-   "profit": null,
+   "status": "Izgubljeno",
+   "profit": -1648,
    "p_model": 0.5127,
    "ev": 0.0767,
    "last_odds": 2.12,
