@@ -1825,4 +1825,7 @@ instead of `r6_v3` (to 10-11); 2024 and 2025 are unchanged. 2026: 1,717 bets, fl
 3,017,342 over 10 months, all 9 full months positive (worst July +8.5k, best February +566k), 44 of 50 weeks in plus,
 worst week with 10+ bets 07-27 (-86.8k). October to 10-14: 47 bets, +110k (weeks 10-01: -33k, 10-05: +68k, 10-12: +75k).
 The live paper bets of 10-15 .. 10-17 are not in this table (the test stops where the holdout prices stop; the paper
-ledger is its own table). Regenerate: `python3 weekly_test.py DATA_DIR BETS_2026_PARQUET OUT_DIR`.
+ledger is its own table). Regenerate: `python3 weekly_test.py DATA_DIR BETS_2026_PARQUET FS_2026_DIR OUT_DIR` (also writes
+`opklade.json`, one row per bet: players, tournament, round, odds, book, model and blend probability, stake, result, score, profit,
+bank after the day; 4,545 bets, sums match the month table). The page lets you click a month (or a week bar / week row) and
+shows its cards, bank by day, categories and every bet, sortable and searchable.
