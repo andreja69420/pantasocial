@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-18T00:05",
+ "as_of": "2026-10-18T00:37",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -646,9 +646,27 @@
    "profit": null,
    "p_model": 0.7627,
    "ev": 0.083,
-   "last_odds": 1.2,
-   "clv": 0.1833,
+   "last_odds": 1.19,
+   "clv": 0.1933,
    "link": "https://www.flashscore.com/match/KWMIFGX1/"
+  },
+  {
+   "id": "WbGISYzA",
+   "start": "2026-10-18T15:30",
+   "category": "ATP Tour",
+   "tournament": "Lyon (France) - Qualification, hard (indoor)",
+   "pick": "Mmoh Michael",
+   "opponent": "Kumstat Jan",
+   "odds": 1.9,
+   "book": "Superbet",
+   "stake": 1619,
+   "status": "Čeka",
+   "profit": null,
+   "p_model": 0.5593,
+   "ev": 0.0628,
+   "last_odds": null,
+   "clv": null,
+   "link": "https://www.flashscore.com/match/WbGISYzA/"
   },
   {
    "id": "bkMXBpID",
