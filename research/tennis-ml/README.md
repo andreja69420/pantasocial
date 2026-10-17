@@ -1817,3 +1817,12 @@ Rebuild (`features2.py`, `F2_CLEAN_GAMES=1`, WTA 449 s, ATP 706 s) -> checked wi
 before); the Shanghai Masters now starts 2026-10-05, after Beijing (09-28). The nx state (`.fx_state`) was rebuilt by the
 first `fx_live` pass on the new build. Raw dir for later rebuilds: `fx_raw_fix`.
 Left alone: Davis Cup / Billie Jean King Cup ties (team events, one id for the whole season, not bet on).
+
+## Weekly test page refreshed (2026-10-17, `weekly_test.py`)
+The dashboard "Tenis test po nedeljama" (weeks, months, years of the plan test, every month from 300,000, quarter Kelly,
+cap 30,000) now reads 2026 from the `models_v6` holdout (`retest2/bets_v6.parquet`, train <= 2024, calibrate 2025, to 10-14)
+instead of `r6_v3` (to 10-11); 2024 and 2025 are unchanged. 2026: 1,717 bets, flat on the month banks +15.6%, profit
+3,017,342 over 10 months, all 9 full months positive (worst July +8.5k, best February +566k), 44 of 50 weeks in plus,
+worst week with 10+ bets 07-27 (-86.8k). October to 10-14: 47 bets, +110k (weeks 10-01: -33k, 10-05: +68k, 10-12: +75k).
+The live paper bets of 10-15 .. 10-17 are not in this table (the test stops where the holdout prices stop; the paper
+ledger is its own table). Regenerate: `python3 weekly_test.py DATA_DIR BETS_2026_PARQUET OUT_DIR`.
