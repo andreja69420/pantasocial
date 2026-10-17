@@ -1861,3 +1861,8 @@ models from now on and compare on the settled ones.
 **Build rebuild note.** The first rebuild (stats re-fetched to 10-17) cut the matches from 10-05 on so that `fs_update.py` would re-add
 them with rank and stats, but the daily feed only reaches back about 7 days, so 10-05..10-09 had to be restored from the old build
 (`restore_lost.py`). Lesson: never cut rows the feed cannot give back.
+
+**Build swapped (2026-10-17 19:40).** `out_live2` is now the rebuild with rank, serve statistics and venue country (history from 1990
+with `F2_CLEAN_GAMES=1`, 5-10 October restored from the previous build, then `fs_update.py 14`); the row counts equal the previous build
+(WTA 682,458, ATP 877,682). The loop runs on it with models_v6 unchanged; the old build is kept as `out_live2_pre_v2` / `out_live2_v2a`.
+`models_v7` is trained but not in production.
