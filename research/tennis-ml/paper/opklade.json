@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-17T11:06",
+ "as_of": "2026-10-17T11:37",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -615,6 +615,24 @@
    "link": "https://www.flashscore.com/match/U9AaJ05l/"
   },
   {
+   "id": "I53cA1Hk",
+   "start": "2026-10-18T03:00",
+   "category": "WTA Tour",
+   "tournament": "Osaka (Japan) - Qualification, hard",
+   "pick": "Liu Claire",
+   "opponent": "Inglis Maddison",
+   "odds": 1.88,
+   "book": "1xBet",
+   "stake": 3136,
+   "status": "Čeka",
+   "profit": null,
+   "p_model": 0.5951,
+   "ev": 0.1188,
+   "last_odds": null,
+   "clv": null,
+   "link": "https://www.flashscore.com/match/I53cA1Hk/"
+  },
+  {
    "id": "bkMXBpID",
    "start": "2026-10-19T03:00",
    "category": "WTA Tour",
@@ -628,8 +646,8 @@
    "profit": null,
    "p_model": 0.7462,
    "ev": 0.0671,
-   "last_odds": null,
-   "clv": null,
+   "last_odds": 1.43,
+   "clv": 0.0,
    "link": "https://www.flashscore.com/match/bkMXBpID/"
   }
  ]
