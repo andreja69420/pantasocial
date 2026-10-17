@@ -1866,3 +1866,9 @@ them with rank and stats, but the daily feed only reaches back about 7 days, so 
 with `F2_CLEAN_GAMES=1`, 5-10 October restored from the previous build, then `fs_update.py 14`); the row counts equal the previous build
 (WTA 682,458, ATP 877,682). The loop runs on it with models_v6 unchanged; the old build is kept as `out_live2_pre_v2` / `out_live2_v2a`.
 `models_v7` is trained but not in production.
+
+## Production switched to models_v7 (2026-10-17 20:50)
+
+`paper_loop.sh` now defaults to `MODELS=models_v7 MODEL_TAG=v7` (full feature set: rank, serve statistics, venue country; trained to 2025,
+calibrated on 2026 to 10-17; see the comparison above). New bets are tagged v7, earlier ones keep v3 ("novi") and v6. The first pass
+priced all 106 upcoming matches without errors (fixture NaN share 0.3-0.6%).

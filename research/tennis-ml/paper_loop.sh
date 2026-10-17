@@ -4,7 +4,7 @@
 # written into the repo (paper/ledger.csv, paper/opklade.xlsx).
 D=${1:?DATA_DIR}; INTERVAL=${INTERVAL:-1800}
 # production setup: base v2 build (out_live2: completed history 2010-2026, clean game counts) + the new-feature modules, models_v6 (slow training on the completed history; models_v3 until 2026-10-15)
-export LIVE_OUT=${LIVE_OUT:-out_live2} MODELS=${MODELS:-models_v6} NX=${NX:-1} F2_CLEAN_GAMES=${F2_CLEAN_GAMES:-1} MODEL_TAG=${MODEL_TAG:-v6}
+export LIVE_OUT=${LIVE_OUT:-out_live2} MODELS=${MODELS:-models_v7} NX=${NX:-1} F2_CLEAN_GAMES=${F2_CLEAN_GAMES:-1} MODEL_TAG=${MODEL_TAG:-v7}
 # books the user can bet with from Serbia (Flashscore region RS), no ITF (whole-2026 test at these prices: +17% without
 # ITF, ITF only +4..6%)
 export GEO=${GEO:-RS} BOOKS=${BOOKS:-bet365,Mozzartbetrs,Admiralbet.rs,SoccerBet,Superbet.rs,1xBet.rs}
