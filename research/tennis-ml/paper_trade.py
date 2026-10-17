@@ -38,6 +38,7 @@ import numpy as np
 import pandas as pd
 
 from fs_common import UA, NameIds, apply_aliases, event_id, key, level, player_name, qual_rounds, records, round_code, tournament
+import fs_rank
 
 D = sys.argv[1]
 DAYS = int(sys.argv[2]) if len(sys.argv) > 2 else 7
@@ -145,6 +146,8 @@ for tour in ("wta", "atp"):
                 b = bio.loc[pid]
                 row.update({f"{side}_hand": b.hand, f"{side}_ht": b.ht, f"{side}_ioc": b.ioc,
                             f"{side}_age": b.age + (day - pd.Timestamp(b.date)).days / 365.25})
+            rk, pt = fs_rank.ranks_asof(D, tour, [pid], [day])  # rank / points of the latest Flashscore list (fs_rank.py)
+            row.update({f"{side}_rank": rk[0], f"{side}_rank_points": pt[0]})
         rows.append(row)
     if not rows:
         print(f"{tour}: no priceable fixtures")
