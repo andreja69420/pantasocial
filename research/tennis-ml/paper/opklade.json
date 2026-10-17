@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-17T05:36",
+ "as_of": "2026-10-17T06:06",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -598,7 +598,7 @@
   },
   {
    "id": "U9AaJ05l",
-   "start": "2026-10-17T07:30",
+   "start": "2026-10-17T08:00",
    "category": "WTA Tour",
    "tournament": "Osaka (Japan) - Qualification, hard",
    "pick": "Sorribes Tormo Sara",
