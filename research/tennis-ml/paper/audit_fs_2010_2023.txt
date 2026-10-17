@@ -1,0 +1,779 @@
+=== 2010 atp
+atp: Flashscore 8544 matches, build 26307 rows in the window
+found: by id 0, by id-pair 7700, by names 7582; in none: 798 (9.3%)
+build rows of the same events (name, month) that Flashscore does not list: 875 of 3217
+               matches  missing  missing_%
+tourney_level                             
+A                 3891      356        9.1
+C                 4653      442        9.5
+events with the most missing matches:
+tourney_name        td     
+Davis Cup           2010-03    59
+Beijing             2010-08    48
+Davis Cup Group I   2010-03    47
+Davis Cup Group II  2010-03    35
+Zagreb              2010-02    33
+Buenos Aires        2010-02    31
+Johannesburg        2010-02    31
+Belgrade            2010-02    26
+Hopman Cup          2010-01    12
+French Open         2010-05    10
+Astana 2            2010-11    10
+Wimbledon           2010-06    10
+Bangkok             2010-09     9
+Moscow              2010-10     9
+Rhodes              2010-04     8
+=== 2010 wta
+wta: Flashscore 3303 matches, build 19919 rows in the window
+found: by id 0, by id-pair 2779, by names 2822; in none: 456 (13.8%)
+build rows of the same events (name, month) that Flashscore does not list: 1281 of 3828
+               matches  missing  missing_%
+tourney_level                             
+P                 3303      456       13.8
+events with the most missing matches:
+tourney_name              td     
+Wimbledon                 2010-06    31
+US Open                   2010-08    27
+Australian Open           2010-01    26
+Fed Cup - World Group     2010-02    25
+French Open               2010-05    23
+Montreal                  2010-08    17
+Guangzhou                 2010-09    16
+Indian Wells              2010-03    15
+Fed Cup - World Group II  2010-02    15
+Fes                       2010-04    13
+Hopman Cup                2010-01    13
+Tokyo                     2010-09    13
+Miami                     2010-03    13
+Seoul                     2010-09    12
+Cincinnati                2010-08    12
+=== 2011 atp
+atp: Flashscore 12548 matches, build 27998 rows in the window
+found: by id 0, by id-pair 10168, by names 9974; in none: 2377 (18.9%)
+build rows of the same events (name, month) that Flashscore does not list: 159 of 3193
+               matches  missing  missing_%
+tourney_level                             
+15                3124     1150       36.8
+A                 4772      582       12.2
+C                 4652      645       13.9
+events with the most missing matches:
+tourney_name        td     
+Davis Cup Group II  2011-03    82
+Shanghai            2011-09    72
+Izmir               2011-07    68
+Buenos Aires        2011-02    64
+Madrid              2011-04    61
+Antalya 4           2011-10    59
+Casablanca          2011-02    59
+Austin              2011-10    58
+Davis Cup           2011-03    57
+Dubrovnik           2011-10    56
+Antalya 9           2011-11    56
+Antalya 6           2011-10    56
+Sabadell            2011-10    55
+Antalya 10          2011-12    54
+Davis Cup Group I   2011-03    50
+=== 2011 wta
+wta: Flashscore 7278 matches, build 21359 rows in the window
+found: by id 0, by id-pair 5620, by names 5537; in none: 1596 (21.9%)
+build rows of the same events (name, month) that Flashscore does not list: 473 of 3480
+               matches  missing  missing_%
+tourney_level                             
+100                 31        3        9.7
+15                2869      902       31.4
+25                 185       18        9.7
+60                 123       34       27.6
+P                 4070      639       15.7
+events with the most missing matches:
+tourney_name  td     
+Moscow        2011-07    88
+Beijing       2011-08    76
+W15 Madrid 3  2011-09    66
+Rock Hill     2011-10    58
+Dubrovnik     2011-10    58
+Sevilla       2011-10    52
+W15 Madrid 4  2011-10    47
+Rebecq        2011-07    45
+Bogota        2011-02    44
+Williamsburg  2011-10    40
+Troy          2011-10    32
+Dobrich       2011-10    32
+Istanbul      2011-08    31
+Kansas        2011-10    30
+Ankara        2011-12    29
+=== 2012 atp
+atp: Flashscore 22193 matches, build 29294 rows in the window
+found: by id 0, by id-pair 19122, by names 18921; in none: 3068 (13.8%)
+build rows of the same events (name, month) that Flashscore does not list: 113 of 2954
+               matches  missing  missing_%
+tourney_level                             
+15               12892     1996       15.5
+A                 4806      677       14.1
+C                 4495      395        8.8
+events with the most missing matches:
+tourney_name        td     
+Moscow              2012-01    102
+Davis Cup Group II  2012-02     88
+Bangkok             2012-05     87
+Casablanca          2012-02     83
+Shanghai            2012-09     70
+Rome                2012-04     67
+Buenos Aires        2012-02     63
+Antalya-Belconti    2012-04     62
+Bastad              2012-05     59
+Antalya 6           2012-02     59
+Antalya 5           2012-02     58
+Antalya 9           2012-03     58
+Antalya 2           2012-01     56
+Davis Cup           2012-02     55
+Antalya 8           2012-02     53
+=== 2012 wta
+wta: Flashscore 14064 matches, build 21000 rows in the window
+found: by id 0, by id-pair 11853, by names 11678; in none: 2136 (15.2%)
+build rows of the same events (name, month) that Flashscore does not list: 460 of 3269
+               matches  missing  missing_%
+tourney_level                             
+100                186       29       15.6
+15                8750     1237       14.1
+25                 671       49        7.3
+60                 277       36       13.0
+80                 118       59       50.0
+P                 4062      726       17.9
+events with the most missing matches:
+tourney_name                td     
+Tokyo                       2012-06    74
+Pelham                      2012-04    63
+Plantation                  2012-01    60
+Moscow                      2012-02    60
+Innisbrook                  2012-01    58
+W80 Wiesbaden               2012-04    58
+Bastad                      2012-05    58
+Antalya-Ali Bey Manavgat    2012-03    49
+Antalya-Belconti            2012-04    44
+Antalya-Ali Bey Manavgat 2  2012-03    43
+Rome                        2012-05    41
+Dothan                      2012-04    40
+US Open                     2012-08    36
+Brussels                    2012-05    35
+Pattaya                     2012-02    33
+=== 2013 atp
+atp: Flashscore 16606 matches, build 31207 rows in the window
+found: by id 0, by id-pair 14904, by names 14609; in none: 1700 (10.2%)
+build rows of the same events (name, month) that Flashscore does not list: 84 of 2786
+               matches  missing  missing_%
+tourney_level                             
+15                7450      604        8.1
+A                 4655      576       12.4
+C                 4501      520       11.6
+events with the most missing matches:
+tourney_name        td     
+Bangkok             2013-05    80
+Bogota              2013-03    77
+Shanghai            2013-09    69
+Casablanca          2013-04    62
+Umag                2013-03    57
+Davis Cup Group I   2013-02    57
+Moscow              2013-02    56
+Davis Cup Group II  2013-01    54
+Davis Cup           2013-02    53
+Beijing             2013-07    39
+Guimaraes           2013-03    35
+Santiago            2013-03    33
+Mexico City         2013-02    33
+Nottingham          2013-06    32
+Houston             2013-04    32
+=== 2013 wta
+wta: Flashscore 9198 matches, build 22926 rows in the window
+found: by id 0, by id-pair 8020, by names 7898; in none: 1114 (12.1%)
+build rows of the same events (name, month) that Flashscore does not list: 330 of 3285
+               matches  missing  missing_%
+tourney_level                             
+100                155       12        7.7
+15                4150      448       10.8
+25                 458       25        5.5
+60                 309       27        8.7
+80                  62       10       16.1
+C                   62       32       51.6
+P                 4002      560       14.0
+events with the most missing matches:
+tourney_name              td     
+Beijing                   2013-07    78
+Moscow                    2013-02    58
+Sydney                    2013-01    42
+Rome                      2013-05    40
+Toronto                   2013-08    34
+Fed Cup - World Group     2013-02    32
+Suzhou                    2013-08    30
+Australian Open           2013-01    29
+US Open                   2013-08    28
+W15 Sharm El Sheikh 2     2013-01    28
+Wimbledon                 2013-06    22
+French Open               2013-05    21
+Fed Cup - World Group II  2013-02    16
+Tashkent                  2013-09    16
+Indian Wells              2013-03    14
+=== 2014 atp
+atp: Flashscore 13277 matches, build 32351 rows in the window
+found: by id 0, by id-pair 12311, by names 12082; in none: 966 (7.3%)
+build rows of the same events (name, month) that Flashscore does not list: 104 of 2946
+               matches  missing  missing_%
+tourney_level                             
+15                4229      251        5.9
+A                 4530      417        9.2
+C                 4518      298        6.6
+events with the most missing matches:
+tourney_name                td     
+Shanghai                    2014-09    71
+Davis Cup                   2014-01    57
+Davis Cup Group II          2014-01    55
+Davis Cup Group I           2014-01    52
+Shenzhen                    2014-04    43
+London                      2014-06    34
+Bergamo                     2014-02    33
+Houston                     2014-04    31
+Nottingham                  2014-02    31
+Chennai                     2014-01    31
+ATP Challenger Tour Finals  2014-11    14
+French Open                 2014-05    12
+Kaarst                      2014-01    12
+Wimbledon                   2014-06    12
+US Open                     2014-08    12
+=== 2014 wta
+wta: Flashscore 5845 matches, build 23457 rows in the window
+found: by id 0, by id-pair 4751, by names 4655; in none: 1053 (18.0%)
+build rows of the same events (name, month) that Flashscore does not list: 323 of 3247
+               matches  missing  missing_%
+tourney_level                             
+100                186       25       13.4
+15                1176      151       12.8
+25                  61        9       14.8
+60                 279       31       11.1
+80                  31        1        3.2
+C                   62        4        6.5
+P                 4050      832       20.5
+events with the most missing matches:
+tourney_name              td     
+Wimbledon                 2014-06    96
+Wuhan                     2014-07    72
+Seoul                     2014-04    62
+Istanbul                  2014-04    55
+US Open                   2014-08    42
+Bogota                    2014-04    36
+French Open               2014-05    36
+Bucharest                 2014-07    30
+Fed Cup - World Group II  2014-02    29
+Tianjin                   2014-10    25
+Australian Open           2014-01    24
+Fed Cup - World Group     2014-02    23
+Montreal                  2014-08    17
+Hobart                    2014-01    16
+Miami                     2014-03    15
+=== 2015 atp
+atp: Flashscore 13794 matches, build 33292 rows in the window
+found: by id 0, by id-pair 12428, by names 12195; in none: 1365 (9.9%)
+build rows of the same events (name, month) that Flashscore does not list: 113 of 2957
+               matches  missing  missing_%
+tourney_level                             
+15                4049      324        8.0
+A                 4813      707       14.7
+C                 4932      334        6.8
+events with the most missing matches:
+tourney_name        td     
+Davis Cup Group II  2015-03    81
+Shanghai            2015-09    74
+Winston-Salem       2015-06    73
+Madrid              2015-03    70
+Davis Cup Group I   2015-03    61
+Davis Cup           2015-03    58
+Moscow              2015-06    56
+Casablanca          2015-01    56
+Shenzhen            2015-03    43
+Bogota              2015-07    42
+Champaign           2015-08    37
+Houston             2015-04    36
+Tallahassee         2015-04    31
+Napoli              2015-04    31
+Bergamo             2015-02    31
+=== 2015 wta
+wta: Flashscore 6365 matches, build 23818 rows in the window
+found: by id 0, by id-pair 5336, by names 5185; in none: 1006 (15.8%)
+build rows of the same events (name, month) that Flashscore does not list: 389 of 3507
+               matches  missing  missing_%
+tourney_level                             
+100                124        0        0.0
+15                1505      263       17.5
+25                  93       16       17.2
+60                 370       16        4.3
+80                  31        6       19.4
+C                   31        6       19.4
+P                 4211      699       16.6
+events with the most missing matches:
+tourney_name           td     
+Wuhan                  2015-05    73
+Seoul                  2015-05    59
+Istanbul               2015-04    54
+LiveSport Prague Open  2015-04    53
+Toronto                2015-08    41
+Tokyo                  2015-09    37
+French Open            2015-05    35
+Ankara                 2015-12    29
+Fed Cup - World Group  2015-02    26
+US Open                2015-08    26
+Australian Open        2015-01    23
+Hong Kong              2015-10    21
+Wimbledon              2015-06    19
+Nottingham             2015-06    18
+Dubai                  2015-02    15
+=== 2016 atp
+atp: Flashscore 13539 matches, build 34881 rows in the window
+found: by id 0, by id-pair 12278, by names 12028; in none: 1261 (9.3%)
+build rows of the same events (name, month) that Flashscore does not list: 65 of 2376
+               matches  missing  missing_%
+tourney_level                             
+15                4197      305        7.3
+A                 4279      648       15.1
+C                 5063      308        6.1
+events with the most missing matches:
+tourney_name        td     
+Davis Cup Group II  2016-03    85
+Shanghai            2016-09    76
+Madrid              2016-03    72
+Winston-Salem       2016-06    57
+Davis Cup Group I   2016-03    54
+Davis Cup           2016-03    52
+Chengdu             2016-08    43
+Moscow              2016-06    39
+Shenzhen            2016-03    36
+Indian Wells        2016-03    36
+Houston             2016-04    32
+Memphis             2016-02    32
+Napoli              2016-04    32
+Charlottesville     2016-06    31
+Tallahassee         2016-04    31
+=== 2016 wta
+wta: Flashscore 6477 matches, build 23824 rows in the window
+found: by id 0, by id-pair 5619, by names 5470; in none: 813 (12.6%)
+build rows of the same events (name, month) that Flashscore does not list: 252 of 3370
+               matches  missing  missing_%
+tourney_level                             
+100                124        7        5.6
+15                1573      294       18.7
+25                 124        4        3.2
+60                 309       18        5.8
+80                  31        1        3.2
+C                   31        0        0.0
+P                 4285      489       11.4
+events with the most missing matches:
+tourney_name              td     
+Wuhan                     2016-07    73
+Livesport Prague Open     2016-04    65
+Tianjin                   2016-05    47
+St. Petersburg            2016-02    40
+Rome                      2016-05    36
+Shenzhen                  2016-01    32
+Tokyo                     2016-09    30
+Fed Cup - World Group     2016-02    27
+Bursa                     2016-07    27
+French Open               2016-05    21
+Australian Open           2016-01    19
+Fed Cup - World Group II  2016-02    16
+Wimbledon                 2016-06    15
+Zhuhai                    2016-09    14
+Hopman Cup                2016-01    12
+=== 2017 atp
+atp: Flashscore 13100 matches, build 33165 rows in the window
+found: by id 0, by id-pair 11726, by names 11438; in none: 1374 (10.5%)
+build rows of the same events (name, month) that Flashscore does not list: 99 of 2204
+               matches  missing  missing_%
+tourney_level                             
+15                3887      314        8.1
+A                 4480      776       17.3
+C                 4733      284        6.0
+events with the most missing matches:
+tourney_name             td     
+Davis Cup - Group III    2017-04    176
+Davis Cup - Group II     2017-02     80
+Madrid                   2017-03     71
+Davis Cup - Group IV     2017-04     60
+Davis Cup - World Group  2017-02     58
+Winston-Salem            2017-06     57
+Davis Cup - Group I      2017-02     52
+Shenzhen                 2017-03     41
+Chengdu                  2017-07     39
+Budapest                 2017-02     39
+Quito                    2017-02     37
+Nottingham               2017-06     35
+Rio de Janeiro           2017-02     35
+Hamburg                  2017-07     34
+Champaign                2017-07     33
+=== 2017 wta
+wta: Flashscore 6553 matches, build 23483 rows in the window
+found: by id 0, by id-pair 5822, by names 5654; in none: 686 (10.5%)
+build rows of the same events (name, month) that Flashscore does not list: 277 of 3413
+               matches  missing  missing_%
+tourney_level                             
+100                124        4        3.2
+15                1468      184       12.5
+25                  61       12       19.7
+60                 340       16        4.7
+80                  93        0        0.0
+C                   62        1        1.6
+P                 4405      469       10.6
+events with the most missing matches:
+tourney_name              td     
+Fed Cup - Group II        2017-04    94
+Fed Cup - Group III       2017-06    56
+Rome                      2017-05    38
+Toronto                   2017-08    37
+Tokyo                     2017-09    32
+St. Petersburg            2017-01    32
+Shenzhen                  2017-01    30
+Fed Cup - World Group     2017-02    25
+Fed Cup - World Group II  2017-02    16
+Australian Open           2017-01    14
+Zhuhai                    2017-03    14
+US Open                   2017-08    13
+Hopman Cup                2017-01    13
+French Open               2017-05    11
+Miami                     2017-03    10
+=== 2018 atp
+atp: Flashscore 13038 matches, build 31820 rows in the window
+found: by id 0, by id-pair 11696, by names 11404; in none: 1342 (10.3%)
+build rows of the same events (name, month) that Flashscore does not list: 86 of 2316
+               matches  missing  missing_%
+tourney_level                             
+15                3765      355        9.4
+A                 4461      679       15.2
+C                 4812      308        6.4
+events with the most missing matches:
+tourney_name             td     
+Davis Cup - Group III    2018-04    184
+Davis Cup - Group II     2018-02     72
+Davis Cup - Group IV     2018-01     72
+Houston                  2018-04     62
+Winston-Salem            2018-06     57
+Davis Cup - Group I      2018-02     54
+Davis Cup - World Group  2018-02     50
+Chengdu                  2018-07     39
+Shenzhen                 2018-03     38
+Budapest                 2018-02     37
+Barcelona                2018-04     33
+Hamburg                  2018-07     31
+Riba - Roja de Turia     2018-10     31
+Nottingham               2018-06     31
+Bergamo                  2018-02     31
+=== 2018 wta
+wta: Flashscore 6387 matches, build 23485 rows in the window
+found: by id 0, by id-pair 5722, by names 5505; in none: 637 (10.0%)
+build rows of the same events (name, month) that Flashscore does not list: 246 of 3352
+               matches  missing  missing_%
+tourney_level                             
+100                154        3        1.9
+15                1339      209       15.6
+25                  93        5        5.4
+60                 339       43       12.7
+80                 124        7        5.6
+C                   62        8       12.9
+P                 4276      362        8.5
+events with the most missing matches:
+tourney_name              td     
+Fed Cup - Group III       2018-04    68
+Fed Cup - Group II        2018-02    66
+Rome                      2018-05    31
+Hodmezovasarhely          2018-06    30
+Shenzhen                  2018-01    30
+W60 Versmold              2018-07    30
+Landisville               2018-08    29
+Templeton                 2018-09    28
+Fed Cup - World Group     2018-02    23
+Fed Cup - World Group II  2018-02    15
+Zhuhai                    2018-03    15
+Tashkent                  2018-09    10
+Hopman Cup                2018-01     9
+New Haven                 2018-08     8
+Toronto                   2018-10     8
+=== 2019 atp
+atp: Flashscore 15189 matches, build 30636 rows in the window
+found: by id 0, by id-pair 14103, by names 13614; in none: 1069 (7.0%)
+build rows of the same events (name, month) that Flashscore does not list: 51 of 3600
+               matches  missing  missing_%
+tourney_level                             
+15                2707      181        6.7
+25                 958       34        3.5
+A                 4307      514       11.9
+C                 7217      340        4.7
+events with the most missing matches:
+tourney_name             td     
+Davis Cup - Group III    2019-06    155
+Davis Cup - Group IV     2019-06    122
+Houston                  2019-04     78
+Davis Cup - World Group  2019-02     51
+Pune                     2019-01     47
+Hamburg                  2019-07     45
+Barcelona                2019-04     45
+Zhuhai                   2019-03     41
+Chengdu                  2019-07     40
+Budapest                 2019-02     39
+Orlando                  2019-01     31
+M15 Fayetteville, AR     2019-09     30
+M15 Castellon            2019-11     29
+Davis Cup - Group II     2019-04     28
+Hopman Cup               2019-01      8
+=== 2019 wta
+wta: Flashscore 6750 matches, build 34637 rows in the window
+found: by id 0, by id-pair 6130, by names 5943; in none: 582 (8.6%)
+build rows of the same events (name, month) that Flashscore does not list: 681 of 4585
+               matches  missing  missing_%
+tourney_level                             
+100                155        9        5.8
+15                1456      157       10.8
+25                  31        6       19.4
+60                 496       41        8.3
+80                 217        7        3.2
+C                   93        3        3.2
+P                 4302      359        8.3
+events with the most missing matches:
+tourney_name                           td     
+Fed Cup - Group II                     2019-02    83
+Billie Jean King Cup - Group III       2019-04    64
+Toronto                                2019-08    32
+Shenzhen                               2019-01    30
+Granby                                 2019-07    28
+Fed Cup - World Group                  2019-02    26
+Fed Cup - Group I                      2019-02    14
+Billie Jean King Cup - World Group II  2019-02    13
+Australian Open                        2019-01    10
+Istanbul                               2019-04     9
+St. Petersburg                         2019-01     9
+Hopman Cup                             2019-01     8
+Madrid                                 2019-05     8
+W60 Prague                             2019-07     8
+US Open                                2019-08     8
+=== 2020 atp
+atp: Flashscore 8762 matches, build 10584 rows in the window
+found: by id 0, by id-pair 8249, by names 7941; in none: 508 (5.8%)
+build rows of the same events (name, month) that Flashscore does not list: 253 of 5403
+               matches  missing  missing_%
+tourney_level                             
+15                3432      354       10.3
+25                1107       62        5.6
+A                 1980       45        2.3
+C                 2243       47        2.1
+events with the most missing matches:
+tourney_name     td     
+Nur-Sultan       2020-03    42
+M15 Monastir 7   2020-02    33
+M15 Monastir 9   2020-03    32
+M15 Monastir 8   2020-02    32
+Hamburg          2020-09    31
+M15 Monastir 10  2020-03    31
+M15 Monastir 6   2020-02    31
+M15 Monastir 12  2020-09    31
+M15 Monastir 5   2020-02    31
+M25 Vogau        2020-08    30
+M15 Monastir 14  2020-09    23
+M15 Toulouse     2020-03    22
+M15 Monastir     2020-01    15
+M25 Naples, FL   2020-02     7
+M25 Aktobe       2020-02     7
+=== 2020 wta
+wta: Flashscore 6528 matches, build 12873 rows in the window
+found: by id 0, by id-pair 5931, by names 5657; in none: 585 (9.0%)
+build rows of the same events (name, month) that Flashscore does not list: 3776 of 8824
+               matches  missing  missing_%
+tourney_level                             
+100                152        2        1.3
+15                2844      436       15.3
+25                1411       58        4.1
+60                 155        4        2.6
+80                  90        7        7.8
+P                 1876       78        4.2
+events with the most missing matches:
+tourney_name                     td     
+W15 Monastir 3                   2020-01    34
+W15 Monastir 4                   2020-01    32
+W15 Monastir 9                   2020-03    32
+W15 Monastir 10                  2020-03    32
+W15 Monastir 7                   2020-02    31
+W15 Monastir 8                   2020-02    31
+W15 Monastir 5                   2020-02    29
+W15 Monastir 2                   2020-01    28
+W15 Monastir 6                   2020-02    28
+W15 Monastir                     2020-01    13
+Billie Jean King Cup - Group II  2020-02    10
+W15 Sharm El Sheikh 7            2020-11    10
+Billie Jean King Cup - Group I   2020-02     9
+Australian Open                  2020-01     9
+W15 Cairo 5                      2020-11     9
+=== 2021 atp
+atp: Flashscore 22184 matches, build 23952 rows in the window
+found: by id 0, by id-pair 20939, by names 20134; in none: 1178 (5.3%)
+build rows of the same events (name, month) that Flashscore does not list: 487 of 13701
+               matches  missing  missing_%
+tourney_level                             
+15                8448      404        4.8
+25                3338      139        4.2
+A                 4176      392        9.4
+C                 6222      243        3.9
+events with the most missing matches:
+tourney_name                td     
+Davis Cup - Group IV        2021-06    128
+Davis Cup - Group III       2021-06    108
+Barcelona                   2021-04     43
+Mallorca                    2021-06     42
+Buenos Aires                2021-02     41
+St. Petersburg              2021-02     39
+Davis Cup - World Group I   2021-03     39
+Nur-Sultan                  2021-02     37
+Davis Cup - World Group II  2021-03     33
+M15 Antalya                 2021-01     31
+M15 Sharm El Sheikh 16      2021-11     17
+M15+H Bressuire             2021-01     10
+M25 Prague                  2021-05      9
+Ambato                      2021-09      8
+M15 Sharm El Sheikh 6       2021-03      8
+=== 2021 wta
+wta: Flashscore 15670 matches, build 29246 rows in the window
+found: by id 0, by id-pair 14511, by names 13845; in none: 1107 (7.1%)
+build rows of the same events (name, month) that Flashscore does not list: 11348 of 24915
+               matches  missing  missing_%
+tourney_level                             
+100                186        4        2.2
+15                6518      480        7.4
+25                3519      198        5.6
+60                 987       79        8.0
+80                 248        8        3.2
+C                  255       49       19.2
+P                 3957      289        7.3
+events with the most missing matches:
+tourney_name                        td     
+Billie Jean King Cup - Group III    2021-06    88
+Billie Jean King Cup - Group II     2021-06    48
+W15 Cairo 8                         2021-01    36
+Charleston                          2021-04    32
+Billie Jean King Cup - World Group  2021-04    30
+W25 Klosters                        2021-06    14
+W60 Oeiras                          2021-04    12
+Nottingham                          2021-06    12
+W15 Manacor                         2021-01    11
+W15 Antalya 16                      2021-04    10
+W15 Monastir 29                     2021-08    10
+W25 Wroclaw                         2021-06     9
+Australian Open                     2021-01     9
+W15 Antalya 3                       2021-01     9
+W25 Kyiv                            2021-07     8
+=== 2022 atp
+atp: Flashscore 29553 matches, build 32129 rows in the window
+found: by id 0, by id-pair 27773, by names 26912; in none: 1630 (5.5%)
+build rows of the same events (name, month) that Flashscore does not list: 619 of 18531
+               matches  missing  missing_%
+tourney_level                             
+15                9817      424        4.3
+25                6371      171        2.7
+A                 4576      566       12.4
+C                 8789      469        5.3
+events with the most missing matches:
+tourney_name                td     
+Davis Cup - Group IV        2022-07    191
+Davis Cup - Group III       2022-06    128
+Davis Cup - World Group II  2022-03     68
+Davis Cup - World Group     2022-03     60
+Davis Cup - World Group I   2022-03     58
+Buenos Aires                2022-02     49
+Sydney                      2022-01     49
+Hamburg                     2022-07     49
+Rio de Janeiro              2022-02     48
+Mallorca                    2022-06     48
+Astana                      2022-07     42
+M25 Cairo                   2022-01     10
+M15 Sharm ElSheikh 18       2022-11      9
+M15 Rancho Santa Fe, CA     2022-05      8
+M15 Sharm ElSheikh 17       2022-11      8
+=== 2022 wta
+wta: Flashscore 21500 matches, build 38812 rows in the window
+found: by id 0, by id-pair 20265, by names 19477; in none: 1085 (5.0%)
+build rows of the same events (name, month) that Flashscore does not list: 13873 of 33043
+               matches  missing  missing_%
+tourney_level                             
+100                449       22        4.9
+15                7057      311        4.4
+25                6594      244        3.7
+60                2427       79        3.3
+80                 217        4        1.8
+C                  543       47        8.7
+P                 4213      378        9.0
+events with the most missing matches:
+tourney_name                        td     
+Billie Jean King Cup - Group II     2022-04    152
+Billie Jean King Cup - Group III    2022-06     88
+Billie Jean King Cup - World Group  2022-04     56
+Wimbledon                           2022-06     11
+Colina                              2022-11     10
+W15 Cairo                           2022-01      9
+W100 Surbiton                       2022-06      8
+W15 Ceuta                           2022-09      8
+W25 Rio de Janeiro                  2022-08      8
+W25 Frydek Mistek                   2022-09      8
+W15 Lima                            2022-11      7
+Buenos Aires                        2022-11      7
+W15 Chiang Rai 4                    2022-06      7
+W25 Cairo                           2022-01      7
+W25 Blumenau-Gaspar                 2022-01      7
+=== 2023 atp
+atp: Flashscore 31515 matches, build 34131 rows in the window
+found: by id 200, by id-pair 29774, by names 28753; in none: 1551 (4.9%)
+build rows of the same events (name, month) that Flashscore does not list: 645 of 19079
+               matches  missing  missing_%
+tourney_level                             
+15                9723      337        3.5
+25                7818      220        2.8
+A                 4653      601       12.9
+C                 9321      393        4.2
+events with the most missing matches:
+tourney_name                td     
+Davis Cup - Group IV        2023-07    128
+Davis Cup - Group III       2023-06    128
+Davis Cup - Group V         2023-06     78
+Davis Cup - World Group     2023-02     59
+Davis Cup - World Group II  2023-02     57
+Davis Cup - World Group I   2023-02     53
+Mallorca                    2023-06     49
+Hamburg                     2023-07     49
+Buenos Aires                2023-02     48
+Pune                        2023-01     48
+Astana                      2023-07     40
+Zhuhai                      2023-08     37
+M25 Fuzhou                  2023-07     29
+Santa Fe                    2023-07     13
+M15 Monastir 24             2023-06     10
+=== 2023 wta
+wta: Flashscore 23102 matches, build 40642 rows in the window
+found: by id 198, by id-pair 21842, by names 20905; in none: 1144 (5.0%)
+build rows of the same events (name, month) that Flashscore does not list: 14229 of 34538
+               matches  missing  missing_%
+tourney_level                             
+100                676        9        1.3
+15                6516      182        2.8
+25                6213      197        3.2
+40                1711       42        2.5
+60                2456       74        3.0
+80                 216       12        5.6
+C                  787       73        9.3
+P                 4527      555       12.3
+events with the most missing matches:
+tourney_name                        td     
+Billie Jean King Cup - Group III    2023-06    230
+Billie Jean King Cup - Group II     2023-04    105
+Billie Jean King Cup - Group IV     2023-06     60
+Billie Jean King Cup - World Group  2023-04     60
+W25 Ourense                         2023-08     30
+Contrexeville                       2023-07     29
+W15 Nakhon Si Thammarat 2           2023-06      9
+W80 Brasilia                        2023-08      9
+Billie Jean King Cup - Group I      2023-04      8
+Wimbledon                           2023-06      8
+San Luis Potosi                     2023-03      8
+Hopman Cup                          2023-07      7
+Makarska                            2023-06      7
+W15 Antalya                         2023-01      7
+W15 Nakhon Si Thammarat 3           2023-07      7
