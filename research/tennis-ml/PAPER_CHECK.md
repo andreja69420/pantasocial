@@ -77,7 +77,7 @@ and `research/CLAUDE.md`. The user writes Serbian: answer in Serbian, short, no 
   cache). Ledger `paper/ledger.csv` (44 bets: 32 "novi" = models_v3, 6 v6, 6 v7), `paper/opklade.xlsx`, `paper/opklade.json` are committed to
   `claude/awesome-shannon-j3tap7` (HEAD `f6e59ec` plus later CLV refresh commits). The loop dies when the container idles; the six scheduled checks
   (:04 :14 :24 :34 :44 :54, prompt = "read PAPER_CHECK.md and follow it") restart it. They need no action from a new chat; just follow the steps above when one fires.
-- **Dashboard** https://claude.ai/artifact/Mjxr7iBZkf5ztbdoDHMsL9 : document `datasets/bets`, last known version 179 (always `get` it first for `if_version`).
+- **Dashboard** https://claude.ai/artifact/Mjxr7iBZkf5ztbdoDHMsL9 : document `datasets/bets`, last known version 180 (always `get` it first for `if_version`).
 - **Open bets at this point** (Belgrade time = UTC+2): Basavareddy-Dougaz 1.42 Superbet (18.10 15:00), Mmoh-Kumstat 1.90 Superbet (18.10 15:30),
   Jacquet 1.65 Superbet (18.10 12:30, claude=ne), Gomez 1.45 Mozzart (18.10 21:30), Golubic 1.43 Superbet and Uchijima 1.91 bet365 (19.10 03:00),
   Alexandrova 1.28 1xBet (19.10 04:00, claude=ne), Bellucci 2.08 Mozzart and Tsitsipas 1.29 1xBet (19.10 08:00). When one settles: send `opklade.xlsx` with the result and the bank.
