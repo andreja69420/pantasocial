@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-18T12:26",
+ "as_of": "2026-10-18T12:37",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -646,8 +646,8 @@
    "profit": null,
    "p_model": 0.6316,
    "ev": 0.0421,
-   "last_odds": 1.65,
-   "clv": 0.0,
+   "last_odds": 1.62,
+   "clv": 0.0185,
    "link": "https://www.flashscore.com/match/IyQO6iEj/"
   },
   {
@@ -670,7 +670,7 @@
   },
   {
    "id": "WbGISYzA",
-   "start": "2026-10-18T15:45",
+   "start": "2026-10-18T16:05",
    "category": "ATP Tour",
    "tournament": "Lyon (France) - Qualification, hard (indoor)",
    "pick": "Mmoh Michael",
@@ -705,24 +705,6 @@
    "link": "https://www.flashscore.com/match/hzjmfIO7/"
   },
   {
-   "id": "bkMXBpID",
-   "start": "2026-10-19T03:00",
-   "category": "WTA Tour",
-   "tournament": "Osaka (Japan), hard",
-   "pick": "Golubic Viktorija",
-   "opponent": "Hontama Mai",
-   "odds": 1.43,
-   "book": "Superbet",
-   "stake": 3622,
-   "status": "Čeka",
-   "profit": null,
-   "p_model": 0.7462,
-   "ev": 0.0671,
-   "last_odds": 1.33,
-   "clv": 0.0752,
-   "link": "https://www.flashscore.com/match/bkMXBpID/"
-  },
-  {
    "id": "YLcpYzZF",
    "start": "2026-10-19T03:00",
    "category": "WTA Tour",
@@ -739,6 +721,24 @@
    "last_odds": 1.62,
    "clv": 0.179,
    "link": "https://www.flashscore.com/match/YLcpYzZF/"
+  },
+  {
+   "id": "bkMXBpID",
+   "start": "2026-10-19T04:30",
+   "category": "WTA Tour",
+   "tournament": "Osaka (Japan), hard",
+   "pick": "Golubic Viktorija",
+   "opponent": "Hontama Mai",
+   "odds": 1.43,
+   "book": "Superbet",
+   "stake": 3622,
+   "status": "Čeka",
+   "profit": null,
+   "p_model": 0.7462,
+   "ev": 0.0671,
+   "last_odds": 1.33,
+   "clv": 0.0752,
+   "link": "https://www.flashscore.com/match/bkMXBpID/"
   },
   {
    "id": "zHfvs0hR",
@@ -793,6 +793,24 @@
    "last_odds": 1.99,
    "clv": -0.0101,
    "link": "https://www.flashscore.com/match/dWOklHaf/"
+  },
+  {
+   "id": "zPhRoEhg",
+   "start": "2026-10-19T10:00",
+   "category": "ATP Tour",
+   "tournament": "Brussels (Belgium), hard (indoor)",
+   "pick": "Fearnley Jacob",
+   "opponent": "Gaston Hugo",
+   "odds": 1.62,
+   "book": "bet365",
+   "stake": 1216,
+   "status": "Čeka",
+   "profit": null,
+   "p_model": 0.6367,
+   "ev": 0.0315,
+   "last_odds": null,
+   "clv": null,
+   "link": "https://www.flashscore.com/match/zPhRoEhg/"
   },
   {
    "id": "UP8vgkvg",
