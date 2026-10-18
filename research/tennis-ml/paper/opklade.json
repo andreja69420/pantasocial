@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-18T14:07",
+ "as_of": "2026-10-18T14:16",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -652,7 +652,7 @@
   },
   {
    "id": "KWMIFGX1",
-   "start": "2026-10-18T15:00",
+   "start": "2026-10-18T15:10",
    "category": "ATP Tour",
    "tournament": "Brussels (Belgium) - Qualification, hard (indoor)",
    "pick": "Basavareddy Nishesh",
@@ -670,7 +670,7 @@
   },
   {
    "id": "WbGISYzA",
-   "start": "2026-10-18T16:05",
+   "start": "2026-10-18T16:25",
    "category": "ATP Tour",
    "tournament": "Lyon (France) - Qualification, hard (indoor)",
    "pick": "Mmoh Michael",
@@ -685,6 +685,24 @@
    "last_odds": 1.87,
    "clv": 0.016,
    "link": "https://www.flashscore.com/match/WbGISYzA/"
+  },
+  {
+   "id": "tEgLpBjI",
+   "start": "2026-10-18T20:30",
+   "category": "Muški Challenger",
+   "tournament": "Fort Worth (USA) - Qualification, hard",
+   "pick": "Artnak Bor",
+   "opponent": "Woestendick Cooper",
+   "odds": 1.8,
+   "book": "Superbet",
+   "stake": 1190,
+   "status": "Čeka",
+   "profit": null,
+   "p_model": 0.5777,
+   "ev": 0.0398,
+   "last_odds": null,
+   "clv": null,
+   "link": "https://www.flashscore.com/match/tEgLpBjI/"
   },
   {
    "id": "hzjmfIO7",
@@ -811,6 +829,24 @@
    "last_odds": null,
    "clv": null,
    "link": "https://www.flashscore.com/match/QZAP4LZR/"
+  },
+  {
+   "id": "Q9svAefA",
+   "start": "2026-10-20T04:00",
+   "category": "WTA Tour",
+   "tournament": "Ningbo (China), hard",
+   "pick": "Chwalinska Maja",
+   "opponent": "Kawa Katarzyna",
+   "odds": 1.21,
+   "book": "Superbet",
+   "stake": 4537,
+   "status": "Čeka",
+   "profit": null,
+   "p_model": 0.8594,
+   "ev": 0.0398,
+   "last_odds": null,
+   "clv": null,
+   "link": "https://www.flashscore.com/match/Q9svAefA/"
   },
   {
    "id": "zHfvs0hR",
