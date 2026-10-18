@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-18T17:18",
+ "as_of": "2026-10-18T17:35",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -795,6 +795,24 @@
    "link": "https://www.flashscore.com/match/zPhRoEhg/"
   },
   {
+   "id": "K4bWV6iA",
+   "start": "2026-10-19T10:00",
+   "category": "Muški Challenger",
+   "tournament": "Florence (Italy) - Qualification, clay",
+   "pick": "Donald Matthew",
+   "opponent": "Barranco Cosano Javier",
+   "odds": 1.71,
+   "book": "Superbet",
+   "stake": 1191,
+   "status": "Čeka",
+   "profit": null,
+   "p_model": 0.6049,
+   "ev": 0.0343,
+   "last_odds": null,
+   "clv": null,
+   "link": "https://www.flashscore.com/match/K4bWV6iA/"
+  },
+  {
    "id": "C2siszem",
    "start": "2026-10-19T16:30",
    "category": "ATP Tour",
@@ -916,8 +934,8 @@
    "profit": null,
    "p_model": 0.8594,
    "ev": 0.0398,
-   "last_odds": 1.18,
-   "clv": 0.0254,
+   "last_odds": 1.28,
+   "clv": -0.0547,
    "link": "https://www.flashscore.com/match/Q9svAefA/"
   },
   {
