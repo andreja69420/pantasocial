@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-18T13:55",
+ "as_of": "2026-10-18T14:07",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -634,7 +634,7 @@
   },
   {
    "id": "IyQO6iEj",
-   "start": "2026-10-18T14:00",
+   "start": "2026-10-18T13:50",
    "category": "ATP Tour",
    "tournament": "Lyon (France) - Qualification, hard (indoor)",
    "pick": "Jacquet Kyrian",
@@ -642,7 +642,7 @@
    "odds": 1.65,
    "book": "Superbet",
    "stake": 1548,
-   "status": "Čeka",
+   "status": "U toku",
    "profit": null,
    "p_model": 0.6316,
    "ev": 0.0421,
@@ -793,6 +793,24 @@
    "last_odds": 1.29,
    "clv": -0.0078,
    "link": "https://www.flashscore.com/match/UP8vgkvg/"
+  },
+  {
+   "id": "QZAP4LZR",
+   "start": "2026-10-20T04:00",
+   "category": "WTA Tour",
+   "tournament": "Ningbo (China), hard",
+   "pick": "Bucsa Cristina",
+   "opponent": "Kudermetova Polina",
+   "odds": 2.0,
+   "book": "Superbet",
+   "stake": 1552,
+   "status": "Čeka",
+   "profit": null,
+   "p_model": 0.5324,
+   "ev": 0.0649,
+   "last_odds": null,
+   "clv": null,
+   "link": "https://www.flashscore.com/match/QZAP4LZR/"
   },
   {
    "id": "zHfvs0hR",
