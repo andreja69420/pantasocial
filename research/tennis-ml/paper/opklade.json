@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-18T19:36",
+ "as_of": "2026-10-18T19:46",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -688,7 +688,7 @@
   },
   {
    "id": "tEgLpBjI",
-   "start": "2026-10-18T20:30",
+   "start": "2026-10-18T19:50",
    "category": "Muški Challenger",
    "tournament": "Fort Worth (USA) - Qualification, hard",
    "pick": "Artnak Bor",
@@ -808,8 +808,8 @@
    "profit": null,
    "p_model": 0.7618,
    "ev": 0.036,
-   "last_odds": 1.36,
-   "clv": 0.0,
+   "last_odds": 1.32,
+   "clv": 0.0303,
    "link": "https://www.flashscore.com/match/ShUPw1le/"
   },
   {
@@ -844,8 +844,8 @@
    "profit": null,
    "p_model": 0.4558,
    "ev": 0.1032,
-   "last_odds": null,
-   "clv": null,
+   "last_odds": 2.42,
+   "clv": 0.0,
    "link": "https://www.flashscore.com/match/x2x2vmcd/"
   },
   {
@@ -862,8 +862,8 @@
    "profit": null,
    "p_model": 0.7398,
    "ev": 0.0727,
-   "last_odds": 1.4,
-   "clv": 0.0357,
+   "last_odds": 1.38,
+   "clv": 0.0507,
    "link": "https://www.flashscore.com/match/fgFQ88KH/"
   },
   {
