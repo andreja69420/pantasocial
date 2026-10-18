@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-18T22:37",
+ "as_of": "2026-10-18T22:45",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -742,7 +742,7 @@
   },
   {
    "id": "6yJgsxpQ",
-   "start": "2026-10-18T22:30",
+   "start": "2026-10-18T22:35",
    "category": "Muški Challenger",
    "tournament": "Santa Cruz 2 (Bolivia), clay",
    "pick": "Seyboth Wild Thiago",
@@ -795,42 +795,6 @@
    "link": "https://www.flashscore.com/match/KYsxolLs/"
   },
   {
-   "id": "zPhRoEhg",
-   "start": "2026-10-19T10:00",
-   "category": "ATP Tour",
-   "tournament": "Brussels (Belgium), hard (indoor)",
-   "pick": "Fearnley Jacob",
-   "opponent": "Gaston Hugo",
-   "odds": 1.62,
-   "book": "bet365",
-   "stake": 1216,
-   "status": "Čeka",
-   "profit": null,
-   "p_model": 0.6367,
-   "ev": 0.0315,
-   "last_odds": 1.5,
-   "clv": 0.08,
-   "link": "https://www.flashscore.com/match/zPhRoEhg/"
-  },
-  {
-   "id": "xxs4zyED",
-   "start": "2026-10-19T10:00",
-   "category": "ATP Tour",
-   "tournament": "Brussels (Belgium), hard (indoor)",
-   "pick": "Bertola Remy",
-   "opponent": "Goffin David",
-   "odds": 2.1,
-   "book": "bet365",
-   "stake": 1986,
-   "status": "Čeka",
-   "profit": null,
-   "p_model": 0.5178,
-   "ev": 0.0874,
-   "last_odds": null,
-   "clv": null,
-   "link": "https://www.flashscore.com/match/xxs4zyED/"
-  },
-  {
    "id": "ShUPw1le",
    "start": "2026-10-19T11:00",
    "category": "Muški Challenger",
@@ -880,8 +844,8 @@
    "profit": null,
    "p_model": 0.4558,
    "ev": 0.1032,
-   "last_odds": 1.63,
-   "clv": 0.4847,
+   "last_odds": 1.6,
+   "clv": 0.5125,
    "link": "https://www.flashscore.com/match/x2x2vmcd/"
   },
   {
@@ -934,8 +898,8 @@
    "profit": null,
    "p_model": 0.6606,
    "ev": 0.0372,
-   "last_odds": 1.36,
-   "clv": 0.1544,
+   "last_odds": 1.4,
+   "clv": 0.1214,
    "link": "https://www.flashscore.com/match/C2siszem/"
   },
   {
@@ -1119,6 +1083,24 @@
    "link": "https://www.flashscore.com/match/dWOklHaf/"
   },
   {
+   "id": "zPhRoEhg",
+   "start": "2026-10-20T10:00",
+   "category": "ATP Tour",
+   "tournament": "Brussels (Belgium), hard (indoor)",
+   "pick": "Fearnley Jacob",
+   "opponent": "Gaston Hugo",
+   "odds": 1.62,
+   "book": "bet365",
+   "stake": 1216,
+   "status": "Čeka",
+   "profit": null,
+   "p_model": 0.6367,
+   "ev": 0.0315,
+   "last_odds": 1.5,
+   "clv": 0.08,
+   "link": "https://www.flashscore.com/match/zPhRoEhg/"
+  },
+  {
    "id": "G4B5htxq",
    "start": "2026-10-20T10:00",
    "category": "ATP Tour",
@@ -1135,6 +1117,24 @@
    "last_odds": 1.4,
    "clv": -0.0071,
    "link": "https://www.flashscore.com/match/G4B5htxq/"
+  },
+  {
+   "id": "xxs4zyED",
+   "start": "2026-10-20T10:00",
+   "category": "ATP Tour",
+   "tournament": "Brussels (Belgium), hard (indoor)",
+   "pick": "Bertola Remy",
+   "opponent": "Goffin David",
+   "odds": 2.1,
+   "book": "bet365",
+   "stake": 1986,
+   "status": "Čeka",
+   "profit": null,
+   "p_model": 0.5178,
+   "ev": 0.0874,
+   "last_odds": 2.1,
+   "clv": 0.0,
+   "link": "https://www.flashscore.com/match/xxs4zyED/"
   }
  ]
 }
