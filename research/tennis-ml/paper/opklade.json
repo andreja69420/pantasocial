@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-18T17:07",
+ "as_of": "2026-10-18T17:15",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -847,6 +847,24 @@
    "last_odds": 1.62,
    "clv": 0.179,
    "link": "https://www.flashscore.com/match/YLcpYzZF/"
+  },
+  {
+   "id": "SbopqSkf",
+   "start": "2026-10-20T03:00",
+   "category": "WTA Tour",
+   "tournament": "Osaka (Japan), hard",
+   "pick": "Joint Maya",
+   "opponent": "Sonmez Zeynep",
+   "odds": 2.08,
+   "book": "MozzartBet",
+   "stake": 925,
+   "status": "Čeka",
+   "profit": null,
+   "p_model": 0.5003,
+   "ev": 0.0405,
+   "last_odds": null,
+   "clv": null,
+   "link": "https://www.flashscore.com/match/SbopqSkf/"
   },
   {
    "id": "UP8vgkvg",
