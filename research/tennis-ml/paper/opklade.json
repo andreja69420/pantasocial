@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-19T01:15",
+ "as_of": "2026-10-19T01:29",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -775,6 +775,24 @@
    "last_odds": 1.33,
    "clv": 0.0752,
    "link": "https://www.flashscore.com/match/bkMXBpID/"
+  },
+  {
+   "id": "Y17jCgCd",
+   "start": "2026-10-19T04:30",
+   "category": "WTA Tour",
+   "tournament": "Osaka (Japan), hard",
+   "pick": "Samsonova Liudmila",
+   "opponent": "Tagger Lilli",
+   "odds": 1.74,
+   "book": "Superbet",
+   "stake": 1050,
+   "status": "Čeka",
+   "profit": null,
+   "p_model": 0.5921,
+   "ev": 0.0303,
+   "last_odds": null,
+   "clv": null,
+   "link": "https://www.flashscore.com/match/Y17jCgCd/"
   },
   {
    "id": "KYsxolLs",
