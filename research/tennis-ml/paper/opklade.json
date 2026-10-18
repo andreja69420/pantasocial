@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-18T23:46",
+ "as_of": "2026-10-19T00:08",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -808,8 +808,8 @@
    "profit": null,
    "p_model": 0.7618,
    "ev": 0.036,
-   "last_odds": 1.29,
-   "clv": 0.0543,
+   "last_odds": 1.27,
+   "clv": 0.0709,
    "link": "https://www.flashscore.com/match/ShUPw1le/"
   },
   {
@@ -844,8 +844,8 @@
    "profit": null,
    "p_model": 0.4558,
    "ev": 0.1032,
-   "last_odds": 1.63,
-   "clv": 0.4847,
+   "last_odds": 1.65,
+   "clv": 0.4667,
    "link": "https://www.flashscore.com/match/x2x2vmcd/"
   },
   {
@@ -973,6 +973,24 @@
    "last_odds": 2.08,
    "clv": 0.0,
    "link": "https://www.flashscore.com/match/SbopqSkf/"
+  },
+  {
+   "id": "QyOPD6m1",
+   "start": "2026-10-20T03:00",
+   "category": "WTA Tour",
+   "tournament": "Osaka (Japan), hard",
+   "pick": "Kartal Sonay",
+   "opponent": "Birrell Kimberly",
+   "odds": 1.47,
+   "book": "SoccerBet",
+   "stake": 1629,
+   "status": "Čeka",
+   "profit": null,
+   "p_model": 0.7007,
+   "ev": 0.0301,
+   "last_odds": null,
+   "clv": null,
+   "link": "https://www.flashscore.com/match/QyOPD6m1/"
   },
   {
    "id": "UP8vgkvg",
@@ -1132,8 +1150,8 @@
    "profit": null,
    "p_model": 0.5178,
    "ev": 0.0874,
-   "last_odds": 1.91,
-   "clv": 0.0995,
+   "last_odds": 1.8,
+   "clv": 0.1667,
    "link": "https://www.flashscore.com/match/xxs4zyED/"
   }
  ]
