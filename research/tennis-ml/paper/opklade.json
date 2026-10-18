@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-18T14:46",
+ "as_of": "2026-10-18T14:55",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -741,6 +741,24 @@
    "link": "https://www.flashscore.com/match/bkMXBpID/"
   },
   {
+   "id": "KYsxolLs",
+   "start": "2026-10-19T06:00",
+   "category": "WTA Tour",
+   "tournament": "Osaka (Japan), hard",
+   "pick": "Mcnally Caty",
+   "opponent": "Kraus Sinja",
+   "odds": 1.52,
+   "book": "Superbet",
+   "stake": 1571,
+   "status": "Čeka",
+   "profit": null,
+   "p_model": 0.6804,
+   "ev": 0.0342,
+   "last_odds": null,
+   "clv": null,
+   "link": "https://www.flashscore.com/match/KYsxolLs/"
+  },
+  {
    "id": "zPhRoEhg",
    "start": "2026-10-19T10:00",
    "category": "ATP Tour",
@@ -844,8 +862,8 @@
    "profit": null,
    "p_model": 0.8594,
    "ev": 0.0398,
-   "last_odds": 1.23,
-   "clv": -0.0163,
+   "last_odds": 1.22,
+   "clv": -0.0082,
    "link": "https://www.flashscore.com/match/Q9svAefA/"
   },
   {
@@ -898,8 +916,8 @@
    "profit": null,
    "p_model": 0.5257,
    "ev": 0.0355,
-   "last_odds": 1.98,
-   "clv": -0.0051,
+   "last_odds": 1.97,
+   "clv": 0.0,
    "link": "https://www.flashscore.com/match/dWOklHaf/"
   },
   {
@@ -916,8 +934,8 @@
    "profit": null,
    "p_model": 0.7423,
    "ev": 0.0318,
-   "last_odds": null,
-   "clv": null,
+   "last_odds": 1.39,
+   "clv": 0.0,
    "link": "https://www.flashscore.com/match/G4B5htxq/"
   }
  ]
