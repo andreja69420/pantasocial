@@ -65,3 +65,25 @@ rank, round, kick-off day, bio). A fixture goes through `features_incr.py`, `fx_
 signature changed (a new result of either player, a new rank list, a moved round) or when the entry is older than 6 h
 (`CACHE_TTL`: ratings of third players drift a little with every result). A pass with nothing new takes ~20 s instead of ~70 s.
 `candidates.csv` (same dir) lists every priced side of the last pass with its EV.
+
+## Handoff state (written 2026-10-18 ~14:00 UTC, for a fresh chat after `/clear`)
+
+Everything needed to continue is in this file, `README.md` (sections "Production switched to models_v7" and "Paper loop: EV>3%, every 10 minutes, ...")
+and `research/CLAUDE.md`. The user writes Serbian: answer in Serbian, short, no long blocking waits.
+
+- **Data dir** `B=/tmp/claude-0/-home-user-pantasocial/d746d33b-0578-5ee2-a55c-5a9f85958b0a/scratchpad/tennis` (not in the repo; if it is gone after a
+  container reset the build, models and raw data must be rebuilt, see the README sections on `out_live2`, `models_v7`, `fx_raw_fix`).
+- **Production**: `paper_loop.sh` (models_v7, tag v7, RS prices, six books, no ITF, EV>3% odds<=5, quarter Kelly on 100k, REVIEW=1, 10-min pass with prediction
+  cache). Ledger `paper/ledger.csv` (44 bets: 32 "novi" = models_v3, 6 v6, 6 v7), `paper/opklade.xlsx`, `paper/opklade.json` are committed to
+  `claude/awesome-shannon-j3tap7` (HEAD `f6e59ec` plus later CLV refresh commits). The loop dies when the container idles; the six scheduled checks
+  (:04 :14 :24 :34 :44 :54, prompt = "read PAPER_CHECK.md and follow it") restart it. They need no action from a new chat; just follow the steps above when one fires.
+- **Dashboard** https://claude.ai/artifact/Mjxr7iBZkf5ztbdoDHMsL9 : document `datasets/bets`, last known version 179 (always `get` it first for `if_version`).
+- **Open bets at this point** (Belgrade time = UTC+2): Basavareddy-Dougaz 1.42 Superbet (18.10 15:00), Mmoh-Kumstat 1.90 Superbet (18.10 15:30),
+  Jacquet 1.65 Superbet (18.10 12:30, claude=ne), Gomez 1.45 Mozzart (18.10 21:30), Golubic 1.43 Superbet and Uchijima 1.91 bet365 (19.10 03:00),
+  Alexandrova 1.28 1xBet (19.10 04:00, claude=ne), Bellucci 2.08 Mozzart and Tsitsipas 1.29 1xBet (19.10 08:00). When one settles: send `opklade.xlsx` with the result and the bank.
+- **Open points, user has not decided**: weekly retrain schedule (`retrain.sh`, `weekly_test.py`), a Model column in the Excel/dashboard, splitting the ledger into
+  pre-fix/clean bets, restoring the removed Kostovic bet, models_v6 as a shadow model, whether to keep six checks an hour (each costs the user one reply).
+- **Not verified yet**: cache hit rate in later passes (should be ~0 recomputes when nothing new; the first pass after the switch recomputed 69 of 119 ATP fixtures
+  because `fs_update` had added results and ranks). Look at the number of "need" fixtures in `$B/paper/loop.log`.
+- **Standing rules**: fix data errors immediately without asking; after any `out_live2` rebuild delete `$B/paper/pred_cache_*.pkl`; features2.py max one at a time (~8 GB);
+  results into the README, commit, push (two separate Bash calls); never `pkill -f`; never start a second loop; the match watcher `watch.py` stays off.
