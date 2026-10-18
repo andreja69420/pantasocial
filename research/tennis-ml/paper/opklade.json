@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-18T12:17",
+ "as_of": "2026-10-18T12:26",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -646,8 +646,8 @@
    "profit": null,
    "p_model": 0.6316,
    "ev": 0.0421,
-   "last_odds": 1.62,
-   "clv": 0.0185,
+   "last_odds": 1.65,
+   "clv": 0.0,
    "link": "https://www.flashscore.com/match/IyQO6iEj/"
   },
   {
@@ -741,24 +741,6 @@
    "link": "https://www.flashscore.com/match/YLcpYzZF/"
   },
   {
-   "id": "UP8vgkvg",
-   "start": "2026-10-19T04:00",
-   "category": "WTA Tour",
-   "tournament": "Ningbo (China), hard",
-   "pick": "Alexandrova Ekaterina",
-   "opponent": "Guo Hanyu",
-   "odds": 1.28,
-   "book": "1xBet",
-   "stake": 3468,
-   "status": "Čeka",
-   "profit": null,
-   "p_model": 0.813,
-   "ev": 0.0406,
-   "last_odds": 1.28,
-   "clv": 0.0,
-   "link": "https://www.flashscore.com/match/UP8vgkvg/"
-  },
-  {
    "id": "zHfvs0hR",
    "start": "2026-10-19T08:00",
    "category": "ATP Tour",
@@ -808,9 +790,27 @@
    "profit": null,
    "p_model": 0.5257,
    "ev": 0.0355,
-   "last_odds": null,
-   "clv": null,
+   "last_odds": 1.99,
+   "clv": -0.0101,
    "link": "https://www.flashscore.com/match/dWOklHaf/"
+  },
+  {
+   "id": "UP8vgkvg",
+   "start": "2026-10-20T04:00",
+   "category": "WTA Tour",
+   "tournament": "Ningbo (China), hard",
+   "pick": "Alexandrova Ekaterina",
+   "opponent": "Guo Hanyu",
+   "odds": 1.28,
+   "book": "1xBet",
+   "stake": 3468,
+   "status": "Čeka",
+   "profit": null,
+   "p_model": 0.813,
+   "ev": 0.0406,
+   "last_odds": 1.28,
+   "clv": 0.0,
+   "link": "https://www.flashscore.com/match/UP8vgkvg/"
   }
  ]
 }
