@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-18T20:46",
+ "as_of": "2026-10-18T20:57",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -706,7 +706,7 @@
   },
   {
    "id": "hzjmfIO7",
-   "start": "2026-10-18T21:30",
+   "start": "2026-10-18T21:45",
    "category": "Muški Challenger",
    "tournament": "Cali (Colombia) - Qualification, clay",
    "pick": "Gomez Juan Sebastian",
@@ -808,8 +808,8 @@
    "profit": null,
    "p_model": 0.7618,
    "ev": 0.036,
-   "last_odds": 1.3,
-   "clv": 0.0462,
+   "last_odds": 1.32,
+   "clv": 0.0303,
    "link": "https://www.flashscore.com/match/ShUPw1le/"
   },
   {
