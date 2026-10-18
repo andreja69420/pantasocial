@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-18T21:46",
+ "as_of": "2026-10-18T21:55",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -732,7 +732,7 @@
    "odds": 1.45,
    "book": "MozzartBet",
    "stake": 1869,
-   "status": "Čeka",
+   "status": "U toku",
    "profit": null,
    "p_model": 0.7139,
    "ev": 0.0352,
@@ -880,8 +880,8 @@
    "profit": null,
    "p_model": 0.6367,
    "ev": 0.0378,
-   "last_odds": 1.59,
-   "clv": 0.0252,
+   "last_odds": 1.62,
+   "clv": 0.0062,
    "link": "https://www.flashscore.com/match/lI9DjK6e/"
   },
   {
