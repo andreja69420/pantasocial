@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-18T22:06",
+ "as_of": "2026-10-18T22:16",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -741,6 +741,24 @@
    "link": "https://www.flashscore.com/match/hzjmfIO7/"
   },
   {
+   "id": "6yJgsxpQ",
+   "start": "2026-10-18T22:30",
+   "category": "Muški Challenger",
+   "tournament": "Santa Cruz 2 (Bolivia), clay",
+   "pick": "Seyboth Wild Thiago",
+   "opponent": "Dellien Hugo",
+   "odds": 1.69,
+   "book": "Superbet",
+   "stake": 1159,
+   "status": "Čeka",
+   "profit": null,
+   "p_model": 0.6106,
+   "ev": 0.032,
+   "last_odds": null,
+   "clv": null,
+   "link": "https://www.flashscore.com/match/6yJgsxpQ/"
+  },
+  {
    "id": "bkMXBpID",
    "start": "2026-10-19T04:30",
    "category": "WTA Tour",
@@ -898,8 +916,8 @@
    "profit": null,
    "p_model": 0.6606,
    "ev": 0.0372,
-   "last_odds": 1.44,
-   "clv": 0.0903,
+   "last_odds": 1.4,
+   "clv": 0.1214,
    "link": "https://www.flashscore.com/match/C2siszem/"
   },
   {
