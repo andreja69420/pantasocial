@@ -197,11 +197,15 @@ for tour in ("wta", "atp"):
     cpath = os.path.join(PAPER, f"pred_cache_{tour}.pkl")
     cache = pickle.load(open(cpath, "rb")) if os.path.exists(cpath) else {}
     mkey = f"{MODELS}|{TAG}|{LIVE_OUT}|{os.path.getmtime(model_path):.0f}"
-    sig = {r_["fs_mid"]: repr((mkey, checks[r_["fs_mid"]], sorted((k_, str(v_)) for k_, v_ in r_.items() if k_ != "fs_mid")))
+    sig = {r_["fs_mid"]: repr((mkey, checks[r_["fs_mid"]], sorted((k_, f"{v_:.1f}" if k_.endswith("_age") else str(v_)) for k_, v_ in r_.items() if k_ != "fs_mid")))
            for r_ in rows}
     now_ = time.time()
     need = [r_ for r_ in rows if cache.get(r_["fs_mid"], (None, 0, 0))[0] != sig[r_["fs_mid"]] or now_ - cache[r_["fs_mid"]][2] > CACHE_TTL]
     print(f"{tour}: {len(rows) - len(need)} of {len(rows)} predictions from the cache, {len(need)} to compute", flush=True)
+    if os.environ.get("SIGDEBUG"):
+        with open(os.path.join(PAPER, f"sig_debug_{tour}.txt"), "w") as f_:
+            for r_ in need[:5]:
+                f_.write(f"{r_['fs_mid']}\nOLD {cache.get(r_['fs_mid'], ('none',))[0]}\nNEW {sig[r_['fs_mid']]}\n\n")
     if need:
         pn = predict_rows(tour, need, model_path, ts)
         if pn is None:

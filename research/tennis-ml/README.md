@@ -1890,3 +1890,7 @@ priced all 106 upcoming matches without errors (fixture NaN share 0.3-0.6%).
   Odds were already fetched in bulk (48 threads, 150 requests/s, 140 matches in 3 s), results are appended incrementally (`fs_update.py` + `features_incr.py`).
 - Handoff for a new chat: `PAPER_CHECK.md` ("Handoff state"): data dir, open bets, open decisions, standing rules.
 - `paper/candidates.csv` (data dir) keeps every priced side of the last pass with its EV, to see how far the matches are from the threshold.
+- Cache check (10-18 10:00): the ATP cache recomputed 66 of 122 fixtures in the second pass and 20 of 122 in the third (WTA 0 of 18): new results of players in upcoming
+  matches (Sunday finals) change the signature legitimately. The age, which depends on the date of the player's last match, was part of the signature at full
+  precision and is now rounded to 0.1 year (one change of signature after the deploy, then stable). `SIGDEBUG=1` writes `paper/sig_debug_{tour}.txt` (old/new signature of the first
+  5 recomputed fixtures).
