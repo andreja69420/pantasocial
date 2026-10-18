@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-18T21:16",
+ "as_of": "2026-10-18T21:26",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -705,24 +705,6 @@
    "link": "https://www.flashscore.com/match/tEgLpBjI/"
   },
   {
-   "id": "hzjmfIO7",
-   "start": "2026-10-18T21:45",
-   "category": "Muški Challenger",
-   "tournament": "Cali (Colombia) - Qualification, clay",
-   "pick": "Gomez Juan Sebastian",
-   "opponent": "Del Pino Mateo",
-   "odds": 1.45,
-   "book": "MozzartBet",
-   "stake": 1869,
-   "status": "Čeka",
-   "profit": null,
-   "p_model": 0.7139,
-   "ev": 0.0352,
-   "last_odds": 1.35,
-   "clv": 0.0741,
-   "link": "https://www.flashscore.com/match/hzjmfIO7/"
-  },
-  {
    "id": "biPiNGhf",
    "start": "2026-10-18T21:50",
    "category": "Muški Challenger",
@@ -739,6 +721,24 @@
    "last_odds": 3.55,
    "clv": 0.0141,
    "link": "https://www.flashscore.com/match/biPiNGhf/"
+  },
+  {
+   "id": "hzjmfIO7",
+   "start": "2026-10-18T22:15",
+   "category": "Muški Challenger",
+   "tournament": "Cali (Colombia) - Qualification, clay",
+   "pick": "Gomez Juan Sebastian",
+   "opponent": "Del Pino Mateo",
+   "odds": 1.45,
+   "book": "MozzartBet",
+   "stake": 1869,
+   "status": "Čeka",
+   "profit": null,
+   "p_model": 0.7139,
+   "ev": 0.0352,
+   "last_odds": 1.35,
+   "clv": 0.0741,
+   "link": "https://www.flashscore.com/match/hzjmfIO7/"
   },
   {
    "id": "bkMXBpID",
@@ -865,6 +865,24 @@
    "last_odds": 1.29,
    "clv": 0.124,
    "link": "https://www.flashscore.com/match/fgFQ88KH/"
+  },
+  {
+   "id": "lI9DjK6e",
+   "start": "2026-10-19T15:00",
+   "category": "ATP Tour",
+   "tournament": "Lyon (France), hard (indoor)",
+   "pick": "Faria Jaime",
+   "opponent": "Balshaw Felix",
+   "odds": 1.63,
+   "book": "Superbet",
+   "stake": 1503,
+   "status": "Čeka",
+   "profit": null,
+   "p_model": 0.6367,
+   "ev": 0.0378,
+   "last_odds": null,
+   "clv": null,
+   "link": "https://www.flashscore.com/match/lI9DjK6e/"
   },
   {
    "id": "C2siszem",
