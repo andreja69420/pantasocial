@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-18T19:19",
+ "as_of": "2026-10-18T19:36",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -700,8 +700,8 @@
    "profit": null,
    "p_model": 0.5777,
    "ev": 0.0398,
-   "last_odds": 1.82,
-   "clv": -0.011,
+   "last_odds": 1.87,
+   "clv": -0.0374,
    "link": "https://www.flashscore.com/match/tEgLpBjI/"
   },
   {
@@ -732,12 +732,12 @@
    "odds": 3.6,
    "book": "AdmiralBet",
    "stake": 427,
-   "status": "Čeka",
-   "profit": null,
+   "status": "Povraćaj",
+   "profit": 0,
    "p_model": 0.2905,
    "ev": 0.046,
-   "last_odds": 3.9,
-   "clv": -0.0769,
+   "last_odds": 3.55,
+   "clv": 0.0141,
    "link": "https://www.flashscore.com/match/biPiNGhf/"
   },
   {
@@ -831,6 +831,24 @@
    "link": "https://www.flashscore.com/match/K4bWV6iA/"
   },
   {
+   "id": "x2x2vmcd",
+   "start": "2026-10-19T12:30",
+   "category": "Muški Challenger",
+   "tournament": "Lisbon (Portugal) - Qualification, clay",
+   "pick": "Svyatoslav Gulin",
+   "opponent": "Schoen Patrick",
+   "odds": 2.42,
+   "book": "Superbet",
+   "stake": 1791,
+   "status": "Čeka",
+   "profit": null,
+   "p_model": 0.4558,
+   "ev": 0.1032,
+   "last_odds": null,
+   "clv": null,
+   "link": "https://www.flashscore.com/match/x2x2vmcd/"
+  },
+  {
    "id": "fgFQ88KH",
    "start": "2026-10-19T14:00",
    "category": "Muški Challenger",
@@ -844,8 +862,8 @@
    "profit": null,
    "p_model": 0.7398,
    "ev": 0.0727,
-   "last_odds": 1.38,
-   "clv": 0.0507,
+   "last_odds": 1.4,
+   "clv": 0.0357,
    "link": "https://www.flashscore.com/match/fgFQ88KH/"
   },
   {
