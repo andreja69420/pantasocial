@@ -197,6 +197,8 @@ for tour in ("wta", "atp"):
                              "q_model": q, "q_blend": qb, "ev": qb * cur - 1, "model": TAG,
                              "fair": shin(np.array([1 / cur]), np.array([1 / cuo]))[0]})
 C = pd.DataFrame(new_bets)
+if not C.empty:
+    C.to_csv(os.path.join(PAPER, "candidates.csv"), index=False)  # every priced side of the pass, to see how close the matches are to the EV threshold
 logged, skipped = 0, []
 
 
