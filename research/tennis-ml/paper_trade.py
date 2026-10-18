@@ -1,6 +1,6 @@
 """Paper trading (simulation without money) of the opening-odds strategy on upcoming matches.
 
-Each run (meant to run every 30 min, so opening lines are caught while they still stand):
+Each run (meant to run every 10 min, so opening lines are caught while they still stand):
   0. results of the last days appended to the feature build in seconds (fs_update.py)
   1. every scheduled singles match Flashscore lists (today and as many days ahead as are published) with every UK
      bookmaker's opening and current home/away odds (fs_odds.py --fixtures)
@@ -53,7 +53,8 @@ TAG = os.environ.get("MODEL_TAG", "")
 GEO = os.environ.get("GEO", "GB")  # Flashscore odds region
 BOOKS = [b for b in os.environ.get("BOOKS", "").split(",") if b]  # only these bookmakers (all of the region if empty)
 SKIP_CATS = [c for c in os.environ.get("SKIP_CATS", "").split(",") if c]  # Flashscore categories not bet, e.g. ITF MEN - SINGLES
-RULES = {"EV>5% odds<=5": (0.05, 5.0)}
+RULES = {"EV>3% odds<=5": (0.03, 5.0)}  # 5% until 2026-10-18 (whole-2026 test: EV>3% gives about twice the bets at similar ROI at later prices)
+CACHE_TTL = float(os.environ.get("CACHE_TTL", 6 * 3600))  # seconds a stored prediction is trusted without a change of its inputs
 MIN_HIST, BIG_GAP, BIG_HIST, BIG_DAYS = 10, 0.30, 30, 180  # the plan rule only (whole-2026 test)
 lg = lambda p: np.log(np.clip(p, 1e-4, 1 - 1e-4) / (1 - np.clip(p, 1e-4, 1 - 1e-4)))
 
@@ -81,6 +82,44 @@ for name, j in jobs.items():
     print(f"[{name}] " + (out.splitlines()[-1] if j.returncode == 0 and name != "update" else out[-800:]), flush=True)
 print(f"[time] odds and update {time.time() - t0:.0f}s", flush=True)
 ledger = pd.read_csv(LEDGER) if os.path.exists(LEDGER) else pd.DataFrame()
+def predict_rows(tour, rows, model_path, ts):
+    """P(home) of the given fixture rows: features (features_incr, fx_live) and the production model; None when a step fails"""
+    fcsv = os.path.join(PAPER, f"{tour}__{tour}_matches_fs_fixtures.csv")
+    pd.DataFrame(rows).to_csv(fcsv, index=False)
+    fout = os.path.join(PAPER, f"{tour}_fixture_features.parquet")
+    fnew = os.path.join(PAPER, f"{tour}_fixture_rows.parquet")
+    env = dict(os.environ, DRY_OUT=fout, DRY_MATCHES=fnew)
+    tp = time.time()
+    r = subprocess.run([sys.executable, os.path.join(HERE, "features_incr.py"), os.path.join(D, "live_raw"), os.path.join(D, LIVE_OUT),
+                        tour, fcsv], env=env, capture_output=True, text=True)
+    if r.returncode:
+        print(f"{tour}: features_incr failed\n{r.stderr[-1500:]}")
+        return None
+    Fx = pd.read_parquet(fout)
+    tf = time.time()
+    if NX:
+        fnx = os.path.join(PAPER, f"{tour}_fixture_nx.parquet")
+        r = subprocess.run([sys.executable, os.path.join(HERE, "fx_live.py"), os.path.join(D, LIVE_OUT), tour, fnew, fnx],
+                           capture_output=True, text=True)
+        if r.returncode:
+            print(f"{tour}: fx_live failed\n{r.stderr[-1500:]}")
+            return None
+        print(r.stdout.strip().splitlines()[-1], flush=True)
+        Fx = Fx.join(pd.read_parquet(fnx))
+    sys.path.insert(0, HERE)
+    from design import build_X
+    M = pickle.load(open(model_path, "rb"))
+    X, _, flip = build_X(Fx, tour)
+    X["level"] = pd.Categorical(Fx.tourney_level.astype(str), categories=M["levels"]).codes
+    X = X[M["features"]]
+    p = np.mean([M["models"]["xgb"].predict_proba(X)[:, 1], M["models"]["lgbm"].predict_proba(X)[:, 1],
+                 M["models"]["logit"].predict_proba(np.nan_to_num(lg(X[M["pcols"]].values.astype(float))))[:, 1]], axis=0)
+    p = M["cal"].predict_proba(lg(p)[:, None])[:, 1]
+    p_home = pd.Series(np.where(flip, 1 - p, p), index=Fx.fs_mid.values)
+    print(f"[time] {tour}: fixtures {tp - ts:.0f}s, features_incr {tf - tp:.0f}s, fx_live and model {time.time() - tf:.0f}s", flush=True)
+    return p_home
+
+
 new_bets, seen, checks = [], [], {}
 for tour in ("wta", "atp"):
     ts = time.time()
@@ -152,39 +191,25 @@ for tour in ("wta", "atp"):
     if not rows:
         print(f"{tour}: no priceable fixtures")
         continue
-    fcsv = os.path.join(PAPER, f"{tour}__{tour}_matches_fs_fixtures.csv")
-    pd.DataFrame(rows).to_csv(fcsv, index=False)
-    fout = os.path.join(PAPER, f"{tour}_fixture_features.parquet")
-    fnew = os.path.join(PAPER, f"{tour}_fixture_rows.parquet")
-    env = dict(os.environ, DRY_OUT=fout, DRY_MATCHES=fnew)
-    tp = time.time()
-    r = subprocess.run([sys.executable, os.path.join(HERE, "features_incr.py"), os.path.join(D, "live_raw"), os.path.join(D, LIVE_OUT),
-                        tour, fcsv], env=env, capture_output=True, text=True)
-    if r.returncode:
-        print(f"{tour}: features_incr failed\n{r.stderr[-1500:]}")
-        continue
-    Fx = pd.read_parquet(fout)
-    tf = time.time()
-    if NX:
-        fnx = os.path.join(PAPER, f"{tour}_fixture_nx.parquet")
-        r = subprocess.run([sys.executable, os.path.join(HERE, "fx_live.py"), os.path.join(D, LIVE_OUT), tour, fnew, fnx],
-                           capture_output=True, text=True)
-        if r.returncode:
-            print(f"{tour}: fx_live failed\n{r.stderr[-1500:]}")
+    # prediction cache: a fixture goes through features and model only when it is new, when its inputs changed (a new result
+    # of either player, rank, round, kick-off day, model) or when the entry is older than CACHE_TTL (ratings of third
+    # players drift a little with every result); otherwise the stored P(home) is used
+    cpath = os.path.join(PAPER, f"pred_cache_{tour}.pkl")
+    cache = pickle.load(open(cpath, "rb")) if os.path.exists(cpath) else {}
+    mkey = f"{MODELS}|{TAG}|{LIVE_OUT}|{os.path.getmtime(model_path):.0f}"
+    sig = {r_["fs_mid"]: repr((mkey, checks[r_["fs_mid"]], sorted((k_, str(v_)) for k_, v_ in r_.items() if k_ != "fs_mid")))
+           for r_ in rows}
+    now_ = time.time()
+    need = [r_ for r_ in rows if cache.get(r_["fs_mid"], (None, 0, 0))[0] != sig[r_["fs_mid"]] or now_ - cache[r_["fs_mid"]][2] > CACHE_TTL]
+    print(f"{tour}: {len(rows) - len(need)} of {len(rows)} predictions from the cache, {len(need)} to compute", flush=True)
+    if need:
+        pn = predict_rows(tour, need, model_path, ts)
+        if pn is None:
             continue
-        print(r.stdout.strip().splitlines()[-1], flush=True)
-        Fx = Fx.join(pd.read_parquet(fnx))
-    sys.path.insert(0, HERE)
-    from design import build_X
-    M = pickle.load(open(model_path, "rb"))
-    X, _, flip = build_X(Fx, tour)
-    X["level"] = pd.Categorical(Fx.tourney_level.astype(str), categories=M["levels"]).codes
-    X = X[M["features"]]
-    p = np.mean([M["models"]["xgb"].predict_proba(X)[:, 1], M["models"]["lgbm"].predict_proba(X)[:, 1],
-                 M["models"]["logit"].predict_proba(np.nan_to_num(lg(X[M["pcols"]].values.astype(float))))[:, 1]], axis=0)
-    p = M["cal"].predict_proba(lg(p)[:, None])[:, 1]
-    p_home = pd.Series(np.where(flip, 1 - p, p), index=Fx.fs_mid.values)
-    print(f"[time] {tour}: fixtures {tp - ts:.0f}s, features_incr {tf - tp:.0f}s, fx_live and model {time.time() - tf:.0f}s", flush=True)
+        cache.update({m: (sig[m], float(v), now_) for m, v in pn.items()})
+    cache = {m: v for m, v in cache.items() if m in sig}
+    pickle.dump(cache, open(cpath, "wb"))
+    p_home = pd.Series({m: v[1] for m, v in cache.items()})
     for r in O[O.fs_mid.isin(p_home.index)].itertuples():
         for side, o, oo, cur, cuo in (("home", r.open_h, r.open_a, r.cur_h, r.cur_a), ("away", r.open_a, r.open_h, r.cur_a, r.cur_h)):
             if not (cur > 1 and cuo > 1):
@@ -234,7 +259,7 @@ if not C.empty:
     for rule, (thr, cap) in RULES.items():
         c = C[(C.ev > thr) & (C.odds <= cap)].sort_values("odds", ascending=False).drop_duplicates(["fs_mid"])
         for r in c.itertuples():
-            if not ledger.empty and ((ledger.fs_mid == r.fs_mid) & (ledger.rule == rule)).any():
+            if not ledger.empty and (ledger.fs_mid == r.fs_mid).any():  # one bet per match, whatever the rule was called
                 continue
             if r.fs_mid in done_ids:  # already proposed, or rejected
                 continue

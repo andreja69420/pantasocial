@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-18T11:36",
+ "as_of": "2026-10-18T11:45",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -633,6 +633,24 @@
    "link": "https://www.flashscore.com/match/I53cA1Hk/"
   },
   {
+   "id": "IyQO6iEj",
+   "start": "2026-10-18T12:30",
+   "category": "ATP Tour",
+   "tournament": "Lyon (France) - Qualification, hard (indoor)",
+   "pick": "Jacquet Kyrian",
+   "opponent": "Gueymard Wayenburg Sascha",
+   "odds": 1.65,
+   "book": "Superbet",
+   "stake": 1548,
+   "status": "Čeka",
+   "profit": null,
+   "p_model": 0.6316,
+   "ev": 0.0421,
+   "last_odds": 1.65,
+   "clv": 0.0,
+   "link": "https://www.flashscore.com/match/IyQO6iEj/"
+  },
+  {
    "id": "KWMIFGX1",
    "start": "2026-10-18T15:00",
    "category": "ATP Tour",
@@ -669,6 +687,24 @@
    "link": "https://www.flashscore.com/match/WbGISYzA/"
   },
   {
+   "id": "hzjmfIO7",
+   "start": "2026-10-18T21:30",
+   "category": "Muški Challenger",
+   "tournament": "Cali (Colombia) - Qualification, clay",
+   "pick": "Gomez Juan Sebastian",
+   "opponent": "Del Pino Mateo",
+   "odds": 1.45,
+   "book": "MozzartBet",
+   "stake": 1869,
+   "status": "Čeka",
+   "profit": null,
+   "p_model": 0.7139,
+   "ev": 0.0352,
+   "last_odds": 1.45,
+   "clv": 0.0,
+   "link": "https://www.flashscore.com/match/hzjmfIO7/"
+  },
+  {
    "id": "bkMXBpID",
    "start": "2026-10-19T03:00",
    "category": "WTA Tour",
@@ -703,6 +739,60 @@
    "last_odds": 1.62,
    "clv": 0.179,
    "link": "https://www.flashscore.com/match/YLcpYzZF/"
+  },
+  {
+   "id": "UP8vgkvg",
+   "start": "2026-10-19T04:00",
+   "category": "WTA Tour",
+   "tournament": "Ningbo (China), hard",
+   "pick": "Alexandrova Ekaterina",
+   "opponent": "Guo Hanyu",
+   "odds": 1.28,
+   "book": "1xBet",
+   "stake": 3468,
+   "status": "Čeka",
+   "profit": null,
+   "p_model": 0.813,
+   "ev": 0.0406,
+   "last_odds": 1.28,
+   "clv": 0.0,
+   "link": "https://www.flashscore.com/match/UP8vgkvg/"
+  },
+  {
+   "id": "zHfvs0hR",
+   "start": "2026-10-19T08:00",
+   "category": "ATP Tour",
+   "tournament": "Almaty (Kazakhstan), hard (indoor)",
+   "pick": "Bellucci Mattia",
+   "opponent": "Etcheverry Tomas Martin",
+   "odds": 2.08,
+   "book": "MozzartBet",
+   "stake": 762,
+   "status": "Čeka",
+   "profit": null,
+   "p_model": 0.4973,
+   "ev": 0.0344,
+   "last_odds": 2.08,
+   "clv": 0.0,
+   "link": "https://www.flashscore.com/match/zHfvs0hR/"
+  },
+  {
+   "id": "UJiWrMNE",
+   "start": "2026-10-19T08:00",
+   "category": "ATP Tour",
+   "tournament": "Almaty (Kazakhstan), hard (indoor)",
+   "pick": "Tsitsipas Stefanos",
+   "opponent": "Kovacevic Aleksandar",
+   "odds": 1.29,
+   "book": "1xBet",
+   "stake": 2576,
+   "status": "Čeka",
+   "profit": null,
+   "p_model": 0.7994,
+   "ev": 0.0312,
+   "last_odds": 1.29,
+   "clv": 0.0,
+   "link": "https://www.flashscore.com/match/UJiWrMNE/"
   }
  ]
 }

@@ -1872,3 +1872,20 @@ with `F2_CLEAN_GAMES=1`, 5-10 October restored from the previous build, then `fs
 `paper_loop.sh` now defaults to `MODELS=models_v7 MODEL_TAG=v7` (full feature set: rank, serve statistics, venue country; trained to 2025,
 calibrated on 2026 to 10-17; see the comparison above). New bets are tagged v7, earlier ones keep v3 ("novi") and v6. The first pass
 priced all 106 upcoming matches without errors (fixture NaN share 0.3-0.6%).
+
+### Paper loop: EV>3%, every 10 minutes, prediction cache (2026-10-18)
+
+- **Rule.** `RULES` is now EV>3% odds<=5 (was 5%). Whole-2026 test on the Serbian prices (`eval_path_years.py` functions, EV>3% against EV>5%, flat 1 unit):
+  at the open 3,301 bets +13.9% (5%: 1,875, +17.8%); at t=0.25 of the open-to-close path 2,632 bets +8.7% (5%: 1,425, +9.0%); at t=0.5
+  2,104 +4.6% (5%: 1,089, +4.0%); at the close 1,886 +0.1% (5%: 998, +8.1%). 2025 is worse at later prices (EV>3%: t=0.5 +0.1%, close -2.3%),
+  2024 better. About twice the bets at a similar ROI while the price is still near the open, weaker at the close. The threshold was chosen after
+  seeing the data. A match gets one bet whatever the rule was called (`paper_trade.py` checks the ledger by `fs_mid` only); the first 3% day (10-18) proposed
+  5 bets (Bellucci, Jacquet, Gomez, Tsitsipas, Alexandrova), Jacquet and Alexandrova with verdict `ne` (price lengthened against us).
+- **Interval.** `paper_loop.sh` default INTERVAL is 600 s. Six scheduled checks an hour (:04 :14 :24 :34 :44 :54) revive the loop and review the proposals
+  (`PAPER_CHECK.md`).
+- **Prediction cache.** `paper_trade.py` keeps `paper/pred_cache_{tour}.pkl` (fs_mid -> signature, P(home), time). The signature is the model, both players' ids and
+  history sizes, the fixture row (rank, round, bio, kick-off day). Only new or changed fixtures go through `features_incr.py`, `fx_live.py` and the model
+  (`predict_rows`), the rest keep their stored P(home); entries older than 6 h are recomputed (ratings of third players drift). Checked: recomputing 4 fixtures
+  alone gives the same P(home) to 5 decimals as the full run. A pass with nothing new took 22 s, a full one 63 s. After a rebuild of `out_live2` delete the cache files.
+  Odds were already fetched in bulk (48 threads, 150 requests/s, 140 matches in 3 s), results are appended incrementally (`fs_update.py` + `features_incr.py`).
+- `paper/candidates.csv` (data dir) keeps every priced side of the last pass with its EV, to see how far the matches are from the threshold.
