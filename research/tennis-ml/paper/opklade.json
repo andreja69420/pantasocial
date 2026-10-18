@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-18T12:37",
+ "as_of": "2026-10-18T12:45",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -634,7 +634,7 @@
   },
   {
    "id": "IyQO6iEj",
-   "start": "2026-10-18T13:00",
+   "start": "2026-10-18T13:20",
    "category": "ATP Tour",
    "tournament": "Lyon (France) - Qualification, hard (indoor)",
    "pick": "Jacquet Kyrian",
@@ -646,8 +646,8 @@
    "profit": null,
    "p_model": 0.6316,
    "ev": 0.0421,
-   "last_odds": 1.62,
-   "clv": 0.0185,
+   "last_odds": 1.65,
+   "clv": 0.0,
    "link": "https://www.flashscore.com/match/IyQO6iEj/"
   },
   {
@@ -705,24 +705,6 @@
    "link": "https://www.flashscore.com/match/hzjmfIO7/"
   },
   {
-   "id": "YLcpYzZF",
-   "start": "2026-10-19T03:00",
-   "category": "WTA Tour",
-   "tournament": "Osaka (Japan), hard",
-   "pick": "Uchijima Moyuka",
-   "opponent": "Shibahara Ena",
-   "odds": 1.91,
-   "book": "bet365",
-   "stake": 1652,
-   "status": "Čeka",
-   "profit": null,
-   "p_model": 0.5575,
-   "ev": 0.0647,
-   "last_odds": 1.62,
-   "clv": 0.179,
-   "link": "https://www.flashscore.com/match/YLcpYzZF/"
-  },
-  {
    "id": "bkMXBpID",
    "start": "2026-10-19T04:30",
    "category": "WTA Tour",
@@ -772,8 +754,8 @@
    "profit": null,
    "p_model": 0.7994,
    "ev": 0.0312,
-   "last_odds": 1.29,
-   "clv": 0.0,
+   "last_odds": 1.26,
+   "clv": 0.0238,
    "link": "https://www.flashscore.com/match/UJiWrMNE/"
   },
   {
@@ -790,8 +772,8 @@
    "profit": null,
    "p_model": 0.5257,
    "ev": 0.0355,
-   "last_odds": 1.99,
-   "clv": -0.0101,
+   "last_odds": 2.03,
+   "clv": -0.0296,
    "link": "https://www.flashscore.com/match/dWOklHaf/"
   },
   {
@@ -808,9 +790,27 @@
    "profit": null,
    "p_model": 0.6367,
    "ev": 0.0315,
-   "last_odds": null,
-   "clv": null,
+   "last_odds": 1.62,
+   "clv": 0.0,
    "link": "https://www.flashscore.com/match/zPhRoEhg/"
+  },
+  {
+   "id": "YLcpYzZF",
+   "start": "2026-10-20T03:00",
+   "category": "WTA Tour",
+   "tournament": "Osaka (Japan), hard",
+   "pick": "Uchijima Moyuka",
+   "opponent": "Shibahara Ena",
+   "odds": 1.91,
+   "book": "bet365",
+   "stake": 1652,
+   "status": "Čeka",
+   "profit": null,
+   "p_model": 0.5575,
+   "ev": 0.0647,
+   "last_odds": 1.62,
+   "clv": 0.179,
+   "link": "https://www.flashscore.com/match/YLcpYzZF/"
   },
   {
    "id": "UP8vgkvg",
