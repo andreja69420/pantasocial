@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-18T12:06",
+ "as_of": "2026-10-18T12:17",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -634,7 +634,7 @@
   },
   {
    "id": "IyQO6iEj",
-   "start": "2026-10-18T12:30",
+   "start": "2026-10-18T13:00",
    "category": "ATP Tour",
    "tournament": "Lyon (France) - Qualification, hard (indoor)",
    "pick": "Jacquet Kyrian",
@@ -646,8 +646,8 @@
    "profit": null,
    "p_model": 0.6316,
    "ev": 0.0421,
-   "last_odds": 1.65,
-   "clv": 0.0,
+   "last_odds": 1.62,
+   "clv": 0.0185,
    "link": "https://www.flashscore.com/match/IyQO6iEj/"
   },
   {
@@ -670,7 +670,7 @@
   },
   {
    "id": "WbGISYzA",
-   "start": "2026-10-18T15:30",
+   "start": "2026-10-18T15:45",
    "category": "ATP Tour",
    "tournament": "Lyon (France) - Qualification, hard (indoor)",
    "pick": "Mmoh Michael",
@@ -772,8 +772,8 @@
    "profit": null,
    "p_model": 0.4973,
    "ev": 0.0344,
-   "last_odds": 2.08,
-   "clv": 0.0,
+   "last_odds": 2.0,
+   "clv": 0.04,
    "link": "https://www.flashscore.com/match/zHfvs0hR/"
   },
   {
@@ -793,6 +793,24 @@
    "last_odds": 1.29,
    "clv": 0.0,
    "link": "https://www.flashscore.com/match/UJiWrMNE/"
+  },
+  {
+   "id": "dWOklHaf",
+   "start": "2026-10-19T08:00",
+   "category": "ATP Tour",
+   "tournament": "Almaty (Kazakhstan), hard (indoor)",
+   "pick": "Atmane Terence",
+   "opponent": "Hijikata Rinky",
+   "odds": 1.97,
+   "book": "1xBet",
+   "stake": 876,
+   "status": "Čeka",
+   "profit": null,
+   "p_model": 0.5257,
+   "ev": 0.0355,
+   "last_odds": null,
+   "clv": null,
+   "link": "https://www.flashscore.com/match/dWOklHaf/"
   }
  ]
 }
