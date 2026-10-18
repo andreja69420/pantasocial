@@ -1894,3 +1894,18 @@ priced all 106 upcoming matches without errors (fixture NaN share 0.3-0.6%).
   matches (Sunday finals) change the signature legitimately. The age, which depends on the date of the player's last match, was part of the signature at full
   precision and is now rounded to 0.1 year (one change of signature after the deploy, then stable). `SIGDEBUG=1` writes `paper/sig_debug_{tour}.txt` (old/new signature of the first
   5 recomputed fixtures).
+
+## Data error: one Sackmann id for two players (2026-10-18 20:56, `fix_reused_ids.py`)
+
+Proposal G6UyHflB (Villanueva Gonzalo, Cali Challenger, 10-19 17:00) failed the 5A check: the opponent Tobon Miguel Jr (b. 2006) had
+id 101495, which Sackmann also gives to Miguel Tobon (b. ~1969, 339 rows 1991-2001). The history of the 20-year-old therefore began with
+30 years of another player's matches (450 rows, ratings and form of the wrong person). Not logged (`review.py no`).
+
+**Cause.** Sackmann's own files (`futures`, `qual_chall`) reuse an id for two namesakes; the name key then maps both to one id.
+Scan of every raw row (birth year = date - age, clusters more than 4 years apart): ATP 8 ids, WTA none: 101495 Miguel Tobon, 102060 Ignacio
+Martinez, 102772 Yu Zhang, 109908 Tom Brown, 118073 Martin Benes, 119896 Gabriel Gomez, 123315 Nicholas Campbell, 124296 Martin Dimitrov.
+
+**Fix.** `fix_reused_ids.py SACKMANN_RAW_DIR --apply` keeps the id for the biggest birth-year cluster and gives each other cluster
+`600000000 + k*1000000 + id` (a real, non-synthetic id; rows without age follow the nearest dated row). Applied to `fx_raw_fix` (rebuild source,
+174 player rows in 22 files) and `live_raw` (name -> id for `fs_update.py`, 166 rows in 16 files); symlinks replaced by fixed copies.
+Rerun it on any new raw source (report mode without `--apply`).
