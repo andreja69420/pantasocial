@@ -1888,4 +1888,5 @@ priced all 106 upcoming matches without errors (fixture NaN share 0.3-0.6%).
   (`predict_rows`), the rest keep their stored P(home); entries older than 6 h are recomputed (ratings of third players drift). Checked: recomputing 4 fixtures
   alone gives the same P(home) to 5 decimals as the full run. A pass with nothing new took 22 s, a full one 63 s. After a rebuild of `out_live2` delete the cache files.
   Odds were already fetched in bulk (48 threads, 150 requests/s, 140 matches in 3 s), results are appended incrementally (`fs_update.py` + `features_incr.py`).
+- Handoff for a new chat: `PAPER_CHECK.md` ("Handoff state"): data dir, open bets, open decisions, standing rules.
 - `paper/candidates.csv` (data dir) keeps every priced side of the last pass with its EV, to see how far the matches are from the threshold.
