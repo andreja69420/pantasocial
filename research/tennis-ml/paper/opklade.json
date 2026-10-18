@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-18T15:45",
+ "as_of": "2026-10-18T15:55",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -721,6 +721,24 @@
    "last_odds": 1.45,
    "clv": 0.0,
    "link": "https://www.flashscore.com/match/hzjmfIO7/"
+  },
+  {
+   "id": "biPiNGhf",
+   "start": "2026-10-18T21:30",
+   "category": "Muški Challenger",
+   "tournament": "Cali (Colombia) - Qualification, clay",
+   "pick": "Kestelboim Mariano",
+   "opponent": "Rodriguez Taverna Santiago",
+   "odds": 3.6,
+   "book": "AdmiralBet",
+   "stake": 427,
+   "status": "Čeka",
+   "profit": null,
+   "p_model": 0.2905,
+   "ev": 0.046,
+   "last_odds": null,
+   "clv": null,
+   "link": "https://www.flashscore.com/match/biPiNGhf/"
   },
   {
    "id": "bkMXBpID",
