@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-18T16:16",
+ "as_of": "2026-10-18T16:26",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -670,7 +670,7 @@
   },
   {
    "id": "WbGISYzA",
-   "start": "2026-10-18T17:05",
+   "start": "2026-10-18T17:20",
    "category": "ATP Tour",
    "tournament": "Lyon (France) - Qualification, hard (indoor)",
    "pick": "Mmoh Michael",
@@ -682,8 +682,8 @@
    "profit": null,
    "p_model": 0.5593,
    "ev": 0.0628,
-   "last_odds": 2.05,
-   "clv": -0.0732,
+   "last_odds": 1.87,
+   "clv": 0.016,
    "link": "https://www.flashscore.com/match/WbGISYzA/"
   },
   {
@@ -880,8 +880,8 @@
    "profit": null,
    "p_model": 0.5324,
    "ev": 0.0649,
-   "last_odds": 1.92,
-   "clv": 0.0417,
+   "last_odds": 1.88,
+   "clv": 0.0638,
    "link": "https://www.flashscore.com/match/QZAP4LZR/"
   },
   {
@@ -898,8 +898,8 @@
    "profit": null,
    "p_model": 0.8594,
    "ev": 0.0398,
-   "last_odds": 1.21,
-   "clv": 0.0,
+   "last_odds": 1.18,
+   "clv": 0.0254,
    "link": "https://www.flashscore.com/match/Q9svAefA/"
   },
   {
@@ -934,8 +934,8 @@
    "profit": null,
    "p_model": 0.7994,
    "ev": 0.0312,
-   "last_odds": 1.24,
-   "clv": 0.0403,
+   "last_odds": 1.23,
+   "clv": 0.0488,
    "link": "https://www.flashscore.com/match/UJiWrMNE/"
   },
   {
