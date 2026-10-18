@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-18T22:56",
+ "as_of": "2026-10-18T23:20",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -696,8 +696,8 @@
    "odds": 1.8,
    "book": "Superbet",
    "stake": 1190,
-   "status": "U toku",
-   "profit": null,
+   "status": "Dobijeno",
+   "profit": 952,
    "p_model": 0.5777,
    "ev": 0.0398,
    "last_odds": 1.87,
@@ -772,8 +772,8 @@
    "profit": null,
    "p_model": 0.7462,
    "ev": 0.0671,
-   "last_odds": 1.35,
-   "clv": 0.0593,
+   "last_odds": 1.33,
+   "clv": 0.0752,
    "link": "https://www.flashscore.com/match/bkMXBpID/"
   },
   {
@@ -844,8 +844,8 @@
    "profit": null,
    "p_model": 0.4558,
    "ev": 0.1032,
-   "last_odds": 1.55,
-   "clv": 0.5613,
+   "last_odds": 1.59,
+   "clv": 0.522,
    "link": "https://www.flashscore.com/match/x2x2vmcd/"
   },
   {
@@ -903,24 +903,6 @@
    "link": "https://www.flashscore.com/match/C2siszem/"
   },
   {
-   "id": "K2wD0Z3U",
-   "start": "2026-10-19T17:00",
-   "category": "Muški Challenger",
-   "tournament": "Cali (Colombia), clay",
-   "pick": "Jarry Nicolas",
-   "opponent": "Barrios Vera Marcelo Tomas",
-   "odds": 2.9,
-   "book": "AdmiralBet",
-   "stake": 830,
-   "status": "Čeka",
-   "profit": null,
-   "p_model": 0.3676,
-   "ev": 0.066,
-   "last_odds": 2.8,
-   "clv": 0.0357,
-   "link": "https://www.flashscore.com/match/K2wD0Z3U/"
-  },
-  {
    "id": "Akyjl5E7",
    "start": "2026-10-19T17:00",
    "category": "Muški Challenger",
@@ -937,6 +919,24 @@
    "last_odds": 2.3,
    "clv": 0.0,
    "link": "https://www.flashscore.com/match/Akyjl5E7/"
+  },
+  {
+   "id": "K2wD0Z3U",
+   "start": "2026-10-20T01:00",
+   "category": "Muški Challenger",
+   "tournament": "Cali (Colombia), clay",
+   "pick": "Jarry Nicolas",
+   "opponent": "Barrios Vera Marcelo Tomas",
+   "odds": 2.9,
+   "book": "AdmiralBet",
+   "stake": 830,
+   "status": "Čeka",
+   "profit": null,
+   "p_model": 0.3676,
+   "ev": 0.066,
+   "last_odds": 2.9,
+   "clv": 0.0,
+   "link": "https://www.flashscore.com/match/K2wD0Z3U/"
   },
   {
    "id": "YLcpYzZF",
@@ -1132,8 +1132,8 @@
    "profit": null,
    "p_model": 0.5178,
    "ev": 0.0874,
-   "last_odds": 2.1,
-   "clv": 0.0,
+   "last_odds": 1.91,
+   "clv": 0.0995,
    "link": "https://www.flashscore.com/match/xxs4zyED/"
   }
  ]

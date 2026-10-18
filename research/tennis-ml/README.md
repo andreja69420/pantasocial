@@ -1909,3 +1909,8 @@ Martinez, 102772 Yu Zhang, 109908 Tom Brown, 118073 Martin Benes, 119896 Gabriel
 `600000000 + k*1000000 + id` (a real, non-synthetic id; rows without age follow the nearest dated row). Applied to `fx_raw_fix` (rebuild source,
 174 player rows in 22 files) and `live_raw` (name -> id for `fs_update.py`, 166 rows in 16 files); symlinks replaced by fixed copies.
 Rerun it on any new raw source (report mode without `--apply`).
+
+**Result (10-18 21:20).** ATP rebuilt (`F2_CLEAN_GAMES=1`, 708 s, 877,232 rows), WTA unchanged. `cmp_build.py`: the 539 Flashscore ids "lost" are the matches the
+loop added after the raw snapshot, `fs_update.py 14` added them back (+541); 174 rows changed = the split ids; no duplicates. Swapped in as `out_live2`
+(old: `out_live2_pre_tobon`), prediction cache deleted, loop restarted. G6UyHflB re-priced on the clean history: Villanueva P 61.9% (was 65.3%), best EV
++0.5% (Superbet 1.72) -> no proposal. Disk allowance was nearly spent; the three oldest `out_live2_*` backups were deleted.
