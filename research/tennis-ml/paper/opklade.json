@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-18T05:06",
+ "as_of": "2026-10-18T05:35",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -616,7 +616,7 @@
   },
   {
    "id": "I53cA1Hk",
-   "start": "2026-10-18T05:15",
+   "start": "2026-10-18T05:35",
    "category": "WTA Tour",
    "tournament": "Osaka (Japan) - Qualification, hard",
    "pick": "Liu Claire",
@@ -624,7 +624,7 @@
    "odds": 1.88,
    "book": "1xBet",
    "stake": 3136,
-   "status": "Čeka",
+   "status": "U toku",
    "profit": null,
    "p_model": 0.5951,
    "ev": 0.1188,
