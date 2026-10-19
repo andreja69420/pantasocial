@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-19T04:25",
+ "as_of": "2026-10-19T04:35",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -760,7 +760,7 @@
   },
   {
    "id": "bkMXBpID",
-   "start": "2026-10-19T04:30",
+   "start": "2026-10-19T04:35",
    "category": "WTA Tour",
    "tournament": "Osaka (Japan), hard",
    "pick": "Golubic Viktorija",
@@ -768,7 +768,7 @@
    "odds": 1.43,
    "book": "Superbet",
    "stake": 3622,
-   "status": "Čeka",
+   "status": "U toku",
    "profit": null,
    "p_model": 0.7462,
    "ev": 0.0671,
@@ -778,7 +778,7 @@
   },
   {
    "id": "Y17jCgCd",
-   "start": "2026-10-19T04:30",
+   "start": "2026-10-19T04:35",
    "category": "WTA Tour",
    "tournament": "Osaka (Japan), hard",
    "pick": "Samsonova Liudmila",
@@ -786,7 +786,7 @@
    "odds": 1.74,
    "book": "Superbet",
    "stake": 1050,
-   "status": "Čeka",
+   "status": "U toku",
    "profit": null,
    "p_model": 0.5921,
    "ev": 0.0303,
