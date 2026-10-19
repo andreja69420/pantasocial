@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-19T05:05",
+ "as_of": "2026-10-19T05:16",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -1065,6 +1065,24 @@
    "link": "https://www.flashscore.com/match/Q9svAefA/"
   },
   {
+   "id": "M5EO9J2B",
+   "start": "2026-10-20T04:00",
+   "category": "Muški Challenger",
+   "tournament": "Guangzhou (China), hard",
+   "pick": "Hsu Yu Hsiou",
+   "opponent": "Cui Jie",
+   "odds": 2.25,
+   "book": "SoccerBet",
+   "stake": 649,
+   "status": "Čeka",
+   "profit": null,
+   "p_model": 0.4585,
+   "ev": 0.0316,
+   "last_odds": null,
+   "clv": null,
+   "link": "https://www.flashscore.com/match/M5EO9J2B/"
+  },
+  {
    "id": "zHfvs0hR",
    "start": "2026-10-20T08:00",
    "category": "ATP Tour",
@@ -1150,8 +1168,8 @@
    "profit": null,
    "p_model": 0.7423,
    "ev": 0.0318,
-   "last_odds": 1.35,
-   "clv": 0.0296,
+   "last_odds": 1.39,
+   "clv": 0.0,
    "link": "https://www.flashscore.com/match/G4B5htxq/"
   },
   {
