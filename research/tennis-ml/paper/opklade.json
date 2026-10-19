@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-19T11:26",
+ "as_of": "2026-10-19T11:35",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -915,25 +915,6 @@
    "link": "https://www.flashscore.com/match/zJXXyuJ7/"
   },
   {
-   "id": "KSpauEPa",
-   "start": "2026-10-19T11:30",
-   "category": "ATP Tour",
-   "tournament": "Almaty (Kazakhstan), hard (indoor)",
-   "pick": "Cilic Marin",
-   "opponent": "Basilashvili Nikoloz",
-   "odds": 2.34,
-   "book": "MozzartBet",
-   "stake": 632,
-   "status": "Čeka",
-   "profit": null,
-   "settled": null,
-   "p_model": 0.4414,
-   "ev": 0.0328,
-   "last_odds": 2.34,
-   "clv": 0.0,
-   "link": "https://www.flashscore.com/match/KSpauEPa/"
-  },
-  {
    "id": "K4bWV6iA",
    "start": "2026-10-19T12:00",
    "category": "Muški Challenger",
@@ -951,6 +932,25 @@
    "last_odds": 1.54,
    "clv": 0.1104,
    "link": "https://www.flashscore.com/match/K4bWV6iA/"
+  },
+  {
+   "id": "KSpauEPa",
+   "start": "2026-10-19T12:00",
+   "category": "ATP Tour",
+   "tournament": "Almaty (Kazakhstan), hard (indoor)",
+   "pick": "Cilic Marin",
+   "opponent": "Basilashvili Nikoloz",
+   "odds": 2.34,
+   "book": "MozzartBet",
+   "stake": 632,
+   "status": "Čeka",
+   "profit": null,
+   "settled": null,
+   "p_model": 0.4414,
+   "ev": 0.0328,
+   "last_odds": 2.34,
+   "clv": 0.0,
+   "link": "https://www.flashscore.com/match/KSpauEPa/"
   },
   {
    "id": "x2x2vmcd",
@@ -1005,8 +1005,8 @@
    "settled": null,
    "p_model": 0.6367,
    "ev": 0.0378,
-   "last_odds": 1.62,
-   "clv": 0.0062,
+   "last_odds": 1.64,
+   "clv": -0.0061,
    "link": "https://www.flashscore.com/match/lI9DjK6e/"
   },
   {
@@ -1062,8 +1062,8 @@
    "settled": null,
    "p_model": 0.6944,
    "ev": 0.0417,
-   "last_odds": 1.5,
-   "clv": 0.0,
+   "last_odds": 1.51,
+   "clv": -0.0066,
    "link": "https://www.flashscore.com/match/hC7TETY8/"
   },
   {
@@ -1100,8 +1100,8 @@
    "settled": null,
    "p_model": 0.4488,
    "ev": 0.0323,
-   "last_odds": 2.15,
-   "clv": 0.0698,
+   "last_odds": 2.07,
+   "clv": 0.1111,
    "link": "https://www.flashscore.com/match/Akyjl5E7/"
   },
   {
@@ -1157,8 +1157,8 @@
    "settled": null,
    "p_model": 0.5324,
    "ev": 0.0649,
-   "last_odds": 1.88,
-   "clv": 0.0638,
+   "last_odds": 1.83,
+   "clv": 0.0929,
    "link": "https://www.flashscore.com/match/QZAP4LZR/"
   },
   {
