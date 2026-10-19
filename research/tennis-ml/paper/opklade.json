@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-19T11:55",
+ "as_of": "2026-10-19T12:06",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -915,27 +915,8 @@
    "link": "https://www.flashscore.com/match/zJXXyuJ7/"
   },
   {
-   "id": "KSpauEPa",
-   "start": "2026-10-19T12:10",
-   "category": "ATP Tour",
-   "tournament": "Almaty (Kazakhstan), hard (indoor)",
-   "pick": "Cilic Marin",
-   "opponent": "Basilashvili Nikoloz",
-   "odds": 2.34,
-   "book": "MozzartBet",
-   "stake": 632,
-   "status": "Čeka",
-   "profit": null,
-   "settled": null,
-   "p_model": 0.4414,
-   "ev": 0.0328,
-   "last_odds": 2.34,
-   "clv": 0.0,
-   "link": "https://www.flashscore.com/match/KSpauEPa/"
-  },
-  {
    "id": "K4bWV6iA",
-   "start": "2026-10-19T12:15",
+   "start": "2026-10-19T12:25",
    "category": "Muški Challenger",
    "tournament": "Florence (Italy) - Qualification, clay",
    "pick": "Donald Matthew",
@@ -970,6 +951,25 @@
    "last_odds": 1.69,
    "clv": 0.432,
    "link": "https://www.flashscore.com/match/x2x2vmcd/"
+  },
+  {
+   "id": "KSpauEPa",
+   "start": "2026-10-19T12:40",
+   "category": "ATP Tour",
+   "tournament": "Almaty (Kazakhstan), hard (indoor)",
+   "pick": "Cilic Marin",
+   "opponent": "Basilashvili Nikoloz",
+   "odds": 2.34,
+   "book": "MozzartBet",
+   "stake": 632,
+   "status": "Čeka",
+   "profit": null,
+   "settled": null,
+   "p_model": 0.4414,
+   "ev": 0.0328,
+   "last_odds": 2.34,
+   "clv": 0.0,
+   "link": "https://www.flashscore.com/match/KSpauEPa/"
   },
   {
    "id": "fgFQ88KH",
@@ -1062,8 +1062,8 @@
    "settled": null,
    "p_model": 0.6944,
    "ev": 0.0417,
-   "last_odds": 1.5,
-   "clv": 0.0,
+   "last_odds": 1.51,
+   "clv": -0.0066,
    "link": "https://www.flashscore.com/match/hC7TETY8/"
   },
   {
@@ -1119,8 +1119,8 @@
    "settled": null,
    "p_model": 0.3676,
    "ev": 0.066,
-   "last_odds": 2.6,
-   "clv": 0.1154,
+   "last_odds": 2.55,
+   "clv": 0.1373,
    "link": "https://www.flashscore.com/match/K2wD0Z3U/"
   },
   {
