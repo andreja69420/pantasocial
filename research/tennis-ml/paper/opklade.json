@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-19T09:35",
+ "as_of": "2026-10-19T09:46",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -883,6 +883,24 @@
    "last_odds": 1.58,
    "clv": 0.0823,
    "link": "https://www.flashscore.com/match/K4bWV6iA/"
+  },
+  {
+   "id": "KSpauEPa",
+   "start": "2026-10-19T11:30",
+   "category": "ATP Tour",
+   "tournament": "Almaty (Kazakhstan), hard (indoor)",
+   "pick": "Cilic Marin",
+   "opponent": "Basilashvili Nikoloz",
+   "odds": 2.34,
+   "book": "MozzartBet",
+   "stake": 632,
+   "status": "Čeka",
+   "profit": null,
+   "p_model": 0.4414,
+   "ev": 0.0328,
+   "last_odds": null,
+   "clv": null,
+   "link": "https://www.flashscore.com/match/KSpauEPa/"
   },
   {
    "id": "x2x2vmcd",
