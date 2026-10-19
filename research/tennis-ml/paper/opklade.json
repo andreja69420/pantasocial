@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-19T10:56",
+ "as_of": "2026-10-19T11:06",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -878,7 +878,7 @@
   },
   {
    "id": "ShUPw1le",
-   "start": "2026-10-19T11:05",
+   "start": "2026-10-19T11:10",
    "category": "Muški Challenger",
    "tournament": "Lisbon (Portugal) - Qualification, clay",
    "pick": "Ritschard Alexander",
@@ -897,7 +897,7 @@
   },
   {
    "id": "zJXXyuJ7",
-   "start": "2026-10-19T11:05",
+   "start": "2026-10-19T11:10",
    "category": "ATP Tour",
    "tournament": "Lyon (France) - Qualification, hard (indoor)",
    "pick": "Mrva Maxim",
@@ -910,8 +910,8 @@
    "settled": null,
    "p_model": 0.4391,
    "ev": 0.0318,
-   "last_odds": 2.25,
-   "clv": 0.0444,
+   "last_odds": 2.32,
+   "clv": 0.0129,
    "link": "https://www.flashscore.com/match/zJXXyuJ7/"
   },
   {
@@ -1238,46 +1238,8 @@
    "link": "https://www.flashscore.com/match/QyOPD6m1/"
   },
   {
-   "id": "zHfvs0hR",
-   "start": "2026-10-20T08:00",
-   "category": "ATP Tour",
-   "tournament": "Almaty (Kazakhstan), hard (indoor)",
-   "pick": "Bellucci Mattia",
-   "opponent": "Etcheverry Tomas Martin",
-   "odds": 2.08,
-   "book": "MozzartBet",
-   "stake": 762,
-   "status": "Čeka",
-   "profit": null,
-   "settled": null,
-   "p_model": 0.4973,
-   "ev": 0.0344,
-   "last_odds": 1.85,
-   "clv": 0.1243,
-   "link": "https://www.flashscore.com/match/zHfvs0hR/"
-  },
-  {
-   "id": "UJiWrMNE",
-   "start": "2026-10-20T08:00",
-   "category": "ATP Tour",
-   "tournament": "Almaty (Kazakhstan), hard (indoor)",
-   "pick": "Tsitsipas Stefanos",
-   "opponent": "Kovacevic Aleksandar",
-   "odds": 1.29,
-   "book": "1xBet",
-   "stake": 2576,
-   "status": "Čeka",
-   "profit": null,
-   "settled": null,
-   "p_model": 0.7994,
-   "ev": 0.0312,
-   "last_odds": 1.23,
-   "clv": 0.0488,
-   "link": "https://www.flashscore.com/match/UJiWrMNE/"
-  },
-  {
    "id": "dWOklHaf",
-   "start": "2026-10-20T08:00",
+   "start": "2026-10-20T08:30",
    "category": "ATP Tour",
    "tournament": "Almaty (Kazakhstan), hard (indoor)",
    "pick": "Atmane Terence",
@@ -1290,8 +1252,8 @@
    "settled": null,
    "p_model": 0.5257,
    "ev": 0.0355,
-   "last_odds": 1.98,
-   "clv": -0.0051,
+   "last_odds": 1.97,
+   "clv": 0.0,
    "link": "https://www.flashscore.com/match/dWOklHaf/"
   },
   {
@@ -1312,6 +1274,25 @@
    "last_odds": 2.2,
    "clv": 0.0227,
    "link": "https://www.flashscore.com/match/M5EO9J2B/"
+  },
+  {
+   "id": "UJiWrMNE",
+   "start": "2026-10-20T10:00",
+   "category": "ATP Tour",
+   "tournament": "Almaty (Kazakhstan), hard (indoor)",
+   "pick": "Tsitsipas Stefanos",
+   "opponent": "Kovacevic Aleksandar",
+   "odds": 1.29,
+   "book": "1xBet",
+   "stake": 2576,
+   "status": "Čeka",
+   "profit": null,
+   "settled": null,
+   "p_model": 0.7994,
+   "ev": 0.0312,
+   "last_odds": 1.23,
+   "clv": 0.0488,
+   "link": "https://www.flashscore.com/match/UJiWrMNE/"
   },
   {
    "id": "zPhRoEhg",
@@ -1369,6 +1350,25 @@
    "last_odds": 1.44,
    "clv": 0.4583,
    "link": "https://www.flashscore.com/match/xxs4zyED/"
+  },
+  {
+   "id": "zHfvs0hR",
+   "start": "2026-10-21T08:00",
+   "category": "ATP Tour",
+   "tournament": "Almaty (Kazakhstan), hard (indoor)",
+   "pick": "Bellucci Mattia",
+   "opponent": "Etcheverry Tomas Martin",
+   "odds": 2.08,
+   "book": "MozzartBet",
+   "stake": 762,
+   "status": "Čeka",
+   "profit": null,
+   "settled": null,
+   "p_model": 0.4973,
+   "ev": 0.0344,
+   "last_odds": 1.85,
+   "clv": 0.1243,
+   "link": "https://www.flashscore.com/match/zHfvs0hR/"
   }
  ]
 }
