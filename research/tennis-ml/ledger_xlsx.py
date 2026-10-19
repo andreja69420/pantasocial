@@ -215,6 +215,7 @@ for b in L.itertuples():
                  "pick": player_name({"WU": pick}, "h").title(), "opponent": player_name({"WU": opp}, "h").title(),
                  "odds": float(b.odds), "book": BOOK_NAMES.get(b.book, b.book), "stake": int(b.stake),
                  "status": b.res, "profit": None if np.isnan(b.profit) else int(b.profit),
+                 "settled": None if np.isnan(b.profit) else f"{bg(b.settled):%Y-%m-%dT%H:%M}",
                  "p_model": round(float(b.q_blend), 4), "ev": round(float(b.ev), 4), "last_odds": last,
                  "clv": None if not last else round(float(b.odds) / last - 1, 4),
                  "link": f"https://www.flashscore.com/match/{b.fs_mid}/"})
