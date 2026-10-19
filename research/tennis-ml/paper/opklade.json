@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-19T08:22",
+ "as_of": "2026-10-19T08:26",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -814,7 +814,7 @@
   },
   {
    "id": "U5WH2Dnp",
-   "start": "2026-10-19T08:40",
+   "start": "2026-10-19T08:50",
    "category": "WTA Tour",
    "tournament": "Ningbo (China), hard",
    "pick": "Cirstea Sorana",
@@ -988,8 +988,8 @@
    "profit": null,
    "p_model": 0.4488,
    "ev": 0.0323,
-   "last_odds": 2.25,
-   "clv": 0.0222,
+   "last_odds": 2.2,
+   "clv": 0.0455,
    "link": "https://www.flashscore.com/match/Akyjl5E7/"
   },
   {
@@ -1240,8 +1240,8 @@
    "profit": null,
    "p_model": 0.5178,
    "ev": 0.0874,
-   "last_odds": 1.57,
-   "clv": 0.3376,
+   "last_odds": 1.44,
+   "clv": 0.4583,
    "link": "https://www.flashscore.com/match/xxs4zyED/"
   }
  ]
