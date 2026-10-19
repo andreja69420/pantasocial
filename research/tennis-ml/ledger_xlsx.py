@@ -216,9 +216,15 @@ for b in L.itertuples():
                  "odds": float(b.odds), "book": BOOK_NAMES.get(b.book, b.book), "stake": int(b.stake),
                  "status": b.res, "profit": None if np.isnan(b.profit) else int(b.profit),
                  "settled": None if np.isnan(b.profit) else f"{bg(b.settled):%Y-%m-%dT%H:%M}",
+                 "claude": b.claude if b.claude in ("da", "ne") else None,
                  "p_model": round(float(b.q_blend), 4), "ev": round(float(b.ev), 4), "last_odds": last,
                  "clv": None if not last else round(float(b.odds) / last - 1, 4),
                  "link": f"https://www.flashscore.com/match/{b.fs_mid}/"})
+try:
+    import live_scores
+    live_scores.merge(rows)
+except Exception as e:  # live scores are a bonus, the sheet and the bets do not depend on them
+    print("live_scores failed:", e)
 with open(os.path.splitext(OUT)[0] + ".json", "w") as f:
     json.dump({"bank_start": BANK, "as_of": f"{bg(now):%Y-%m-%dT%H:%M}", "rows": rows}, f, ensure_ascii=False, indent=1)
 print(f"{len(L)} bets -> {OUT}")
