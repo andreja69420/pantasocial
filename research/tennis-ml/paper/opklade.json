@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-19T11:35",
+ "as_of": "2026-10-19T11:45",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -916,7 +916,7 @@
   },
   {
    "id": "K4bWV6iA",
-   "start": "2026-10-19T12:00",
+   "start": "2026-10-19T12:10",
    "category": "Muški Challenger",
    "tournament": "Florence (Italy) - Qualification, clay",
    "pick": "Donald Matthew",
@@ -935,7 +935,7 @@
   },
   {
    "id": "KSpauEPa",
-   "start": "2026-10-19T12:00",
+   "start": "2026-10-19T12:10",
    "category": "ATP Tour",
    "tournament": "Almaty (Kazakhstan), hard (indoor)",
    "pick": "Cilic Marin",
@@ -1005,8 +1005,8 @@
    "settled": null,
    "p_model": 0.6367,
    "ev": 0.0378,
-   "last_odds": 1.64,
-   "clv": -0.0061,
+   "last_odds": 1.62,
+   "clv": 0.0062,
    "link": "https://www.flashscore.com/match/lI9DjK6e/"
   },
   {
@@ -1081,8 +1081,8 @@
    "settled": null,
    "p_model": 0.4666,
    "ev": 0.0359,
-   "last_odds": 1.93,
-   "clv": 0.1503,
+   "last_odds": 1.9,
+   "clv": 0.1684,
    "link": "https://www.flashscore.com/match/hzCnGt2n/"
   },
   {
