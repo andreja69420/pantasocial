@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-19T05:55",
+ "as_of": "2026-10-19T06:06",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -768,8 +768,8 @@
    "odds": 1.43,
    "book": "Superbet",
    "stake": 3622,
-   "status": "U toku",
-   "profit": null,
+   "status": "Dobijeno",
+   "profit": 1557,
    "p_model": 0.7462,
    "ev": 0.0671,
    "last_odds": 1.32,
@@ -796,7 +796,7 @@
   },
   {
    "id": "KYsxolLs",
-   "start": "2026-10-19T06:25",
+   "start": "2026-10-19T06:05",
    "category": "WTA Tour",
    "tournament": "Osaka (Japan), hard",
    "pick": "Mcnally Caty",
@@ -804,7 +804,7 @@
    "odds": 1.52,
    "book": "Superbet",
    "stake": 1571,
-   "status": "Čeka",
+   "status": "U toku",
    "profit": null,
    "p_model": 0.6804,
    "ev": 0.0342,
