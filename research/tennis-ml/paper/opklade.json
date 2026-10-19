@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-19T12:06",
+ "as_of": "2026-10-19T12:16",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -915,44 +915,6 @@
    "link": "https://www.flashscore.com/match/zJXXyuJ7/"
   },
   {
-   "id": "K4bWV6iA",
-   "start": "2026-10-19T12:25",
-   "category": "Muški Challenger",
-   "tournament": "Florence (Italy) - Qualification, clay",
-   "pick": "Donald Matthew",
-   "opponent": "Barranco Cosano Javier",
-   "odds": 1.71,
-   "book": "Superbet",
-   "stake": 1191,
-   "status": "Čeka",
-   "profit": null,
-   "settled": null,
-   "p_model": 0.6049,
-   "ev": 0.0343,
-   "last_odds": 1.54,
-   "clv": 0.1104,
-   "link": "https://www.flashscore.com/match/K4bWV6iA/"
-  },
-  {
-   "id": "x2x2vmcd",
-   "start": "2026-10-19T12:30",
-   "category": "Muški Challenger",
-   "tournament": "Lisbon (Portugal) - Qualification, clay",
-   "pick": "Svyatoslav Gulin",
-   "opponent": "Schoen Patrick",
-   "odds": 2.42,
-   "book": "Superbet",
-   "stake": 1791,
-   "status": "Čeka",
-   "profit": null,
-   "settled": null,
-   "p_model": 0.4558,
-   "ev": 0.1032,
-   "last_odds": 1.69,
-   "clv": 0.432,
-   "link": "https://www.flashscore.com/match/x2x2vmcd/"
-  },
-  {
    "id": "KSpauEPa",
    "start": "2026-10-19T12:40",
    "category": "ATP Tour",
@@ -970,6 +932,44 @@
    "last_odds": 2.34,
    "clv": 0.0,
    "link": "https://www.flashscore.com/match/KSpauEPa/"
+  },
+  {
+   "id": "x2x2vmcd",
+   "start": "2026-10-19T12:45",
+   "category": "Muški Challenger",
+   "tournament": "Lisbon (Portugal) - Qualification, clay",
+   "pick": "Svyatoslav Gulin",
+   "opponent": "Schoen Patrick",
+   "odds": 2.42,
+   "book": "Superbet",
+   "stake": 1791,
+   "status": "Čeka",
+   "profit": null,
+   "settled": null,
+   "p_model": 0.4558,
+   "ev": 0.1032,
+   "last_odds": 1.69,
+   "clv": 0.432,
+   "link": "https://www.flashscore.com/match/x2x2vmcd/"
+  },
+  {
+   "id": "K4bWV6iA",
+   "start": "2026-10-19T13:00",
+   "category": "Muški Challenger",
+   "tournament": "Florence (Italy) - Qualification, clay",
+   "pick": "Donald Matthew",
+   "opponent": "Barranco Cosano Javier",
+   "odds": 1.71,
+   "book": "Superbet",
+   "stake": 1191,
+   "status": "Čeka",
+   "profit": null,
+   "settled": null,
+   "p_model": 0.6049,
+   "ev": 0.0343,
+   "last_odds": 1.54,
+   "clv": 0.1104,
+   "link": "https://www.flashscore.com/match/K4bWV6iA/"
   },
   {
    "id": "fgFQ88KH",
@@ -1005,8 +1005,8 @@
    "settled": null,
    "p_model": 0.6367,
    "ev": 0.0378,
-   "last_odds": 1.62,
-   "clv": 0.0062,
+   "last_odds": 1.63,
+   "clv": 0.0,
    "link": "https://www.flashscore.com/match/lI9DjK6e/"
   },
   {
@@ -1024,8 +1024,8 @@
    "settled": null,
    "p_model": 0.6606,
    "ev": 0.0372,
-   "last_odds": 1.36,
-   "clv": 0.1544,
+   "last_odds": 1.3,
+   "clv": 0.2077,
    "link": "https://www.flashscore.com/match/C2siszem/"
   },
   {
@@ -1331,6 +1331,25 @@
    "last_odds": 1.27,
    "clv": -0.0472,
    "link": "https://www.flashscore.com/match/Q9svAefA/"
+  },
+  {
+   "id": "j1OTWLYQ",
+   "start": "2026-10-20T11:30",
+   "category": "WTA Tour",
+   "tournament": "Ningbo (China), hard",
+   "pick": "Snigur Daria",
+   "opponent": "Kawa Katarzyna",
+   "odds": 1.27,
+   "book": "1xBet",
+   "stake": 3008,
+   "status": "Čeka",
+   "profit": null,
+   "settled": null,
+   "p_model": 0.812,
+   "ev": 0.0312,
+   "last_odds": null,
+   "clv": null,
+   "link": "https://www.flashscore.com/match/j1OTWLYQ/"
   },
   {
    "id": "UP8vgkvg",
