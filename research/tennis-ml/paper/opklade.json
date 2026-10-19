@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-19T10:24",
+ "as_of": "2026-10-19T10:33",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -867,9 +867,9 @@
    "odds": 1.37,
    "book": "1xBet",
    "stake": 2272,
-   "status": "U toku",
-   "profit": null,
-   "settled": null,
+   "status": "Dobijeno",
+   "profit": 841,
+   "settled": "2026-10-19T10:33",
    "p_model": 0.7537,
    "ev": 0.0326,
    "last_odds": 1.37,
@@ -891,8 +891,8 @@
    "settled": null,
    "p_model": 0.7618,
    "ev": 0.036,
-   "last_odds": 1.23,
-   "clv": 0.1057,
+   "last_odds": 1.24,
+   "clv": 0.0968,
    "link": "https://www.flashscore.com/match/ShUPw1le/"
   },
   {
@@ -910,8 +910,8 @@
    "settled": null,
    "p_model": 0.4391,
    "ev": 0.0318,
-   "last_odds": 2.32,
-   "clv": 0.0129,
+   "last_odds": 2.25,
+   "clv": 0.0444,
    "link": "https://www.flashscore.com/match/zJXXyuJ7/"
   },
   {
@@ -1005,8 +1005,8 @@
    "settled": null,
    "p_model": 0.6367,
    "ev": 0.0378,
-   "last_odds": 1.59,
-   "clv": 0.0252,
+   "last_odds": 1.64,
+   "clv": -0.0061,
    "link": "https://www.flashscore.com/match/lI9DjK6e/"
   },
   {
@@ -1119,8 +1119,8 @@
    "settled": null,
    "p_model": 0.3676,
    "ev": 0.066,
-   "last_odds": 2.75,
-   "clv": 0.0545,
+   "last_odds": 2.6,
+   "clv": 0.1154,
    "link": "https://www.flashscore.com/match/K2wD0Z3U/"
   },
   {
@@ -1214,8 +1214,8 @@
    "settled": null,
    "p_model": 0.5324,
    "ev": 0.0649,
-   "last_odds": 1.87,
-   "clv": 0.0695,
+   "last_odds": 1.88,
+   "clv": 0.0638,
    "link": "https://www.flashscore.com/match/QZAP4LZR/"
   },
   {
