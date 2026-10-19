@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-19T09:08",
+ "as_of": "2026-10-19T09:23",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -822,7 +822,7 @@
    "odds": 1.37,
    "book": "1xBet",
    "stake": 2272,
-   "status": "Čeka",
+   "status": "U toku",
    "profit": null,
    "p_model": 0.7537,
    "ev": 0.0326,
