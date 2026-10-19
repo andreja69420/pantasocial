@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-19T11:06",
+ "as_of": "2026-10-19T11:26",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -886,7 +886,7 @@
    "odds": 1.36,
    "book": "1xBet",
    "stake": 2464,
-   "status": "Čeka",
+   "status": "U toku",
    "profit": null,
    "settled": null,
    "p_model": 0.7618,
@@ -905,7 +905,7 @@
    "odds": 2.35,
    "book": "Superbet",
    "stake": 605,
-   "status": "Čeka",
+   "status": "U toku",
    "profit": null,
    "settled": null,
    "p_model": 0.4391,
@@ -913,25 +913,6 @@
    "last_odds": 2.32,
    "clv": 0.0129,
    "link": "https://www.flashscore.com/match/zJXXyuJ7/"
-  },
-  {
-   "id": "K4bWV6iA",
-   "start": "2026-10-19T11:30",
-   "category": "Muški Challenger",
-   "tournament": "Florence (Italy) - Qualification, clay",
-   "pick": "Donald Matthew",
-   "opponent": "Barranco Cosano Javier",
-   "odds": 1.71,
-   "book": "Superbet",
-   "stake": 1191,
-   "status": "Čeka",
-   "profit": null,
-   "settled": null,
-   "p_model": 0.6049,
-   "ev": 0.0343,
-   "last_odds": 1.54,
-   "clv": 0.1104,
-   "link": "https://www.flashscore.com/match/K4bWV6iA/"
   },
   {
    "id": "KSpauEPa",
@@ -951,6 +932,25 @@
    "last_odds": 2.34,
    "clv": 0.0,
    "link": "https://www.flashscore.com/match/KSpauEPa/"
+  },
+  {
+   "id": "K4bWV6iA",
+   "start": "2026-10-19T12:00",
+   "category": "Muški Challenger",
+   "tournament": "Florence (Italy) - Qualification, clay",
+   "pick": "Donald Matthew",
+   "opponent": "Barranco Cosano Javier",
+   "odds": 1.71,
+   "book": "Superbet",
+   "stake": 1191,
+   "status": "Čeka",
+   "profit": null,
+   "settled": null,
+   "p_model": 0.6049,
+   "ev": 0.0343,
+   "last_odds": 1.54,
+   "clv": 0.1104,
+   "link": "https://www.flashscore.com/match/K4bWV6iA/"
   },
   {
    "id": "x2x2vmcd",
@@ -1005,8 +1005,8 @@
    "settled": null,
    "p_model": 0.6367,
    "ev": 0.0378,
-   "last_odds": 1.64,
-   "clv": -0.0061,
+   "last_odds": 1.62,
+   "clv": 0.0062,
    "link": "https://www.flashscore.com/match/lI9DjK6e/"
   },
   {
@@ -1252,8 +1252,8 @@
    "settled": null,
    "p_model": 0.5257,
    "ev": 0.0355,
-   "last_odds": 1.97,
-   "clv": 0.0,
+   "last_odds": 1.98,
+   "clv": -0.0051,
    "link": "https://www.flashscore.com/match/dWOklHaf/"
   },
   {
