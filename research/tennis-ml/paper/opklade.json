@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-19T07:15",
+ "as_of": "2026-10-19T07:26",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -804,8 +804,8 @@
    "odds": 1.52,
    "book": "Superbet",
    "stake": 1571,
-   "status": "U toku",
-   "profit": null,
+   "status": "Povraćaj",
+   "profit": 0,
    "p_model": 0.6804,
    "ev": 0.0342,
    "last_odds": 1.4,
@@ -970,8 +970,8 @@
    "profit": null,
    "p_model": 0.3676,
    "ev": 0.066,
-   "last_odds": 2.7,
-   "clv": 0.0741,
+   "last_odds": 2.75,
+   "clv": 0.0545,
    "link": "https://www.flashscore.com/match/K2wD0Z3U/"
   },
   {
