@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-19T10:19",
+ "as_of": "2026-10-19T10:24",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -910,8 +910,8 @@
    "settled": null,
    "p_model": 0.4391,
    "ev": 0.0318,
-   "last_odds": 2.25,
-   "clv": 0.0444,
+   "last_odds": 2.32,
+   "clv": 0.0129,
    "link": "https://www.flashscore.com/match/zJXXyuJ7/"
   },
   {
@@ -1005,8 +1005,8 @@
    "settled": null,
    "p_model": 0.6367,
    "ev": 0.0378,
-   "last_odds": 1.58,
-   "clv": 0.0316,
+   "last_odds": 1.59,
+   "clv": 0.0252,
    "link": "https://www.flashscore.com/match/lI9DjK6e/"
   },
   {
@@ -1024,8 +1024,8 @@
    "settled": null,
    "p_model": 0.6606,
    "ev": 0.0372,
-   "last_odds": 1.3,
-   "clv": 0.2077,
+   "last_odds": 1.36,
+   "clv": 0.1544,
    "link": "https://www.flashscore.com/match/C2siszem/"
   },
   {
@@ -1214,8 +1214,8 @@
    "settled": null,
    "p_model": 0.5324,
    "ev": 0.0649,
-   "last_odds": 1.92,
-   "clv": 0.0417,
+   "last_odds": 1.87,
+   "clv": 0.0695,
    "link": "https://www.flashscore.com/match/QZAP4LZR/"
   },
   {
@@ -1309,8 +1309,8 @@
    "settled": null,
    "p_model": 0.5257,
    "ev": 0.0355,
-   "last_odds": 1.98,
-   "clv": -0.0051,
+   "last_odds": 1.97,
+   "clv": 0.0,
    "link": "https://www.flashscore.com/match/dWOklHaf/"
   },
   {
