@@ -1,6 +1,6 @@
 {
  "bank_start": 100000.0,
- "as_of": "2026-10-19T07:45",
+ "as_of": "2026-10-19T07:56",
  "rows": [
   {
    "id": "jRgwcsop",
@@ -813,6 +813,24 @@
    "link": "https://www.flashscore.com/match/KYsxolLs/"
   },
   {
+   "id": "U5WH2Dnp",
+   "start": "2026-10-19T08:10",
+   "category": "WTA Tour",
+   "tournament": "Ningbo (China), hard",
+   "pick": "Cirstea Sorana",
+   "opponent": "Shi Han",
+   "odds": 1.37,
+   "book": "1xBet",
+   "stake": 2272,
+   "status": "Čeka",
+   "profit": null,
+   "p_model": 0.7537,
+   "ev": 0.0326,
+   "last_odds": null,
+   "clv": null,
+   "link": "https://www.flashscore.com/match/U5WH2Dnp/"
+  },
+  {
    "id": "ShUPw1le",
    "start": "2026-10-19T11:00",
    "category": "Muški Challenger",
@@ -916,8 +934,8 @@
    "profit": null,
    "p_model": 0.6367,
    "ev": 0.0378,
-   "last_odds": 1.59,
-   "clv": 0.0252,
+   "last_odds": 1.6,
+   "clv": 0.0187,
    "link": "https://www.flashscore.com/match/lI9DjK6e/"
   },
   {
