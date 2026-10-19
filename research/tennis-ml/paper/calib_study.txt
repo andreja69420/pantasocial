@@ -1,0 +1,700 @@
+Calibration study (overnight run): per-variant tables, copied from calib_exp/*.md. Baseline for 2025 = cx_base, for 2026 = r6_v3 (identical predictions, max |dp| = 0).
+Variants: cx_base (train 2010..Y-2, early stop + Platt on Y-1), cx_cal2 (--calib-years=2), cx_refit (--refit), cx_hl8 (--halflife=8), cx_cal2refit (both). Blend study at the end.
+
+==================================================================
+== cx_base.md
+==================================================================
+# cx_base: model alone (columns: n | log-loss (SE) | Brier | ECE 5-pt bins, bins n>=30)
+
+## 1. Model alone, calibrated p (Platt on previous year)
+
+| tour | year | group | n | log-loss (SE) | Brier | ECE | paired dLL vs r6_v3 (SE) |
+|---|---|---|---|---|---|---|---|
+| wta | 2025 | all | 24063 | 0.5436 (0.0032) | 0.1842 | 1.63% |  |
+| wta | 2025 | ITF | 17879 | 0.5306 (0.0038) | 0.1787 | 1.66% |  |
+| wta | 2025 | Chall/125 | 2194 | 0.5605 (0.0092) | 0.1919 | 3.30% |  |
+| wta | 2025 | Tour | 3990 | 0.5923 (0.0067) | 0.2043 | 2.30% |  |
+| wta | 2026 | all | 18856 | 0.5486 (0.0034) | 0.1862 | 1.41% | -0.00000 (0.00000) n=18856, max|dp|=0.0000 |
+| wta | 2026 | ITF | 14369 | 0.5421 (0.0041) | 0.1835 | 1.67% | -0.00000 (0.00000) n=14369, max|dp|=0.0000 |
+| wta | 2026 | Chall/125 | 1287 | 0.5530 (0.0112) | 0.1890 | 5.54% | +0.00000 (0.00000) n=1287, max|dp|=0.0000 |
+| wta | 2026 | Tour | 3200 | 0.5763 (0.0071) | 0.1973 | 2.64% | -0.00000 (0.00000) n=3200, max|dp|=0.0000 |
+| atp | 2025 | all | 32033 | 0.5637 (0.0025) | 0.1922 | 0.98% |  |
+| atp | 2025 | ITF | 17808 | 0.5325 (0.0036) | 0.1789 | 1.00% |  |
+| atp | 2025 | Chall/125 | 10125 | 0.6028 (0.0042) | 0.2088 | 2.15% |  |
+| atp | 2025 | Tour | 4100 | 0.6024 (0.0063) | 0.2088 | 2.17% |  |
+| atp | 2026 | all | 27820 | 0.5648 (0.0027) | 0.1922 | 0.53% | +0.00000 (0.00000) n=27820, max|dp|=0.0000 |
+| atp | 2026 | ITF | 14781 | 0.5459 (0.0040) | 0.1839 | 1.05% | +0.00000 (0.00000) n=14781, max|dp|=0.0000 |
+| atp | 2026 | Chall/125 | 9629 | 0.5845 (0.0041) | 0.2008 | 1.29% | -0.00000 (0.00000) n=9629, max|dp|=0.0000 |
+| atp | 2026 | Tour | 3410 | 0.5911 (0.0065) | 0.2041 | 1.92% | -0.00000 (0.00000) n=3410, max|dp|=0.0000 |
+| pooled | 2025 | all | 56096 | 0.5550 (0.0020) | 0.1887 | 1.04% |  |
+| pooled | 2025 | ITF | 35687 | 0.5316 (0.0026) | 0.1788 | 0.79% |  |
+| pooled | 2025 | Chall/125 | 12319 | 0.5953 (0.0038) | 0.2058 | 1.81% |  |
+| pooled | 2025 | Tour | 8090 | 0.5974 (0.0046) | 0.2066 | 1.74% |  |
+| pooled | 2026 | all | 46676 | 0.5583 (0.0021) | 0.1898 | 0.69% | -0.00000 (0.00000) n=46676, max|dp|=0.0000 |
+| pooled | 2026 | ITF | 29150 | 0.5440 (0.0028) | 0.1837 | 1.13% | +0.00000 (0.00000) n=29150, max|dp|=0.0000 |
+| pooled | 2026 | Chall/125 | 10916 | 0.5808 (0.0039) | 0.1994 | 1.31% | -0.00000 (0.00000) n=10916, max|dp|=0.0000 |
+| pooled | 2026 | Tour | 6610 | 0.5839 (0.0048) | 0.2008 | 1.66% | -0.00000 (0.00000) n=6610, max|dp|=0.0000 |
+
+## 2. Post-hoc calibrators fitted on the saved validation raw preds (test year Y <- validation year Y-1), applied to p_raw of test year Y
+
+Check: refitted Platt vs train3 p: max|diff| = 0.00e+00
+
+| tour | year | calibrator | n | log-loss (SE) | Brier | ECE | paired dLL vs Platt (SE) | z |
+|---|---|---|---|---|---|---|---|---|
+| wta | 2025 | Platt (current) | 24063 | 0.5436 (0.0032) | 0.1842 | 1.63% | - | - |
+| wta | 2025 | Isotonic | 24063 | 0.5445 (0.0032) | 0.1842 | 1.50% | +0.00094 (0.00034) | +2.8 |
+| wta | 2025 | Beta | 24063 | 0.5436 (0.0032) | 0.1842 | 1.68% | +0.00001 (0.00002) | +0.3 |
+| wta | 2025 | Platt per level group | 24063 | 0.5438 (0.0032) | 0.1842 | 1.57% | +0.00019 (0.00008) | +2.3 |
+| wta | 2025 | Platt per tourney_level, shrunk (lam=200) | 24063 | 0.5436 (0.0032) | 0.1842 | 1.52% | +0.00007 (0.00006) | +1.1 |
+| wta | 2026 | Platt (current) | 18856 | 0.5486 (0.0034) | 0.1862 | 1.41% | - | - |
+| wta | 2026 | Isotonic | 18856 | 0.5495 (0.0035) | 0.1865 | 1.48% | +0.00087 (0.00032) | +2.7 |
+| wta | 2026 | Beta | 18856 | 0.5487 (0.0034) | 0.1862 | 1.33% | +0.00001 (0.00002) | +0.5 |
+| wta | 2026 | Platt per level group | 18856 | 0.5486 (0.0034) | 0.1862 | 1.40% | -0.00007 (0.00012) | -0.6 |
+| wta | 2026 | Platt per tourney_level, shrunk (lam=200) | 18856 | 0.5487 (0.0034) | 0.1863 | 1.37% | +0.00002 (0.00010) | +0.2 |
+| atp | 2025 | Platt (current) | 32033 | 0.5637 (0.0025) | 0.1922 | 0.98% | - | - |
+| atp | 2025 | Isotonic | 32033 | 0.5639 (0.0025) | 0.1923 | 0.98% | +0.00028 (0.00019) | +1.5 |
+| atp | 2025 | Beta | 32033 | 0.5637 (0.0025) | 0.1922 | 1.03% | +0.00002 (0.00004) | +0.5 |
+| atp | 2025 | Platt per level group | 32033 | 0.5636 (0.0025) | 0.1922 | 0.91% | -0.00005 (0.00007) | -0.6 |
+| atp | 2025 | Platt per tourney_level, shrunk (lam=200) | 32033 | 0.5636 (0.0025) | 0.1922 | 0.96% | -0.00005 (0.00008) | -0.6 |
+| atp | 2026 | Platt (current) | 27820 | 0.5648 (0.0027) | 0.1922 | 0.53% | - | - |
+| atp | 2026 | Isotonic | 27820 | 0.5661 (0.0027) | 0.1924 | 1.08% | +0.00133 (0.00034) | +3.9 |
+| atp | 2026 | Beta | 27820 | 0.5648 (0.0027) | 0.1922 | 0.54% | -0.00000 (0.00001) | -0.1 |
+| atp | 2026 | Platt per level group | 27820 | 0.5651 (0.0027) | 0.1923 | 0.73% | +0.00030 (0.00011) | +2.7 |
+| atp | 2026 | Platt per tourney_level, shrunk (lam=200) | 27820 | 0.5650 (0.0027) | 0.1923 | 0.74% | +0.00022 (0.00010) | +2.3 |
+| pooled | 2025 | Platt (current) | 56096 | 0.5550 (0.0020) | 0.1887 | 1.04% | - | - |
+| pooled | 2025 | Isotonic | 56096 | 0.5556 (0.0020) | 0.1888 | 1.02% | +0.00056 (0.00018) | +3.1 |
+| pooled | 2025 | Beta | 56096 | 0.5551 (0.0020) | 0.1888 | 1.10% | +0.00001 (0.00002) | +0.5 |
+| pooled | 2025 | Platt per level group | 56096 | 0.5551 (0.0020) | 0.1888 | 1.06% | +0.00005 (0.00006) | +1.0 |
+| pooled | 2025 | Platt per tourney_level, shrunk (lam=200) | 56096 | 0.5550 (0.0020) | 0.1887 | 1.03% | -0.00000 (0.00005) | -0.0 |
+| pooled | 2026 | Platt (current) | 46676 | 0.5583 (0.0021) | 0.1898 | 0.69% | - | - |
+| pooled | 2026 | Isotonic | 46676 | 0.5594 (0.0021) | 0.1900 | 0.91% | +0.00114 (0.00024) | +4.7 |
+| pooled | 2026 | Beta | 46676 | 0.5583 (0.0021) | 0.1898 | 0.65% | +0.00000 (0.00001) | +0.5 |
+| pooled | 2026 | Platt per level group | 46676 | 0.5584 (0.0021) | 0.1898 | 0.63% | +0.00015 (0.00008) | +1.8 |
+| pooled | 2026 | Platt per tourney_level, shrunk (lam=200) | 46676 | 0.5584 (0.0021) | 0.1898 | 0.68% | +0.00014 (0.00007) | +2.0 |
+
+### 2b. Calibrators by level group, pooled tours (log-loss, ECE)
+
+| year | group | Platt (current) | Isotonic | Beta | Platt per level group | Platt per tourney_level, shrunk (lam=200) |
+|---|---|---|---|---|---|---|
+| 2025 | ITF | 0.5316 / 0.79% | 0.5323 / 0.89% | 0.5316 / 0.79% | 0.5315 / 0.86% | 0.5316 / 0.85% |
+| 2025 | Chall/125 | 0.5953 / 1.81% | 0.5953 / 1.78% | 0.5953 / 1.88% | 0.5952 / 1.56% | 0.5952 / 1.63% |
+| 2025 | Tour | 0.5974 / 1.74% | 0.5979 / 1.66% | 0.5974 / 1.74% | 0.5979 / 1.84% | 0.5973 / 1.83% |
+| 2026 | ITF | 0.5440 / 1.13% | 0.5452 / 1.21% | 0.5440 / 1.10% | 0.5441 / 1.20% | 0.5441 / 1.15% |
+| 2026 | Chall/125 | 0.5808 / 1.31% | 0.5824 / 1.38% | 0.5808 / 1.34% | 0.5812 / 1.51% | 0.5810 / 1.46% |
+| 2026 | Tour | 0.5839 / 1.66% | 0.5844 / 1.65% | 0.5839 / 1.53% | 0.5841 / 1.69% | 0.5842 / 1.55% |
+
+## 3. Betting at the six Serbian books, 2026 (opening price, best of 6, blend EV>5%, odds<=5)
+
+Files: /tmp/claude-0/-home-user-pantasocial/d746d33b-0578-5ee2-a55c-5a9f85958b0a/scratchpad/tennis/calib_exp/cx_base_six.parquet, /tmp/claude-0/-home-user-pantasocial/d746d33b-0578-5ee2-a55c-5a9f85958b0a/scratchpad/tennis/calib_exp/out_cx_base/. cx_base 2026 preds are bit-identical to out_v3 r6_v3 (max |dp| = 0 on all 46,676 matches), so every betting number equals the baseline.
+
+```
+cx_base: no-ITF EV>5% odds<=5: 1869 bets ROI +17.2% lower90 +13.2% (SE 2.4pp)
+   EV>5%: n=1869 mean blend P 57.7% vs won 61.1%  (SE of won 1.1pp)
+   EV>10%: n=524 mean blend P 54.2% vs won 54.4%  (SE of won 2.2pp)
+   EV>15%: n=190 mean blend P 53.2% vs won 50.0%  (SE of won 3.6pp)
+r6_v3: no-ITF EV>5% odds<=5: 1869 bets ROI +17.2% lower90 +13.2% (SE 2.4pp)
+   EV>5%: n=1869 mean blend P 57.7% vs won 61.1%  (SE of won 1.1pp)
+   EV>10%: n=524 mean blend P 54.2% vs won 54.4%  (SE of won 2.2pp)
+   EV>15%: n=190 mean blend P 53.2% vs won 50.0%  (SE of won 3.6pp)
+
+                                  bets   roi%    lo%  odds
+cx_base all                       5261   9.47   7.06  2.10
+        atp Challenger / WTA 125  1084  18.39  13.40  2.01
+        atp ITF                   1572   3.78  -0.66  2.17
+        atp tour events            295  15.32   4.04  2.27
+        wta Challenger / WTA 125   102   5.80 -11.88  2.10
+        wta ITF                   1820   6.46   2.36  2.07
+        wta tour events            388  18.19   9.41  2.10
+r6_v3   all                       5261   9.47   7.06  2.10
+        atp Challenger / WTA 125  1084  18.39  13.40  2.01
+        atp ITF                   1572   3.78  -0.66  2.17
+        atp tour events            295  15.32   4.04  2.27
+        wta Challenger / WTA 125   102   5.80 -11.88  2.10
+        wta ITF                   1820   6.46   2.36  2.07
+        wta tour events            388  18.19   9.41  2.10
+```
+
+## 4. Run notes
+
+- Runs: wta 2025+2026 and atp 2025+2026 with the exact queue.md command (flags none), sequential, no failures. Train time: wta 2025 717 s, atp 2025 706 s, atp 2026 1473 s. Preds: /tmp/claude-0/-home-user-pantasocial/d746d33b-0578-5ee2-a55c-5a9f85958b0a/scratchpad/tennis/out_v3/preds3_{wta,atp}_ens_cx_base_lower_2025-2026{,_va}.parquet
+- Selection rule: cx_base is the baseline protocol itself (2026 identical to r6_v3, 2025 is its own reference), so it cannot beat itself; N/A. It supplies the 2025 reference for the other variants.
+- Post-hoc calibrators: none beats Platt on both years. Isotonic is worse (pooled +0.0006 / +0.0011 log-loss, z=3.1 / 4.7). Beta is equal (|z|<1). Per-level-group and shrunk per-tourney_level Platt are at best equal, in 2026 slightly worse (z=+1.8 / +2.0 pooled). Verdict: keep Platt.
+- Calibrator caveat: a calibrator fitted on one validation year (Y-1) only; ECE uses 5-point bins with bins n<30 dropped, so small groups (Chall/125 WTA, 1287 matches) have noisy ECE (5.5%).
+
+==================================================================
+== cx_cal2.md
+==================================================================
+# cx_cal2: model alone (columns: n | log-loss (SE) | Brier | ECE 5-pt bins, bins n>=30)
+
+## 1. Model alone, calibrated p (Platt on previous year)
+
+| tour | year | group | n | log-loss (SE) | Brier | ECE | paired dLL vs baseline (2025: cx_base, 2026: r6_v3) (SE) |
+|---|---|---|---|---|---|---|---|
+| wta | 2025 | all | 24063 | 0.5437 (0.0032) | 0.1843 | 1.54% | +0.00012 (0.00022) z=+0.6 n=24063, dECE=-0.09pp, max|dp|=0.0827 |
+| wta | 2025 | ITF | 17879 | 0.5305 (0.0038) | 0.1787 | 1.85% | -0.00012 (0.00026) z=-0.5 n=17879, dECE=+0.19pp, max|dp|=0.0787 |
+| wta | 2025 | Chall/125 | 2194 | 0.5615 (0.0091) | 0.1923 | 3.04% | +0.00094 (0.00074) z=+1.3 n=2194, dECE=-0.26pp, max|dp|=0.0632 |
+| wta | 2025 | Tour | 3990 | 0.5930 (0.0067) | 0.2046 | 2.43% | +0.00077 (0.00056) z=+1.4 n=3990, dECE=+0.13pp, max|dp|=0.0827 |
+| wta | 2026 | all | 18856 | 0.5504 (0.0036) | 0.1869 | 1.64% | +0.00178 (0.00032) z=+5.7 n=18856, dECE=+0.23pp, max|dp|=0.0988 |
+| wta | 2026 | ITF | 14369 | 0.5439 (0.0042) | 0.1842 | 2.12% | +0.00178 (0.00036) z=+4.9 n=14369, dECE=+0.45pp, max|dp|=0.0988 |
+| wta | 2026 | Chall/125 | 1287 | 0.5578 (0.0116) | 0.1912 | 5.25% | +0.00487 (0.00119) z=+4.1 n=1287, dECE=-0.29pp, max|dp|=0.0928 |
+| wta | 2026 | Tour | 3200 | 0.5768 (0.0075) | 0.1976 | 2.20% | +0.00054 (0.00073) z=+0.7 n=3200, dECE=-0.43pp, max|dp|=0.0879 |
+| atp | 2025 | all | 32033 | 0.5637 (0.0025) | 0.1922 | 0.89% | +0.00005 (0.00020) z=+0.3 n=32033, dECE=-0.09pp, max|dp|=0.0973 |
+| atp | 2025 | ITF | 17808 | 0.5328 (0.0036) | 0.1790 | 0.89% | +0.00033 (0.00028) z=+1.2 n=17808, dECE=-0.11pp, max|dp|=0.0973 |
+| atp | 2025 | Chall/125 | 10125 | 0.6026 (0.0041) | 0.2087 | 1.88% | -0.00023 (0.00036) z=-0.6 n=10125, dECE=-0.26pp, max|dp|=0.0750 |
+| atp | 2025 | Tour | 4100 | 0.6019 (0.0061) | 0.2086 | 2.17% | -0.00049 (0.00054) z=-0.9 n=4100, dECE=-0.01pp, max|dp|=0.0827 |
+| atp | 2026 | all | 27820 | 0.5648 (0.0027) | 0.1922 | 0.61% | -0.00002 (0.00020) z=-0.1 n=27820, dECE=+0.08pp, max|dp|=0.0817 |
+| atp | 2026 | ITF | 14781 | 0.5461 (0.0040) | 0.1840 | 1.29% | +0.00018 (0.00028) z=+0.6 n=14781, dECE=+0.25pp, max|dp|=0.0787 |
+| atp | 2026 | Chall/125 | 9629 | 0.5839 (0.0042) | 0.2006 | 1.06% | -0.00059 (0.00033) z=-1.8 n=9629, dECE=-0.24pp, max|dp|=0.0758 |
+| atp | 2026 | Tour | 3410 | 0.5918 (0.0067) | 0.2044 | 1.99% | +0.00073 (0.00055) z=+1.3 n=3410, dECE=+0.07pp, max|dp|=0.0817 |
+| pooled | 2025 | all | 56096 | 0.5551 (0.0020) | 0.1888 | 0.93% | +0.00008 (0.00015) z=+0.5 n=56096, dECE=-0.11pp, max|dp|=0.0973 |
+| pooled | 2025 | ITF | 35687 | 0.5317 (0.0026) | 0.1789 | 0.82% | +0.00010 (0.00019) z=+0.6 n=35687, dECE=+0.03pp, max|dp|=0.0973 |
+| pooled | 2025 | Chall/125 | 12319 | 0.5953 (0.0037) | 0.2058 | 1.87% | -0.00002 (0.00033) z=-0.1 n=12319, dECE=+0.06pp, max|dp|=0.0750 |
+| pooled | 2025 | Tour | 8090 | 0.5975 (0.0045) | 0.2066 | 1.98% | +0.00014 (0.00039) z=+0.3 n=8090, dECE=+0.24pp, max|dp|=0.0827 |
+| pooled | 2026 | all | 46676 | 0.5590 (0.0022) | 0.1901 | 0.76% | +0.00071 (0.00017) z=+4.1 n=46676, dECE=+0.07pp, max|dp|=0.0988 |
+| pooled | 2026 | ITF | 29150 | 0.5450 (0.0029) | 0.1841 | 1.24% | +0.00097 (0.00023) z=+4.2 n=29150, dECE=+0.11pp, max|dp|=0.0988 |
+| pooled | 2026 | Chall/125 | 10916 | 0.5809 (0.0039) | 0.1995 | 1.13% | +0.00006 (0.00032) z=+0.2 n=10916, dECE=-0.19pp, max|dp|=0.0928 |
+| pooled | 2026 | Tour | 6610 | 0.5846 (0.0050) | 0.2011 | 1.56% | +0.00064 (0.00045) z=+1.4 n=6610, dECE=-0.10pp, max|dp|=0.0879 |
+
+## 2. Post-hoc calibrators fitted on the saved validation raw preds (test year Y <- validation year Y-1), applied to p_raw of test year Y
+
+Check: refitted Platt vs train3 p: max|diff| = 0.00e+00
+
+| tour | year | calibrator | n | log-loss (SE) | Brier | ECE | paired dLL vs Platt (SE) | z |
+|---|---|---|---|---|---|---|---|---|
+| wta | 2025 | Platt (current) | 24063 | 0.5437 (0.0032) | 0.1843 | 1.54% | - | - |
+| wta | 2025 | Isotonic | 24063 | 0.5440 (0.0032) | 0.1842 | 1.33% | +0.00030 (0.00028) | +1.0 |
+| wta | 2025 | Beta | 24063 | 0.5437 (0.0032) | 0.1843 | 1.55% | -0.00000 (0.00000) | -0.1 |
+| wta | 2025 | Platt per level group | 24063 | 0.5437 (0.0032) | 0.1843 | 1.65% | +0.00004 (0.00010) | +0.4 |
+| wta | 2025 | Platt per tourney_level, shrunk (lam=200) | 24063 | 0.5438 (0.0032) | 0.1843 | 1.57% | +0.00005 (0.00008) | +0.6 |
+| wta | 2026 | Platt (current) | 18856 | 0.5504 (0.0036) | 0.1869 | 1.64% | - | - |
+| wta | 2026 | Isotonic | 18856 | 0.5513 (0.0036) | 0.1871 | 1.68% | +0.00091 (0.00024) | +3.7 |
+| wta | 2026 | Beta | 18856 | 0.5504 (0.0036) | 0.1869 | 1.66% | +0.00000 (0.00000) | +0.6 |
+| wta | 2026 | Platt per level group | 18856 | 0.5504 (0.0036) | 0.1869 | 1.66% | +0.00001 (0.00003) | +0.3 |
+| wta | 2026 | Platt per tourney_level, shrunk (lam=200) | 18856 | 0.5503 (0.0036) | 0.1869 | 1.63% | -0.00008 (0.00006) | -1.3 |
+| atp | 2025 | Platt (current) | 32033 | 0.5637 (0.0025) | 0.1922 | 0.89% | - | - |
+| atp | 2025 | Isotonic | 32033 | 0.5639 (0.0025) | 0.1923 | 0.84% | +0.00014 (0.00015) | +0.9 |
+| atp | 2025 | Beta | 32033 | 0.5637 (0.0025) | 0.1922 | 1.01% | +0.00002 (0.00005) | +0.4 |
+| atp | 2025 | Platt per level group | 32033 | 0.5637 (0.0025) | 0.1922 | 0.93% | -0.00001 (0.00005) | -0.1 |
+| atp | 2025 | Platt per tourney_level, shrunk (lam=200) | 32033 | 0.5637 (0.0025) | 0.1922 | 1.11% | -0.00003 (0.00008) | -0.4 |
+| atp | 2026 | Platt (current) | 27820 | 0.5648 (0.0027) | 0.1922 | 0.61% | - | - |
+| atp | 2026 | Isotonic | 27820 | 0.5655 (0.0027) | 0.1924 | 0.88% | +0.00075 (0.00024) | +3.1 |
+| atp | 2026 | Beta | 27820 | 0.5648 (0.0027) | 0.1922 | 0.58% | +0.00000 (0.00003) | +0.2 |
+| atp | 2026 | Platt per level group | 27820 | 0.5650 (0.0027) | 0.1923 | 0.51% | +0.00023 (0.00009) | +2.5 |
+| atp | 2026 | Platt per tourney_level, shrunk (lam=200) | 27820 | 0.5650 (0.0027) | 0.1923 | 0.58% | +0.00021 (0.00009) | +2.3 |
+| pooled | 2025 | Platt (current) | 56096 | 0.5551 (0.0020) | 0.1888 | 0.93% | - | - |
+| pooled | 2025 | Isotonic | 56096 | 0.5553 (0.0020) | 0.1888 | 0.91% | +0.00021 (0.00015) | +1.4 |
+| pooled | 2025 | Beta | 56096 | 0.5551 (0.0020) | 0.1888 | 0.97% | +0.00001 (0.00003) | +0.4 |
+| pooled | 2025 | Platt per level group | 56096 | 0.5551 (0.0020) | 0.1888 | 0.97% | +0.00001 (0.00005) | +0.2 |
+| pooled | 2025 | Platt per tourney_level, shrunk (lam=200) | 56096 | 0.5551 (0.0020) | 0.1888 | 0.95% | +0.00000 (0.00006) | +0.1 |
+| pooled | 2026 | Platt (current) | 46676 | 0.5590 (0.0022) | 0.1901 | 0.76% | - | - |
+| pooled | 2026 | Isotonic | 46676 | 0.5598 (0.0022) | 0.1902 | 0.87% | +0.00081 (0.00018) | +4.6 |
+| pooled | 2026 | Beta | 46676 | 0.5590 (0.0022) | 0.1901 | 0.75% | +0.00000 (0.00001) | +0.2 |
+| pooled | 2026 | Platt per level group | 46676 | 0.5591 (0.0022) | 0.1901 | 0.75% | +0.00014 (0.00006) | +2.5 |
+| pooled | 2026 | Platt per tourney_level, shrunk (lam=200) | 46676 | 0.5591 (0.0022) | 0.1901 | 0.72% | +0.00009 (0.00006) | +1.5 |
+
+### 2b. Calibrators by level group, pooled tours (log-loss, ECE)
+
+| year | group | Platt (current) | Isotonic | Beta | Platt per level group | Platt per tourney_level, shrunk (lam=200) |
+|---|---|---|---|---|---|---|
+| 2025 | ITF | 0.5317 / 0.82% | 0.5319 / 0.82% | 0.5317 / 0.84% | 0.5316 / 0.81% | 0.5317 / 0.92% |
+| 2025 | Chall/125 | 0.5953 / 1.87% | 0.5953 / 1.47% | 0.5953 / 1.94% | 0.5954 / 1.93% | 0.5953 / 1.78% |
+| 2025 | Tour | 0.5975 / 1.98% | 0.5978 / 1.79% | 0.5976 / 2.14% | 0.5977 / 1.85% | 0.5974 / 1.73% |
+| 2026 | ITF | 0.5450 / 1.24% | 0.5457 / 1.33% | 0.5450 / 1.21% | 0.5451 / 1.38% | 0.5451 / 1.35% |
+| 2026 | Chall/125 | 0.5809 / 1.13% | 0.5819 / 0.96% | 0.5808 / 1.18% | 0.5812 / 1.09% | 0.5811 / 1.14% |
+| 2026 | Tour | 0.5846 / 1.56% | 0.5855 / 1.78% | 0.5846 / 1.59% | 0.5846 / 1.66% | 0.5845 / 1.31% |
+
+## 3. Betting at the six Serbian books, 2026 (opening price, best of 6, blend EV>5%, odds<=5, no ITF)
+
+Files: /tmp/claude-0/-home-user-pantasocial/d746d33b-0578-5ee2-a55c-5a9f85958b0a/scratchpad/tennis/calib_exp/cx_cal2_six.parquet, /tmp/claude-0/-home-user-pantasocial/d746d33b-0578-5ee2-a55c-5a9f85958b0a/scratchpad/tennis/calib_exp/out_cx_cal2/ (2026 rows of the 2025-2026 preds; matches symlinked). Logs: eval_levels_cal2.log, eval_books_cal2.log, bet_side_cal2.txt.
+
+```
+cx_cal2: no-ITF EV>5% odds<=5: 2087 bets ROI +15.8% lower90 +12.2% (SE 2.2pp)
+   EV>5%: n=2087 mean blend P 59.2% vs won 62.1%  (SE of won 1.1pp)
+   EV>10%: n=568 mean blend P 55.4% vs won 54.9%  (SE of won 2.1pp)
+   EV>15%: n=206 mean blend P 53.5% vs won 52.9%  (SE of won 3.5pp)
+r6_v3 baseline: 1869 bets ROI +17.2% lower90 +13.2% (SE 2.4pp); EV>5% P 57.8% vs won 61.1%; EV>10% 54.1% vs 54.5%; EV>15% 53.2% vs 50.0%
+```
+
+cx_cal2 has more bets (2087 vs 1869, overlap 1675) at lower ROI (+15.8% vs +17.2%, difference well inside the SE of about 2.3pp each, and the two bet sets are 80% shared). By tour: WTA 587 bets +16.8% (SE 4.1) vs baseline 490 bets +15.6% (SE 4.8); ATP 1500 bets +15.4% (SE 2.6) vs 1379 bets +17.7% (SE 2.8). Bet-side calibration at EV>10%/15% is slightly better than baseline, at EV>5% it is the same under-prediction (P 59.2% vs won 62.1%). All inside noise; betting is a check only.
+
+## 4. Run notes
+
+- Command exactly as queue.md V1 (--calib-years=2 --save-va --no-log), wta then atp, one at a time via run_cx_cal2.sh, no failures. Chosen iterations (2025 / 2026): WTA xgb 302/368, lgbm 310/304; ATP xgb 439/289, lgbm 293/360. Train time: wta 2025 873 s, wta 2026 1903 s (cumulative), atp 2025 1036 s, atp 2026 1986 s.
+- Preds: out_v3/preds3_{wta,atp}_ens_cx_cal2_lower_2025-2026{,_va}.parquet. Platt refit from the _va file reproduces train3 p exactly (max diff 0).
+- Training data is one year shorter (2010..Y-3), validation is Y-2,Y-1. Paired dLL > 0 means cx_cal2 is worse. Baseline for 2025 = cx_base, 2026 = r6_v3.
+- Post-hoc calibrators on the 2-year validation: none beats Platt. Isotonic worse in 2026 (pooled +0.0008, z=+4.6), per-level-group Platt worse in 2026 (z=+2.5), shrunk per-tourney_level Platt equal (z=+1.5), Beta equal (|z|<1).
+
+## 5. Selection rule
+
+FAIL. Pooled log-loss vs baseline: 2025 +0.00008 (SE 0.00015, z=+0.5, no change), 2026 +0.00071 (SE 0.00017, z=+4.1, significantly WORSE; WTA 2026 +0.00178, z=+5.7). Not lower on both years. ECE pooled 2025 0.93% vs 1.04% (better), 2026 0.76% vs 0.69% (worse). Keep one calibration year with train ending Y-2.
+
+==================================================================
+== cx_refit.md
+==================================================================
+# cx_refit: model alone (columns: n | log-loss (SE) | Brier | ECE 5-pt bins, bins n>=30)
+
+## 1. Model alone, calibrated p (Platt on previous year)
+
+| tour | year | group | n | log-loss (SE) | Brier | ECE | paired dLL vs baseline (2025: cx_base, 2026: r6_v3) (SE) |
+|---|---|---|---|---|---|---|---|
+| wta | 2025 | all | 24063 | 0.5429 (0.0032) | 0.1839 | 1.86% | -0.00073 (0.00024) z=-3.1 n=24063, dECE=+0.22pp, max|dp|=0.1061 |
+| wta | 2025 | ITF | 17879 | 0.5301 (0.0039) | 0.1785 | 1.73% | -0.00053 (0.00027) z=-1.9 n=17879, dECE=+0.08pp, max|dp|=0.0899 |
+| wta | 2025 | Chall/125 | 2194 | 0.5550 (0.0092) | 0.1896 | 4.00% | -0.00547 (0.00081) z=-6.8 n=2194, dECE=+0.71pp, max|dp|=0.1061 |
+| wta | 2025 | Tour | 3990 | 0.5932 (0.0068) | 0.2046 | 3.34% | +0.00097 (0.00059) z=+1.6 n=3990, dECE=+1.04pp, max|dp|=0.0749 |
+| wta | 2026 | all | 18856 | 0.5485 (0.0034) | 0.1862 | 0.86% | -0.00014 (0.00027) z=-0.5 n=18856, dECE=-0.55pp, max|dp|=0.1552 |
+| wta | 2026 | ITF | 14369 | 0.5423 (0.0040) | 0.1836 | 1.22% | +0.00020 (0.00031) z=+0.7 n=14369, dECE=-0.44pp, max|dp|=0.0903 |
+| wta | 2026 | Chall/125 | 1287 | 0.5467 (0.0110) | 0.1864 | 4.56% | -0.00623 (0.00113) z=-5.5 n=1287, dECE=-0.98pp, max|dp|=0.1552 |
+| wta | 2026 | Tour | 3200 | 0.5770 (0.0071) | 0.1977 | 1.70% | +0.00075 (0.00068) z=+1.1 n=3200, dECE=-0.94pp, max|dp|=0.0969 |
+| atp | 2025 | all | 32033 | 0.5634 (0.0025) | 0.1921 | 1.03% | -0.00027 (0.00019) z=-1.4 n=32033, dECE=+0.05pp, max|dp|=0.0900 |
+| atp | 2025 | ITF | 17808 | 0.5325 (0.0036) | 0.1790 | 1.14% | +0.00005 (0.00026) z=+0.2 n=17808, dECE=+0.14pp, max|dp|=0.0900 |
+| atp | 2025 | Chall/125 | 10125 | 0.6024 (0.0042) | 0.2086 | 2.12% | -0.00040 (0.00034) z=-1.2 n=10125, dECE=-0.02pp, max|dp|=0.0720 |
+| atp | 2025 | Tour | 4100 | 0.6010 (0.0062) | 0.2082 | 2.09% | -0.00136 (0.00050) z=-2.7 n=4100, dECE=-0.09pp, max|dp|=0.0700 |
+| atp | 2026 | all | 27820 | 0.5642 (0.0026) | 0.1920 | 0.61% | -0.00064 (0.00021) z=-3.1 n=27820, dECE=+0.08pp, max|dp|=0.0850 |
+| atp | 2026 | ITF | 14781 | 0.5453 (0.0039) | 0.1837 | 1.00% | -0.00065 (0.00030) z=-2.1 n=14781, dECE=-0.05pp, max|dp|=0.0850 |
+| atp | 2026 | Chall/125 | 9629 | 0.5839 (0.0041) | 0.2006 | 1.22% | -0.00061 (0.00032) z=-1.9 n=9629, dECE=-0.07pp, max|dp|=0.0666 |
+| atp | 2026 | Tour | 3410 | 0.5904 (0.0064) | 0.2038 | 1.74% | -0.00067 (0.00052) z=-1.3 n=3410, dECE=-0.18pp, max|dp|=0.0613 |
+| pooled | 2025 | all | 56096 | 0.5546 (0.0020) | 0.1885 | 1.23% | -0.00047 (0.00015) z=-3.1 n=56096, dECE=+0.20pp, max|dp|=0.1061 |
+| pooled | 2025 | ITF | 35687 | 0.5313 (0.0026) | 0.1787 | 1.01% | -0.00024 (0.00019) z=-1.3 n=35687, dECE=+0.22pp, max|dp|=0.0900 |
+| pooled | 2025 | Chall/125 | 12319 | 0.5940 (0.0038) | 0.2052 | 1.92% | -0.00130 (0.00031) z=-4.1 n=12319, dECE=+0.11pp, max|dp|=0.1061 |
+| pooled | 2025 | Tour | 8090 | 0.5972 (0.0046) | 0.2064 | 2.30% | -0.00021 (0.00039) z=-0.5 n=8090, dECE=+0.56pp, max|dp|=0.0749 |
+| pooled | 2026 | all | 46676 | 0.5578 (0.0021) | 0.1897 | 0.51% | -0.00044 (0.00017) z=-2.7 n=46676, dECE=-0.18pp, max|dp|=0.1552 |
+| pooled | 2026 | ITF | 29150 | 0.5438 (0.0028) | 0.1837 | 0.71% | -0.00023 (0.00022) z=-1.1 n=29150, dECE=-0.41pp, max|dp|=0.0903 |
+| pooled | 2026 | Chall/125 | 10916 | 0.5795 (0.0038) | 0.1989 | 1.21% | -0.00127 (0.00031) z=-4.0 n=10916, dECE=-0.11pp, max|dp|=0.1552 |
+| pooled | 2026 | Tour | 6610 | 0.5839 (0.0048) | 0.2008 | 1.30% | +0.00002 (0.00042) z=+0.0 n=6610, dECE=-0.36pp, max|dp|=0.0969 |
+
+## 2. Post-hoc calibrators fitted on the saved validation raw preds (test year Y <- validation year Y-1), applied to p_raw of test year Y
+
+Check: refitted Platt vs train3 p: max|diff| = 0.00e+00
+
+| tour | year | calibrator | n | log-loss (SE) | Brier | ECE | paired dLL vs Platt (SE) | z |
+|---|---|---|---|---|---|---|---|---|
+| wta | 2025 | Platt (current) | 24063 | 0.5429 (0.0032) | 0.1839 | 1.86% | - | - |
+| wta | 2025 | Isotonic | 24063 | 0.5439 (0.0033) | 0.1840 | 1.60% | +0.00105 (0.00034) | +3.1 |
+| wta | 2025 | Beta | 24063 | 0.5429 (0.0032) | 0.1839 | 1.87% | +0.00001 (0.00002) | +0.4 |
+| wta | 2025 | Platt per level group | 24063 | 0.5431 (0.0032) | 0.1839 | 1.80% | +0.00021 (0.00008) | +2.5 |
+| wta | 2025 | Platt per tourney_level, shrunk (lam=200) | 24063 | 0.5429 (0.0032) | 0.1839 | 1.86% | +0.00007 (0.00006) | +1.1 |
+| wta | 2026 | Platt (current) | 18856 | 0.5485 (0.0034) | 0.1862 | 0.86% | - | - |
+| wta | 2026 | Isotonic | 18856 | 0.5493 (0.0034) | 0.1864 | 1.45% | +0.00082 (0.00032) | +2.6 |
+| wta | 2026 | Beta | 18856 | 0.5485 (0.0034) | 0.1862 | 0.84% | +0.00002 (0.00002) | +0.7 |
+| wta | 2026 | Platt per level group | 18856 | 0.5485 (0.0034) | 0.1862 | 1.17% | -0.00003 (0.00012) | -0.3 |
+| wta | 2026 | Platt per tourney_level, shrunk (lam=200) | 18856 | 0.5485 (0.0034) | 0.1862 | 1.09% | +0.00005 (0.00010) | +0.5 |
+| atp | 2025 | Platt (current) | 32033 | 0.5634 (0.0025) | 0.1921 | 1.03% | - | - |
+| atp | 2025 | Isotonic | 32033 | 0.5639 (0.0026) | 0.1923 | 0.85% | +0.00050 (0.00019) | +2.7 |
+| atp | 2025 | Beta | 32033 | 0.5634 (0.0025) | 0.1921 | 1.00% | +0.00002 (0.00004) | +0.5 |
+| atp | 2025 | Platt per level group | 32033 | 0.5634 (0.0025) | 0.1921 | 0.94% | -0.00002 (0.00007) | -0.3 |
+| atp | 2025 | Platt per tourney_level, shrunk (lam=200) | 32033 | 0.5634 (0.0025) | 0.1921 | 0.92% | -0.00002 (0.00008) | -0.2 |
+| atp | 2026 | Platt (current) | 27820 | 0.5642 (0.0026) | 0.1920 | 0.61% | - | - |
+| atp | 2026 | Isotonic | 27820 | 0.5652 (0.0027) | 0.1922 | 0.97% | +0.00103 (0.00034) | +3.1 |
+| atp | 2026 | Beta | 27820 | 0.5642 (0.0026) | 0.1920 | 0.60% | -0.00000 (0.00001) | -0.4 |
+| atp | 2026 | Platt per level group | 27820 | 0.5645 (0.0026) | 0.1921 | 0.70% | +0.00031 (0.00011) | +2.8 |
+| atp | 2026 | Platt per tourney_level, shrunk (lam=200) | 27820 | 0.5644 (0.0026) | 0.1921 | 0.72% | +0.00023 (0.00009) | +2.5 |
+| pooled | 2025 | Platt (current) | 56096 | 0.5546 (0.0020) | 0.1885 | 1.23% | - | - |
+| pooled | 2025 | Isotonic | 56096 | 0.5553 (0.0020) | 0.1887 | 1.05% | +0.00074 (0.00018) | +4.0 |
+| pooled | 2025 | Beta | 56096 | 0.5546 (0.0020) | 0.1886 | 1.22% | +0.00001 (0.00002) | +0.6 |
+| pooled | 2025 | Platt per level group | 56096 | 0.5547 (0.0020) | 0.1886 | 1.21% | +0.00008 (0.00006) | +1.4 |
+| pooled | 2025 | Platt per tourney_level, shrunk (lam=200) | 56096 | 0.5546 (0.0020) | 0.1885 | 1.18% | +0.00002 (0.00006) | +0.3 |
+| pooled | 2026 | Platt (current) | 46676 | 0.5578 (0.0021) | 0.1897 | 0.51% | - | - |
+| pooled | 2026 | Isotonic | 46676 | 0.5588 (0.0021) | 0.1899 | 0.79% | +0.00095 (0.00024) | +4.0 |
+| pooled | 2026 | Beta | 46676 | 0.5578 (0.0021) | 0.1897 | 0.50% | +0.00000 (0.00001) | +0.5 |
+| pooled | 2026 | Platt per level group | 46676 | 0.5580 (0.0021) | 0.1897 | 0.59% | +0.00017 (0.00008) | +2.1 |
+| pooled | 2026 | Platt per tourney_level, shrunk (lam=200) | 46676 | 0.5580 (0.0021) | 0.1897 | 0.60% | +0.00016 (0.00007) | +2.3 |
+
+### 2b. Calibrators by level group, pooled tours (log-loss, ECE)
+
+| year | group | Platt (current) | Isotonic | Beta | Platt per level group | Platt per tourney_level, shrunk (lam=200) |
+|---|---|---|---|---|---|---|
+| 2025 | ITF | 0.5313 / 1.01% | 0.5322 / 1.01% | 0.5313 / 1.05% | 0.5313 / 1.03% | 0.5314 / 0.94% |
+| 2025 | Chall/125 | 0.5940 / 1.92% | 0.5943 / 1.89% | 0.5940 / 1.97% | 0.5940 / 1.51% | 0.5939 / 1.78% |
+| 2025 | Tour | 0.5972 / 2.30% | 0.5978 / 2.28% | 0.5972 / 2.30% | 0.5978 / 2.46% | 0.5972 / 2.16% |
+| 2026 | ITF | 0.5438 / 0.71% | 0.5448 / 1.00% | 0.5438 / 0.68% | 0.5438 / 0.79% | 0.5439 / 0.94% |
+| 2026 | Chall/125 | 0.5795 / 1.21% | 0.5806 / 1.38% | 0.5795 / 1.20% | 0.5800 / 1.82% | 0.5799 / 1.72% |
+| 2026 | Tour | 0.5839 / 1.30% | 0.5844 / 1.76% | 0.5839 / 1.41% | 0.5842 / 2.10% | 0.5842 / 1.72% |
+
+## 3. Betting at the six Serbian books, 2026 (opening price, best of 6, blend EV>5%, odds<=5, no ITF)
+
+Files: calib_exp/cx_refit_six.parquet, calib_exp/out_cx_refit/ (2026 rows of the 2025-2026 preds, matches symlinked). Logs: eval_levels_refit.log, eval_books_refit.log, bet_side_refit.txt.
+
+```
+cx_refit: no-ITF EV>5% odds<=5: 1817 bets ROI +16.8% lower90 +12.7% (SE 2.5pp)
+   EV>5%:  n=1817 mean blend P 57.0% vs won 60.3%  (SE of won 1.1pp)
+   EV>10%: n=499  mean blend P 53.8% vs won 54.1%  (SE of won 2.2pp)
+   EV>15%: n=179  mean blend P 51.5% vs won 54.2%  (SE of won 3.7pp)
+r6_v3 baseline: 1869 bets ROI +17.2% lower90 +13.2% (SE 2.4pp); EV>5% P 57.8% vs won 61.1%; EV>10% 54.1% vs 54.5%; EV>15% 53.2% vs 50.0%
+```
+
+eval_books (all levels incl. ITF, same rule): cx_refit 5119 bets ROI +9.10% (lo 6.63%) vs r6_v3 5261 bets +9.47% (lo 7.06%). Bets/ROI are the same within noise (difference 0.4pp vs SE ~2.5pp).
+Bet-side calibration is about as good as baseline (P under won by 3.3pp at EV>5% vs 3.3pp baseline; EV>10% -0.3pp vs -0.4pp). Check only, not a selection criterion.
+
+## 4. Run notes
+
+- Command exactly as queue.md V2 (--refit --save-va --no-log), wta then atp, one at a time via run_cx_refit.sh, no failures. Chosen iterations (best_iter -> refit trees, 2025 / 2026): WTA xgb 315->355 / 435->464, lgbm 298->335 / 380->405; ATP xgb 288->314 / 341->368, lgbm 422->458 / 328->353 (full logs cx_refit_wta.log, cx_refit_atp.log). Train time: wta 2025 1040 s, wta 2026 2252 s (cumulative), atp 2025 1124 s, atp 2026 2324 s.
+- Preds: out_v3/preds3_{wta,atp}_ens_cx_refit_lower_2025-2026{,_va}.parquet. Platt refit from the _va file reproduces train3 p exactly (max diff 0).
+- Train = 2010..Y-2 for early stopping/Platt, then refit on 2010..Y-1 with trees scaled by (n_train+n_val)/n_train, same Platt. Paired dLL < 0 means cx_refit is better. Baseline for 2025 = cx_base, 2026 = r6_v3.
+- Post-hoc calibrators on the 1-year validation: none beats Platt (isotonic worse, z=+4.0 both years pooled; Beta equal; per-level-group Platt and shrunk per-tourney_level Platt equal or slightly worse).
+- The refit model's p_raw has a slightly different distribution than the one the Platt was fitted on (the Platt is applied unchanged), yet ECE stays about as good (see below).
+
+## 5. Selection rule
+
+Pooled log-loss vs baseline: 2025 -0.00047 (SE 0.00015, z=-3.1), 2026 -0.00044 (SE 0.00017, z=-2.7): lower on BOTH years, each > 2 SE. By tour: WTA 2025 -0.00073 (z=-3.1), 2026 -0.00014 (z=-0.5); ATP 2025 -0.00027 (z=-1.4), 2026 -0.00064 (z=-3.1). Gain is largest in Challenger/WTA125 (pooled -0.0013, z=-4.1 / -4.0) and zero for tour events.
+ECE pooled: 2025 1.23% vs 1.03% baseline (worse by 0.20pp), 2026 0.51% vs 0.69% (better by 0.18pp); mean over both years equal (0.90% vs 0.88%). The ECE clause is therefore mixed, not clearly "not worse".
+Verdict: PASSES the log-loss part of the rule on both years; the ECE clause is satisfied only in 2026 (2025 ECE +0.20pp, within bin-noise of about 0.2-0.3pp). Strictly applied, the ECE clause is not met in 2025; this is a judgement call for the report agent. Betting ROI unchanged (+16.8% vs +17.2%, inside noise).
+
+==================================================================
+== cx_hl8.md
+==================================================================
+# cx_hl8: model alone (columns: n | log-loss (SE) | Brier | ECE 5-pt bins, bins n>=30)
+
+## 1. Model alone, calibrated p (Platt on previous year)
+
+| tour | year | group | n | log-loss (SE) | Brier | ECE | paired dLL vs baseline (2025: cx_base, 2026: r6_v3) (SE) |
+|---|---|---|---|---|---|---|---|
+| wta | 2025 | all | 24063 | 0.5437 (0.0032) | 0.1842 | 1.54% | +0.00009 (0.00023) z=+0.4 n=24063, dECE=-0.10pp, max|dp|=0.0757 |
+| wta | 2025 | ITF | 17879 | 0.5305 (0.0038) | 0.1787 | 1.64% | -0.00018 (0.00026) z=-0.7 n=17879, dECE=-0.01pp, max|dp|=0.0757 |
+| wta | 2025 | Chall/125 | 2194 | 0.5637 (0.0092) | 0.1933 | 2.94% | +0.00322 (0.00082) z=+3.9 n=2194, dECE=-0.36pp, max|dp|=0.0752 |
+| wta | 2025 | Tour | 3990 | 0.5919 (0.0067) | 0.2041 | 2.42% | -0.00040 (0.00057) z=-0.7 n=3990, dECE=+0.12pp, max|dp|=0.0664 |
+| wta | 2026 | all | 18856 | 0.5490 (0.0034) | 0.1863 | 1.16% | +0.00035 (0.00025) z=+1.4 n=18856, dECE=-0.25pp, max|dp|=0.0848 |
+| wta | 2026 | ITF | 14369 | 0.5423 (0.0041) | 0.1835 | 1.26% | +0.00020 (0.00028) z=+0.7 n=14369, dECE=-0.41pp, max|dp|=0.0848 |
+| wta | 2026 | Chall/125 | 1287 | 0.5556 (0.0112) | 0.1900 | 4.52% | +0.00261 (0.00100) z=+2.6 n=1287, dECE=-1.02pp, max|dp|=0.0687 |
+| wta | 2026 | Tour | 3200 | 0.5764 (0.0071) | 0.1973 | 2.30% | +0.00013 (0.00062) z=+0.2 n=3200, dECE=-0.34pp, max|dp|=0.0763 |
+| atp | 2025 | all | 32033 | 0.5642 (0.0025) | 0.1923 | 0.74% | +0.00051 (0.00019) z=+2.6 n=32033, dECE=-0.24pp, max|dp|=0.0869 |
+| atp | 2025 | ITF | 17808 | 0.5331 (0.0036) | 0.1791 | 0.94% | +0.00063 (0.00027) z=+2.4 n=17808, dECE=-0.06pp, max|dp|=0.0853 |
+| atp | 2025 | Chall/125 | 10125 | 0.6031 (0.0042) | 0.2089 | 1.77% | +0.00031 (0.00034) z=+0.9 n=10125, dECE=-0.38pp, max|dp|=0.0749 |
+| atp | 2025 | Tour | 4100 | 0.6028 (0.0062) | 0.2089 | 2.18% | +0.00043 (0.00052) z=+0.8 n=4100, dECE=+0.00pp, max|dp|=0.0869 |
+| atp | 2026 | all | 27820 | 0.5649 (0.0027) | 0.1922 | 0.67% | +0.00007 (0.00020) z=+0.4 n=27820, dECE=+0.15pp, max|dp|=0.0851 |
+| atp | 2026 | ITF | 14781 | 0.5461 (0.0039) | 0.1840 | 1.08% | +0.00021 (0.00028) z=+0.7 n=14781, dECE=+0.04pp, max|dp|=0.0851 |
+| atp | 2026 | Chall/125 | 9629 | 0.5842 (0.0041) | 0.2007 | 1.32% | -0.00035 (0.00031) z=-1.1 n=9629, dECE=+0.03pp, max|dp|=0.0773 |
+| atp | 2026 | Tour | 3410 | 0.5918 (0.0064) | 0.2043 | 2.74% | +0.00067 (0.00053) z=+1.3 n=3410, dECE=+0.82pp, max|dp|=0.0538 |
+| pooled | 2025 | all | 56096 | 0.5554 (0.0020) | 0.1889 | 0.95% | +0.00033 (0.00015) z=+2.2 n=56096, dECE=-0.09pp, max|dp|=0.0869 |
+| pooled | 2025 | ITF | 35687 | 0.5318 (0.0026) | 0.1789 | 0.94% | +0.00023 (0.00019) z=+1.2 n=35687, dECE=+0.15pp, max|dp|=0.0853 |
+| pooled | 2025 | Chall/125 | 12319 | 0.5961 (0.0038) | 0.2061 | 1.59% | +0.00083 (0.00031) z=+2.7 n=12319, dECE=-0.21pp, max|dp|=0.0752 |
+| pooled | 2025 | Tour | 8090 | 0.5974 (0.0045) | 0.2066 | 1.37% | +0.00002 (0.00039) z=+0.1 n=8090, dECE=-0.38pp, max|dp|=0.0869 |
+| pooled | 2026 | all | 46676 | 0.5585 (0.0021) | 0.1898 | 0.58% | +0.00019 (0.00015) z=+1.2 n=46676, dECE=-0.11pp, max|dp|=0.0851 |
+| pooled | 2026 | ITF | 29150 | 0.5442 (0.0028) | 0.1838 | 0.84% | +0.00020 (0.00020) z=+1.0 n=29150, dECE=-0.29pp, max|dp|=0.0851 |
+| pooled | 2026 | Chall/125 | 10916 | 0.5808 (0.0039) | 0.1994 | 1.29% | +0.00000 (0.00030) z=+0.0 n=10916, dECE=-0.03pp, max|dp|=0.0773 |
+| pooled | 2026 | Tour | 6610 | 0.5843 (0.0048) | 0.2009 | 1.95% | +0.00041 (0.00041) z=+1.0 n=6610, dECE=+0.29pp, max|dp|=0.0763 |
+
+## 2. Post-hoc calibrators fitted on the saved validation raw preds (test year Y <- validation year Y-1), applied to p_raw of test year Y
+
+Check: refitted Platt vs train3 p: max|diff| = 0.00e+00
+
+| tour | year | calibrator | n | log-loss (SE) | Brier | ECE | paired dLL vs Platt (SE) | z |
+|---|---|---|---|---|---|---|---|---|
+| wta | 2025 | Platt (current) | 24063 | 0.5437 (0.0032) | 0.1842 | 1.54% | - | - |
+| wta | 2025 | Isotonic | 24063 | 0.5444 (0.0032) | 0.1843 | 1.55% | +0.00072 (0.00032) | +2.2 |
+| wta | 2025 | Beta | 24063 | 0.5437 (0.0032) | 0.1842 | 1.50% | +0.00001 (0.00002) | +0.5 |
+| wta | 2025 | Platt per level group | 24063 | 0.5439 (0.0032) | 0.1843 | 1.49% | +0.00019 (0.00008) | +2.3 |
+| wta | 2025 | Platt per tourney_level, shrunk (lam=200) | 24063 | 0.5437 (0.0032) | 0.1843 | 1.57% | +0.00006 (0.00006) | +1.0 |
+| wta | 2026 | Platt (current) | 18856 | 0.5490 (0.0034) | 0.1863 | 1.16% | - | - |
+| wta | 2026 | Isotonic | 18856 | 0.5499 (0.0035) | 0.1866 | 1.35% | +0.00095 (0.00031) | +3.0 |
+| wta | 2026 | Beta | 18856 | 0.5490 (0.0034) | 0.1863 | 1.10% | +0.00002 (0.00003) | +0.6 |
+| wta | 2026 | Platt per level group | 18856 | 0.5489 (0.0034) | 0.1863 | 0.94% | -0.00010 (0.00013) | -0.8 |
+| wta | 2026 | Platt per tourney_level, shrunk (lam=200) | 18856 | 0.5490 (0.0034) | 0.1863 | 1.04% | +0.00000 (0.00010) | +0.0 |
+| atp | 2025 | Platt (current) | 32033 | 0.5642 (0.0025) | 0.1923 | 0.74% | - | - |
+| atp | 2025 | Isotonic | 32033 | 0.5647 (0.0025) | 0.1925 | 1.06% | +0.00051 (0.00022) | +2.3 |
+| atp | 2025 | Beta | 32033 | 0.5642 (0.0025) | 0.1923 | 0.78% | +0.00002 (0.00004) | +0.7 |
+| atp | 2025 | Platt per level group | 32033 | 0.5642 (0.0025) | 0.1923 | 0.77% | -0.00002 (0.00007) | -0.2 |
+| atp | 2025 | Platt per tourney_level, shrunk (lam=200) | 32033 | 0.5641 (0.0025) | 0.1923 | 0.77% | -0.00003 (0.00008) | -0.4 |
+| atp | 2026 | Platt (current) | 27820 | 0.5649 (0.0027) | 0.1922 | 0.67% | - | - |
+| atp | 2026 | Isotonic | 27820 | 0.5658 (0.0027) | 0.1924 | 1.08% | +0.00092 (0.00030) | +3.1 |
+| atp | 2026 | Beta | 27820 | 0.5649 (0.0027) | 0.1922 | 0.71% | -0.00000 (0.00001) | -0.5 |
+| atp | 2026 | Platt per level group | 27820 | 0.5652 (0.0027) | 0.1923 | 0.81% | +0.00033 (0.00011) | +2.9 |
+| atp | 2026 | Platt per tourney_level, shrunk (lam=200) | 27820 | 0.5651 (0.0027) | 0.1923 | 0.84% | +0.00025 (0.00010) | +2.5 |
+| pooled | 2025 | Platt (current) | 56096 | 0.5554 (0.0020) | 0.1889 | 0.95% | - | - |
+| pooled | 2025 | Isotonic | 56096 | 0.5560 (0.0020) | 0.1890 | 1.01% | +0.00060 (0.00019) | +3.2 |
+| pooled | 2025 | Beta | 56096 | 0.5554 (0.0020) | 0.1889 | 0.93% | +0.00002 (0.00002) | +0.8 |
+| pooled | 2025 | Platt per level group | 56096 | 0.5554 (0.0020) | 0.1889 | 0.94% | +0.00007 (0.00005) | +1.3 |
+| pooled | 2025 | Platt per tourney_level, shrunk (lam=200) | 56096 | 0.5554 (0.0020) | 0.1889 | 0.94% | +0.00001 (0.00005) | +0.2 |
+| pooled | 2026 | Platt (current) | 46676 | 0.5585 (0.0021) | 0.1898 | 0.58% | - | - |
+| pooled | 2026 | Isotonic | 46676 | 0.5594 (0.0021) | 0.1900 | 0.95% | +0.00093 (0.00022) | +4.3 |
+| pooled | 2026 | Beta | 46676 | 0.5585 (0.0021) | 0.1898 | 0.61% | +0.00001 (0.00001) | +0.5 |
+| pooled | 2026 | Platt per level group | 46676 | 0.5586 (0.0021) | 0.1899 | 0.60% | +0.00016 (0.00008) | +1.8 |
+| pooled | 2026 | Platt per tourney_level, shrunk (lam=200) | 46676 | 0.5586 (0.0021) | 0.1899 | 0.70% | +0.00015 (0.00007) | +2.1 |
+
+### 2b. Calibrators by level group, pooled tours (log-loss, ECE)
+
+| year | group | Platt (current) | Isotonic | Beta | Platt per level group | Platt per tourney_level, shrunk (lam=200) |
+|---|---|---|---|---|---|---|
+| 2025 | ITF | 0.5318 / 0.94% | 0.5324 / 0.96% | 0.5318 / 0.88% | 0.5318 / 0.96% | 0.5318 / 0.95% |
+| 2025 | Chall/125 | 0.5961 / 1.59% | 0.5968 / 1.66% | 0.5962 / 1.61% | 0.5961 / 1.38% | 0.5961 / 1.47% |
+| 2025 | Tour | 0.5974 / 1.37% | 0.5980 / 2.00% | 0.5974 / 1.49% | 0.5980 / 1.76% | 0.5973 / 1.76% |
+| 2026 | ITF | 0.5442 / 0.84% | 0.5453 / 1.22% | 0.5442 / 0.84% | 0.5443 / 0.96% | 0.5443 / 0.95% |
+| 2026 | Chall/125 | 0.5808 / 1.29% | 0.5819 / 1.70% | 0.5808 / 1.29% | 0.5812 / 1.65% | 0.5811 / 1.66% |
+| 2026 | Tour | 0.5843 / 1.95% | 0.5845 / 2.13% | 0.5843 / 2.00% | 0.5844 / 2.25% | 0.5845 / 2.11% |
+
+## 3. Betting at the six Serbian books, 2026 (opening price, current blend, no ITF, EV>5% odds<=5)
+
+Files: calib_exp/out_cx_hl8/preds3_{wta,atp}_ens_cx_hl8_lower_2026.parquet (year==2026 subset, same index as r6_v3), calib_exp/cx_hl8_six.parquet.
+
+```
+cx_hl8: no-ITF EV>5% odds<=5: 1842 bets ROI +16.7% lower90 +12.7% (SE 2.4pp)
+   EV>5%:  n=1842 mean blend P 57.5% vs won 60.8%  (SE of won 1.1pp)
+   EV>10%: n=506  mean blend P 54.3% vs won 54.9%  (SE of won 2.2pp)
+   EV>15%: n=195  mean blend P 52.6% vs won 50.8%  (SE of won 3.6pp)
+r6_v3 baseline: 1869 bets ROI +17.2% lower90 +13.2%; EV>5% P 57.8% vs won 61.1%; EV>10% 54.1% vs 54.5%; EV>15% 53.2% vs 50.0%
+```
+eval_books (all levels incl. ITF): cx_hl8 5227 bets ROI +8.91% (lo 6.49%) vs r6_v3 5261 bets +9.47% (lo 7.06%). Difference 0.6pp vs SE ~2.5pp: noise. Check only, not a selection criterion.
+
+## 4. Run notes
+
+- Command as queue.md V3 (--halflife=8 --save-va --no-log), wta then atp, one at a time via run_cx_hl8.sh, no failures. Weights 0.5^((Y-year)/8) applied to XGB, LGBM and the logistic anchor (train rows only; the validation year is unweighted).
+- Best iterations (2025 / 2026): WTA xgb 355/382, lgbm 213/257; ATP xgb 212/188, lgbm 176/194. Train time: wta 2025 712 s, 2026 1358 s (cumulative); atp 2025 490 s, 2026 985 s.
+- Preds: out_v3/preds3_{wta,atp}_ens_cx_hl8_lower_2025-2026{,_va}.parquet. Platt refit from the _va file reproduces train3 p exactly (max diff 0).
+- Paired dLL > 0 means cx_hl8 is worse. Baseline for 2025 = cx_base, 2026 = r6_v3.
+- Post-hoc calibrators on cx_hl8: none beats Platt (isotonic worse, z=+3.2 / +4.3 pooled; Beta equal; per-level Platt equal or worse).
+
+## 5. Selection rule
+
+Pooled log-loss vs baseline: 2025 +0.00033 (SE 0.00015, z=+2.2, worse), 2026 +0.00019 (SE 0.00015, z=+1.2, worse). By tour: WTA 2025 +0.00009, 2026 +0.00035; ATP 2025 +0.00051 (z=+2.6), 2026 +0.00007. Largest loss in WTA Challenger/125 (+0.0032 / +0.0026, z=+3.9 / +2.6).
+ECE pooled: 2025 0.95% (-0.09pp), 2026 0.58% (-0.11pp), slightly lower but inside bin noise.
+Verdict: FAILS. Log-loss is higher on both years (significantly worse in 2025), so recency weighting with half-life 8 does not help; ECE alone does not rescue it. Betting ROI unchanged (+16.7% vs +17.2%, noise).
+
+==================================================================
+== cx_cal2refit.md
+==================================================================
+# cx_cal2refit: model alone (columns: n | log-loss (SE) | Brier | ECE 5-pt bins, bins n>=30)
+
+## 1. Model alone, calibrated p (Platt on previous year)
+
+| tour | year | group | n | log-loss (SE) | Brier | ECE | paired dLL vs baseline (2025: cx_base, 2026: r6_v3) (SE) |
+|---|---|---|---|---|---|---|---|
+| wta | 2025 | all | 24063 | 0.5426 (0.0032) | 0.1838 | 1.75% | -0.00096 (0.00024) z=-4.0 n=24063, dECE=+0.11pp, max|dp|=0.1079 |
+| wta | 2025 | ITF | 17879 | 0.5300 (0.0039) | 0.1785 | 1.64% | -0.00068 (0.00027) z=-2.5 n=17879, dECE=-0.01pp, max|dp|=0.0889 |
+| wta | 2025 | Chall/125 | 2194 | 0.5543 (0.0092) | 0.1893 | 4.43% | -0.00627 (0.00082) z=-7.6 n=2194, dECE=+1.13pp, max|dp|=0.1079 |
+| wta | 2025 | Tour | 3990 | 0.5929 (0.0068) | 0.2045 | 3.13% | +0.00067 (0.00059) z=+1.1 n=3990, dECE=+0.83pp, max|dp|=0.0699 |
+| wta | 2026 | all | 18856 | 0.5492 (0.0035) | 0.1864 | 1.65% | +0.00056 (0.00032) z=+1.8 n=18856, dECE=+0.24pp, max|dp|=0.1536 |
+| wta | 2026 | ITF | 14369 | 0.5434 (0.0042) | 0.1839 | 2.12% | +0.00128 (0.00037) z=+3.5 n=14369, dECE=+0.45pp, max|dp|=0.0903 |
+| wta | 2026 | Chall/125 | 1287 | 0.5459 (0.0115) | 0.1863 | 4.42% | -0.00705 (0.00118) z=-6.0 n=1287, dECE=-1.11pp, max|dp|=0.1536 |
+| wta | 2026 | Tour | 3200 | 0.5767 (0.0074) | 0.1976 | 3.26% | +0.00040 (0.00073) z=+0.5 n=3200, dECE=+0.62pp, max|dp|=0.1075 |
+| atp | 2025 | all | 32033 | 0.5633 (0.0024) | 0.1920 | 0.94% | -0.00033 (0.00022) z=-1.5 n=32033, dECE=-0.04pp, max|dp|=0.1047 |
+| atp | 2025 | ITF | 17808 | 0.5327 (0.0035) | 0.1790 | 1.16% | +0.00023 (0.00030) z=+0.8 n=17808, dECE=+0.16pp, max|dp|=0.1047 |
+| atp | 2025 | Chall/125 | 10125 | 0.6020 (0.0040) | 0.2084 | 1.80% | -0.00086 (0.00040) z=-2.2 n=10125, dECE=-0.35pp, max|dp|=0.0715 |
+| atp | 2025 | Tour | 4100 | 0.6009 (0.0060) | 0.2081 | 2.10% | -0.00149 (0.00059) z=-2.5 n=4100, dECE=-0.08pp, max|dp|=0.0727 |
+| atp | 2026 | all | 27820 | 0.5641 (0.0027) | 0.1920 | 0.57% | -0.00070 (0.00021) z=-3.4 n=27820, dECE=+0.05pp, max|dp|=0.0894 |
+| atp | 2026 | ITF | 14781 | 0.5452 (0.0039) | 0.1837 | 0.94% | -0.00072 (0.00030) z=-2.4 n=14781, dECE=-0.10pp, max|dp|=0.0894 |
+| atp | 2026 | Chall/125 | 9629 | 0.5839 (0.0041) | 0.2006 | 1.20% | -0.00063 (0.00032) z=-2.0 n=9629, dECE=-0.09pp, max|dp|=0.0722 |
+| atp | 2026 | Tour | 3410 | 0.5902 (0.0065) | 0.2037 | 1.83% | -0.00084 (0.00052) z=-1.6 n=3410, dECE=-0.09pp, max|dp|=0.0613 |
+| pooled | 2025 | all | 56096 | 0.5544 (0.0020) | 0.1885 | 0.91% | -0.00060 (0.00016) z=-3.7 n=56096, dECE=-0.12pp, max|dp|=0.1079 |
+| pooled | 2025 | ITF | 35687 | 0.5313 (0.0026) | 0.1787 | 0.73% | -0.00022 (0.00020) z=-1.1 n=35687, dECE=-0.06pp, max|dp|=0.1047 |
+| pooled | 2025 | Chall/125 | 12319 | 0.5935 (0.0037) | 0.2050 | 1.89% | -0.00183 (0.00036) z=-5.1 n=12319, dECE=+0.08pp, max|dp|=0.1079 |
+| pooled | 2025 | Tour | 8090 | 0.5970 (0.0045) | 0.2063 | 2.33% | -0.00042 (0.00042) z=-1.0 n=8090, dECE=+0.59pp, max|dp|=0.0727 |
+| pooled | 2026 | all | 46676 | 0.5581 (0.0021) | 0.1897 | 0.70% | -0.00019 (0.00018) z=-1.1 n=46676, dECE=+0.01pp, max|dp|=0.1536 |
+| pooled | 2026 | ITF | 29150 | 0.5443 (0.0029) | 0.1838 | 1.08% | +0.00027 (0.00024) z=+1.1 n=29150, dECE=-0.05pp, max|dp|=0.0903 |
+| pooled | 2026 | Chall/125 | 10916 | 0.5794 (0.0039) | 0.1989 | 1.03% | -0.00139 (0.00032) z=-4.4 n=10916, dECE=-0.29pp, max|dp|=0.1536 |
+| pooled | 2026 | Tour | 6610 | 0.5837 (0.0049) | 0.2007 | 1.84% | -0.00024 (0.00044) z=-0.5 n=6610, dECE=+0.18pp, max|dp|=0.1075 |
+
+## 2. Post-hoc calibrators fitted on the saved validation raw preds (test year Y <- validation year Y-1), applied to p_raw of test year Y
+
+Check: refitted Platt vs train3 p: max|diff| = 0.00e+00
+
+| tour | year | calibrator | n | log-loss (SE) | Brier | ECE | paired dLL vs Platt (SE) | z |
+|---|---|---|---|---|---|---|---|---|
+| wta | 2025 | Platt (current) | 24063 | 0.5426 (0.0032) | 0.1838 | 1.75% | - | - |
+| wta | 2025 | Isotonic | 24063 | 0.5436 (0.0033) | 0.1839 | 1.67% | +0.00100 (0.00031) | +3.2 |
+| wta | 2025 | Beta | 24063 | 0.5426 (0.0032) | 0.1838 | 1.75% | -0.00000 (0.00000) | -0.1 |
+| wta | 2025 | Platt per level group | 24063 | 0.5426 (0.0032) | 0.1838 | 1.81% | +0.00001 (0.00010) | +0.1 |
+| wta | 2025 | Platt per tourney_level, shrunk (lam=200) | 24063 | 0.5427 (0.0032) | 0.1838 | 1.77% | +0.00004 (0.00008) | +0.5 |
+| wta | 2026 | Platt (current) | 18856 | 0.5492 (0.0035) | 0.1864 | 1.65% | - | - |
+| wta | 2026 | Isotonic | 18856 | 0.5497 (0.0036) | 0.1865 | 1.63% | +0.00050 (0.00024) | +2.1 |
+| wta | 2026 | Beta | 18856 | 0.5492 (0.0035) | 0.1864 | 1.63% | -0.00000 (0.00000) | -0.1 |
+| wta | 2026 | Platt per level group | 18856 | 0.5492 (0.0035) | 0.1864 | 1.67% | +0.00000 (0.00003) | +0.1 |
+| wta | 2026 | Platt per tourney_level, shrunk (lam=200) | 18856 | 0.5491 (0.0035) | 0.1864 | 1.59% | -0.00008 (0.00006) | -1.2 |
+| atp | 2025 | Platt (current) | 32033 | 0.5633 (0.0024) | 0.1920 | 0.94% | - | - |
+| atp | 2025 | Isotonic | 32033 | 0.5634 (0.0025) | 0.1921 | 0.99% | +0.00006 (0.00014) | +0.4 |
+| atp | 2025 | Beta | 32033 | 0.5633 (0.0024) | 0.1921 | 0.94% | +0.00002 (0.00004) | +0.5 |
+| atp | 2025 | Platt per level group | 32033 | 0.5633 (0.0024) | 0.1920 | 0.88% | -0.00001 (0.00005) | -0.1 |
+| atp | 2025 | Platt per tourney_level, shrunk (lam=200) | 32033 | 0.5633 (0.0024) | 0.1920 | 1.00% | -0.00000 (0.00008) | -0.0 |
+| atp | 2026 | Platt (current) | 27820 | 0.5641 (0.0027) | 0.1920 | 0.57% | - | - |
+| atp | 2026 | Isotonic | 27820 | 0.5647 (0.0027) | 0.1921 | 1.01% | +0.00054 (0.00021) | +2.5 |
+| atp | 2026 | Beta | 27820 | 0.5641 (0.0027) | 0.1920 | 0.48% | -0.00000 (0.00002) | -0.1 |
+| atp | 2026 | Platt per level group | 27820 | 0.5644 (0.0027) | 0.1921 | 0.74% | +0.00026 (0.00009) | +2.9 |
+| atp | 2026 | Platt per tourney_level, shrunk (lam=200) | 27820 | 0.5644 (0.0027) | 0.1920 | 0.60% | +0.00024 (0.00009) | +2.6 |
+| pooled | 2025 | Platt (current) | 56096 | 0.5544 (0.0020) | 0.1885 | 0.91% | - | - |
+| pooled | 2025 | Isotonic | 56096 | 0.5549 (0.0020) | 0.1886 | 0.97% | +0.00046 (0.00016) | +3.0 |
+| pooled | 2025 | Beta | 56096 | 0.5545 (0.0020) | 0.1885 | 0.94% | +0.00001 (0.00002) | +0.5 |
+| pooled | 2025 | Platt per level group | 56096 | 0.5544 (0.0020) | 0.1885 | 0.92% | -0.00000 (0.00005) | -0.0 |
+| pooled | 2025 | Platt per tourney_level, shrunk (lam=200) | 56096 | 0.5545 (0.0020) | 0.1885 | 0.92% | +0.00002 (0.00006) | +0.3 |
+| pooled | 2026 | Platt (current) | 46676 | 0.5581 (0.0021) | 0.1897 | 0.70% | - | - |
+| pooled | 2026 | Isotonic | 46676 | 0.5586 (0.0022) | 0.1899 | 0.97% | +0.00053 (0.00016) | +3.3 |
+| pooled | 2026 | Beta | 46676 | 0.5581 (0.0021) | 0.1897 | 0.71% | -0.00000 (0.00001) | -0.1 |
+| pooled | 2026 | Platt per level group | 46676 | 0.5582 (0.0021) | 0.1898 | 0.69% | +0.00016 (0.00006) | +2.9 |
+| pooled | 2026 | Platt per tourney_level, shrunk (lam=200) | 46676 | 0.5582 (0.0021) | 0.1898 | 0.68% | +0.00011 (0.00006) | +1.8 |
+
+### 2b. Calibrators by level group, pooled tours (log-loss, ECE)
+
+| year | group | Platt (current) | Isotonic | Beta | Platt per level group | Platt per tourney_level, shrunk (lam=200) |
+|---|---|---|---|---|---|---|
+| 2025 | ITF | 0.5313 / 0.73% | 0.5320 / 0.80% | 0.5313 / 0.69% | 0.5312 / 0.76% | 0.5314 / 0.80% |
+| 2025 | Chall/125 | 0.5935 / 1.89% | 0.5933 / 1.50% | 0.5935 / 1.83% | 0.5936 / 1.51% | 0.5935 / 1.49% |
+| 2025 | Tour | 0.5970 / 2.33% | 0.5974 / 2.16% | 0.5970 / 2.32% | 0.5972 / 1.97% | 0.5969 / 2.23% |
+| 2026 | ITF | 0.5443 / 1.08% | 0.5448 / 1.44% | 0.5443 / 1.08% | 0.5444 / 1.22% | 0.5443 / 1.20% |
+| 2026 | Chall/125 | 0.5794 / 1.03% | 0.5800 / 1.58% | 0.5794 / 1.14% | 0.5799 / 1.41% | 0.5798 / 1.37% |
+| 2026 | Tour | 0.5837 / 1.84% | 0.5841 / 1.39% | 0.5837 / 1.75% | 0.5837 / 1.80% | 0.5837 / 1.56% |
+
+## 3. Betting at the six Serbian books, 2026 (opening price, best of 6, blend EV>5%, odds<=5, no ITF)
+
+Files: calib_exp/out_cx_cal2refit/preds3_{wta,atp}_ens_cx_cal2refit_lower_2026.parquet (year==2026 subset, same index as r6_v3, matches symlinked), calib_exp/cx_cal2refit_six.parquet. Logs: eval_levels_cal2refit.log, eval_books_cal2refit.log, bet_side_cal2refit.txt.
+
+```
+cx_cal2refit: no-ITF EV>5% odds<=5: 1927 bets ROI +16.4% lower90 +12.5% (SE 2.4pp)
+   EV>5%:  n=1927 mean blend P 58.2% vs won 61.0%  (SE of won 1.1pp)
+   EV>10%: n=521  mean blend P 54.5% vs won 55.1%  (SE of won 2.2pp)
+   EV>15%: n=189  mean blend P 53.0% vs won 53.4%  (SE of won 3.6pp)
+r6_v3 baseline: 1869 bets ROI +17.2% lower90 +13.2%; EV>5% P 57.8% vs won 61.1%; EV>10% 54.1% vs 54.5%; EV>15% 53.2% vs 50.0%
+```
+eval_books (all levels incl. ITF): cx_cal2refit 5518 bets ROI +8.58% (lo 6.26%) vs r6_v3 5261 bets +9.47% (lo 7.06%). Difference 0.9pp vs SE ~2.4pp: noise. Bet-side calibration is marginally better than baseline at EV>10/15% (P 54.5 vs won 55.1; 53.0 vs 53.4), same ~3pp under-prediction at EV>5%. Check only, not a selection criterion.
+
+## 4. Run notes
+
+- Command as queue.md V4 (--calib-years=2 --refit --save-va --no-log), wta then atp, one at a time via run_cx_cal2refit.sh, no failures. Train time: wta 2025 1273 s, 2026 2742 s (cum.); atp 2025 1488 s, 2026 2900 s (cum.).
+- Early-stopped iterations then refit trees (2025 / 2026): WTA xgb 302->383 / 368->442, lgbm 310->392 / 304->364; ATP xgb 439->521 / 289->339, lgbm 293->347 / 360->421.
+- Training 2010..Y-3 + validation Y-2,Y-1 for early stop and Platt, then refit on 2010..Y-1 with the same Platt. Paired dLL < 0 means cx_cal2refit is better. Baseline 2025 = cx_base, 2026 = r6_v3.
+- Platt refit from the _va file reproduces train3 p exactly (max diff 0). Post-hoc calibrators: none beats Platt (isotonic worse, pooled z=+3.0 / +3.3; Beta identical; per-level-group Platt worse in 2026 pooled z=+2.9, driven by ATP; shrunk per-tourney_level equal/worse).
+
+## 5. Selection rule
+
+Pooled log-loss vs baseline (paired, same matches): 2025 -0.00060 (SE 0.00016, z=-3.7, better), 2026 -0.00019 (SE 0.00018, z=-1.1, better but inside noise).
+By tour: WTA 2025 -0.00096 (z=-4.0), 2026 +0.00056 (z=+1.8, worse; ITF +0.00128 z=+3.5, Challenger/125 -0.00705 z=-6.0); ATP 2025 -0.00033 (z=-1.5), 2026 -0.00070 (z=-3.4).
+ECE pooled (5-pt bins): 2025 0.912% vs 1.037% (diff -0.12pp, bootstrap SE 0.12pp); 2026 0.701% vs 0.692% (diff +0.009pp, SE 0.14pp). WTA ECE worse (2025 +0.11pp, 2026 +0.24pp), ATP about equal.
+Verdict: PASSES the literal rule (log-loss lower on both years, >2 SE on 2025, not worse on 2026, ECE not worse beyond noise: 2026 +0.009pp is numerically a hair higher but 1/15 of its SE). The evidence is moderate: the gain is mostly 2025 and mostly Challenger/125 and ATP; WTA 2026 (ITF) is worse, 2026 pooled is inside the noise. Betting ROI unchanged within noise (+16.4% vs +17.2%).
+
+==================================================================
+== blend_report.md
+==================================================================
+# Betting-stage blend: out-of-sample calibration study (r6_v3, 2026, six Serbian books)
+
+Script: `/home/user/pantasocial/research/tennis-ml/blend_cv.py` (usage in its docstring). Full outputs of all three split
+schemes: `calib_exp/cv_all.md` (this folder). Dated bets: `calib_exp/six_open_dated.parquet` (baseline command re-run with the
+current `eval_levels2026.py`, which already writes `fs_mid`, `start`, `book`; rows identical to `rs/six_open.parquet`: same q, o, evb, pnl).
+
+## Setup
+
+- Universe: 2026 sides, six Serbian books, best opening price, no ITF levels (15,25,35,50,75,100): 32,596 sides, 16,298 matches,
+  32,418 with a result (voids kept as pnl 0 in ROI, excluded from log-loss), 2 Jan - 11 Oct 2026 (match start from Flashscore), 372 tournaments.
+- Plan rule: P*odds-1 > 5%, odds <= 5, flat 1 unit. Production reproduces: 1,869 bets, ROI +17.2%, lower 90% +13.2%.
+- Out-of-sample only. Schemes: **half** = fit Jan-May / test Jun-Oct and reverse (pooled, every side scored by a model that did not see it);
+  **block4** = 4 equal time blocks, leave one out; **walk** = expanding window by month from April (causal; 22k sides).
+  External fits (older-model predictions, other bookmakers) are applied unchanged to all 2026 sides.
+- Standard errors: log-loss differences and profit differences clustered by tournament (paired, same sides). ROI se = repo style
+  (std/sqrt n); the tournament-clustered ROI se is within 0.1 pt of it everywhere, so bets are effectively independent.
+- "ROI same N": the variant's top-EV bets, number of bets fixed to the production rule's count in the same block. A variant that merely
+  shifts the P scale up picks more bets at EV>5% and dilutes ROI; this column removes that and shows its EV threshold.
+- Because the production coefficients were fitted on TE Bet365 2014-2024 and never on 2026, the production blend is a clean out-of-sample baseline.
+  Roughly 40 variants were tried on one year of data; treat differences below ~2 se as noise.
+
+## Pooled out-of-sample results, scheme half (32,418 sides)
+
+dLL = log-loss minus production (negative = better), se clustered by tournament, units e-3.
+
+| variant | log-loss | dLL (se) | bets | ROI (se) | lo90 | ROI same N (EV thr) | dProfit vs prod, units (se) |
+|---|---|---|---|---|---|---|---|
+| **production 0.44/0.64/0, best-price Shin** | 0.5809 | 0 | 1,869 | +17.2% (2.4) | +13.2% | +17.2% (5.0%) | 0 |
+| model alone | 0.5842 | +3.25 (0.82) | 8,758 | +7.9% (1.2) | +5.8% | +15.1% | +368 (96) |
+| market alone | 0.5854 | +4.45 (0.55) | 0 | - | - | -0.3% | -321 (46) |
+| a) refit a,b,c | 0.5810 | +0.06 (0.24) | 5,202 | +10.2% (1.5) | +7.8% | +16.8% (10.3%) | +211 (62) |
+| a) refit a,b (c=0) | 0.5815 | +0.55 (0.29) | 3,686 | +12.0% (1.7) | +9.1% | +16.6% (8.7%) | +120 (45) |
+| a) refit a+b=1 with c | 0.5811 | +0.17 (0.28) | 5,079 | +10.6% (1.7) | +7.8% | +16.1% | +218 (73) |
+| a) fit on TE Bet365 2014-25 all segments | 0.5809 | -0.03 (0.02) | 1,941 | +16.0% (2.4) | +12.1% | +16.5% | -10 (11) |
+| a) fit on TE Bet365 2014-25 no ITF | 0.5810 | +0.06 (0.20) | 2,897 | +14.8% (2.2) | +11.2% | +16.4% (7.1%) | +108 (45) |
+| a) fit on BetMGM 2025-26 all segments | 0.5811 | +0.17 (0.12) | 1,902 | +14.9% (2.2) | +11.3% | +14.8% | -38 (23) |
+| a) fit on BetMGM 2025-26 Challenger | 0.5807 | -0.22 (0.15) | 3,382 | +12.4% (1.9) | +9.3% | +16.6% | +100 (46) |
+| b) per tour | 0.5815 | +0.61 (0.30) | 5,266 | +10.1% (1.5) | +7.7% | +15.2% | +213 (61) |
+| b) per level group (Chall+125 / tour) | 0.5815 | +0.64 (0.33) | 5,227 | +10.9% (1.5) | +8.5% | +14.0% | +250 (60) |
+| b) per tour x level group (4 cells) | 0.5824 | +1.52 (0.55) | 5,425 | +10.1% (1.4) | +7.8% | +16.3% | +229 (62) |
+| c) 0.44/0.64 on **mean of per-book Shin** | **0.5801** | **-0.83 (0.11)** | 5,068 | +11.1% (1.5) | +8.6% | +17.5% (10.2%) | +240 (57) |
+| c) 0.44/0.64 on mean logit of per-book Shin | 0.5801 | -0.85 (0.11) | 5,084 | +11.1% (1.5) | +8.6% | +17.6% (10.2%) | +245 (58) |
+| c) 0.44/0.64 on median per-book Shin | 0.5804 | -0.55 (0.22) | 5,088 | +10.9% (1.5) | +8.4% | +15.6% (10.8%) | +233 (61) |
+| c) 0.44/0.64 on Shin of median prices | 0.5803 | -0.60 (0.20) | 5,087 | +11.1% (1.5) | +8.6% | +15.1% (10.7%) | +246 (61) |
+| c) 0.44/0.64 on Shin of best prices of both sides* | 0.5799 | -0.97 (0.06) | 5,014 | +11.4% (1.5) | +8.9% | +17.0% (10.2%) | +249 (56) |
+| c) refit a,b,c on mean Shin | 0.5808 | -0.15 (0.25) | 5,539 | +11.0% (1.4) | +8.6% | +18.5% (11.4%) | +286 (64) |
+| d) production + Platt | 0.5807 | -0.24 (0.12) | 4,439 | +11.8% (1.6) | +9.2% | +18.4% (8.5%) | +201 (55) |
+| d) production + isotonic | 0.5820 | +1.07 (0.47) | 5,276 | +7.9% (1.5) | +5.4% | +12.8% (9.8%) | +98 (66) |
+| d) refit + isotonic | 0.5821 | +1.18 (0.51) | 5,932 | +8.7% (1.4) | +6.3% | +13.0% | +192 (70) |
+| d) odds-dependent weights (log odds interaction) | 0.5810 | +0.07 (0.24) | 5,219 | +10.4% (1.5) | +7.9% | +17.0% | +220 (61) |
+| d) odds-dependent weights (bands 2 / 3.5) | 0.5812 | +0.29 (0.26) | 5,349 | +9.8% (1.5) | +7.3% | +15.3% | +202 (67) |
+
+\* best prices on both sides sum to 0.95 in inverse odds (arbitrage-like), so the pair is normalised proportionally instead of Shin; it needs the bet's own price in the
+market term, which is fine at bet time but harder to explain than the mean. The mean/median variants use only the six books already scraped.
+
+Block4 and walk give the same ranking (full tables in cv_all.md). Production vs consensus-mean, log-loss difference: half -0.83 (0.11);
+block4 -0.83 (0.11); walk -0.94 (0.13) e-3. Refit a,b,c vs production: half +0.06 (0.24), block4 -0.32 (0.14), walk +0.11 (0.35) e-3 (sign flips between schemes).
+
+## a) Are 0.44 / 0.64 still right?
+
+Yes, within noise.
+- Refit on 2026 (a, b, c), whole year in-sample: 0.518 (0.035), 0.569 (0.036), c +0.067 (0.013). Jan-May alone: 0.647/0.481, Jun-Oct alone: 0.422/0.622.
+  The weights move by about 3 se between the halves, so the split is not stable enough to chase.
+- Out-of-sample log-loss of every refit equals the production blend's (differences -0.3 to +0.6e-3, all within 2 se, sign depends on the scheme). The fits from
+  independent data (TE Bet365: 0.445/0.629; BetMGM: 0.438/0.682; Challenger-only subsets 0.50-0.55 / 0.51-0.52) agree with 0.44/0.64 and score the same.
+- The only reliably non-zero refit term is the intercept c = +0.067 (0.013). It is an artefact of best-price selection, see c).
+- Market-only and model-only are both clearly worse (+4.5 and +3.3e-3, 5-6 se), so the blend itself is worth having.
+
+## b) Per tour / per level group
+
+Not worth it. Group coefficients (full-year fit, a / b): ATP Challenger 0.55/0.54, ATP tour 0.49/0.59, WTA 125 0.28/0.75 (se 0.15), WTA tour 0.52/0.58.
+All within about 2 se of each other except the tiny WTA 125 cell (n=1,940). Out-of-sample the grouped fits are worse than the pooled refit
+(+0.6e-3 per tour, +0.6e-3 per level group, +1.5e-3 for four cells, the last at 2.8 se) and the walk scheme says the same. Overfit.
+
+## c) Best-price selection bias: confirmed, and it is the one real finding
+
+- The two sides of a match each take the Shin probability of the book that quotes them the longest price. Averaged over matches the two market terms sum to **0.952**,
+  not 1.000 (consensus mean: 1.000). The production blend therefore under-states P on every bet side by about 2-3 points, the 2026 refit absorbs that in c = +0.067,
+  and on the sides we bet the production P is too low: EV>5% sides mean P 57.8% vs won 61.1% (gap +3.4 pt, se 1.1).
+- With the consensus (mean over the books quoting the match, bets still at the best price) the refit intercept is 0.000 (0.012) and the weights are 0.488 (0.036) / 0.608 (0.038),
+  i.e. close to the old 0.44 / 0.64 (the fixed old weights are inside ~1.3 se). Fixed 0.44 / 0.64 on the consensus scores best of the non-fitted choices, and
+  refitting adds nothing (it is noisier; -0.15 (0.25) vs -0.83 (0.11) for the fixed weights).
+- Log-loss -0.83e-3 (0.11), 7 se paired, negative in both halves (-1.01, -0.68), all 4 blocks (-0.58...-1.12) and all 7 walk months (-0.49...-1.37).
+  It is small in absolute terms (0.14% of the log-loss), but the blend beats the market alone by only 0.0045, so it is about a fifth of the blend's gain over the market.
+- Bet-side calibration (pooled, mean P vs won share):
+
+| P | EV>5% | EV>10% | EV>15% |
+|---|---|---|---|
+| production | 57.8% vs 61.1% (+3.4, se 1.1) n=1,860 | 54.1% vs 54.5% (+0.4, 2.1) n=523 | 53.2% vs 50.0% (-3.2, 3.5) n=190 |
+| consensus mean, 0.44/0.64 | 56.5% vs 56.8% (+0.3, 0.7) n=5,037 | 53.8% vs 53.6% (-0.2, 1.1) n=1,940 | 51.8% vs 50.5% (-1.4, 1.7) n=820 |
+| consensus mean, refit a,b,c | 57.9% vs 57.6% (-0.3, 0.6) n=5,507 | 56.3% vs 55.1% (-1.2, 1.0) n=2,332 | 54.8% vs 52.5% (-2.4, 1.5) n=1,075 |
+
+- **ROI is where it needs care.** With the same EV>5% rule the consensus P is about 5 EV points higher on the typical bet, so the rule fires 2.7x as often:
+  5,068 bets, ROI +11.1% (1.5), lower 90% +8.6%, vs 1,869 bets, +17.2% (2.4), +13.2%. Total profit rises by +240 units (se 57) because the extra bets still earn about +7% each,
+  but ROI per bet falls, which fails the "does not reduce ROI" test. At the same number of bets (top 1,869, EV threshold about 10.2%) the ROI is +17.5% (2.8) vs +17.2% (2.4),
+  difference +0.3 (2.2) points, no change. EV>10% on the consensus: 1,952 bets, +16.9% (2.7), lower 90% +12.4%.
+  So the two blends pick almost the same bets (1,274 of 1,869 are shared with the 1,952 consensus bets at EV>10%) and earn the same; the consensus P is just honest.
+- Per group, production EV>5% vs consensus EV>10% (ROI, se): ATP Challenger +18.4% (3.0) n=1,084 vs +16.8% (3.4) n=1,134; ATP tour events +15.3% (6.9) n=295 vs +23.3% (7.3) n=338;
+  WTA tour +18.2% (5.3) n=388 vs +16.8% (6.3) n=371; WTA 125 +5.8% (10.8) n=102 vs -2.3% (11.2) n=109. No group differs by more than its se.
+- The relation holds for all five consensus forms (all beat production on log-loss by 0.55 to 0.97e-3), so the finding does not depend on the exact consensus definition. 92% of bet sides have 5-6 books quoting.
+
+## d) Platt / isotonic / odds-dependent shrink
+
+- Isotonic on top of the blend: worse log-loss (+1.1 to +1.2e-3, 2.3 se) and worse ROI at equal N (-4.4 (2.2) points). Do not use.
+- Platt on top of the production blend: -0.24 (0.12)e-3 (2 se), it fits a positive shift (the same 0.95 artefact as c), picks 4,439 bets at EV>5%, ROI +11.8%, same-N ROI +18.4% (+1.2 (1.3) vs prod). It is a cruder
+  version of the consensus fix (consensus is better: -0.83 (0.11)). Platt on the refit changes nothing (the refit already contains an intercept).
+- Odds-dependent weights (log odds interaction or bands 2 / 3.5): no gain (+0.07 (0.24), +0.29 (0.26)e-3), the refit weights barely depend on the odds. "More market weight at longer odds" is not supported.
+  Combined with the consensus (log-odds interaction): -0.13 (0.24), no better than the plain consensus.
+
+## Other observations
+
+- Production ROI by period (Jan-Mar 11 / Mar 11-May 17 / May 17-Jul 28 / Jul 28-Oct 11): +23.0%, +18.0%, +18.0%, +10.6% (se 4.2-5.3 each); the decline is suggestive, not significant (about 2 se first vs last block). Worth watching in the paper ledger.
+- The TE / BetMGM external sets come from an older model, so they test the coefficients' transfer, not the model. BetMGM 2025-26 overlaps 2026 in time.
+
+## Recommendation
+
+1. **Keep the coefficients 0.44 / 0.64 / c=0.** No refit (all, per tour, per level group, odds-dependent) beat them out-of-sample on log-loss, group-specific fits are significantly worse, isotonic is worse.
+2. The current blend is **under-confident on the sides we bet** (EV>5%: P 57.8% vs won 61.1%) because the market term takes the Shin probability of the best-price book, and the two best prices sum to 0.95 (so the term is
+   biased low on average). **Replacing the market term by the mean of the per-book Shin probabilities of the books quoting the match (still betting the best price) wins on log-loss (-0.83e-3, 7 se, all splits)
+   and calibrates the bet sides (gap +0.3 (0.7) pt).**
+3. That change does **not** improve ROI. With the unchanged EV>5% rule it produces 2.7x the bets at +11.1% (lower 90% +8.6%) instead of +17.2% (+13.2%); only with the threshold raised to about EV>10% (same number of bets) is the ROI the
+   same (+17.5% vs +17.2%, difference within 1 se). By your criterion (wins on log-loss and does not reduce ROI on the test block) it passes only as the pair **consensus market term + EV>10%**, and then the gain is calibration (matters for Kelly sizing and for reported
+   probabilities), not profit. If staying with flat stakes and the EV>5% rule, leave production as it is. Do not switch the threshold and the market term separately.
+4. Before changing live code: paper_trade.py would need all books' opening prices of the match at bet time (the six-book Shin mean is computed from the same odds file); log both P versions in the ledger for a forward test of the consensus
+   (n around 1,000 bets at EV>10% gives about 3% ROI se, so ROI cannot be separated from production; only calibration can).
+5. Nothing in this study was fitted on 2026 outcomes other than the refit variants; the consensus winner uses the old fixed coefficients, but the choice of this variant out of ~40 tried is itself a (mild) selection, which is why the
+   statement is limited to "log-loss and calibration better, ROI unchanged".
+
+## Reproduce
+
+```
+cd /home/user/pantasocial/research/tennis-ml
+B=/tmp/claude-0/-home-user-pantasocial/d746d33b-0578-5ee2-a55c-5a9f85958b0a/scratchpad/tennis; X=$B/calib_exp
+python3 eval_levels2026.py $B $B/fs_geo r6_v3:out_v3 --geo=RS --book=bet365,Mozzartbetrs,Admiralbet.rs,SoccerBet,Superbet.rs,1xBet.rs --bets=$X/six_open_dated.parquet
+python3 blend_cv.py --build-ext=$X $B                      # external sets (TE Bet365, BetMGM) from blend_transfer.py
+python3 blend_cv.py $X/six_open_dated.parquet $B/fs_geo --matches=$B/out_v3 --ext=$X --scheme=all --coefs \
+   --ladder="fixed 0.44/0.64, mean;production market term (best-price book)" --perfold="fixed 0.44/0.64, mean"
+```

@@ -1,0 +1,86 @@
+priced matches 12-14 Oct 552 with replay q: 552
+holdout (never saw 2026): 15 bets, wins 12, flat ROI +65.5%, also in live ledger 6
+prod model at the opening price: 16 bets, wins 13, flat ROI +78.2%, also in live ledger 7
+both models: 13
+
+live-ledger bets (side we bet), q live vs replay vs holdout; EV at best OPEN price:
+                       home                 away  odds     o  q_model    q_m      q  ev_live  evb_m    evb    won
+1          cecchinato-marco   vives-marcos-pedro  3.75  3.90    0.404  0.395  0.410    0.050  0.056  0.077   True
+2            giunta-massimo         searle-henry  3.10  2.85    0.484  0.421  0.465    0.094 -0.023  0.028  False
+8           onclin-gauthier        balshaw-felix  2.63  2.20    0.550  0.522  0.545    0.101  0.006  0.028  False
+9           ribecai-michele     papoe-radu-mihai  2.28  2.15    0.569  0.559  0.511    0.060  0.026 -0.020   True
+10  olivieri-genaro-alberto          ratti-lucio  2.05  2.05    0.675  0.646  0.664    0.135  0.106  0.123   True
+11              kumstat-jan        butvilas-edas  1.80  1.70    0.674  0.669  0.667    0.060  0.031  0.030  False
+13       villanueva-gonzalo  zarate-carlos-maria  1.59  1.60    0.725  0.732  0.731    0.055  0.069  0.069  False
+14             smith-keegan          kopriva-vit  1.60  1.57    0.733  0.739  0.734    0.063  0.052  0.048  False
+17            tiago-pereira          mikrut-luka  1.40  1.18    0.821  0.802  0.810    0.060 -0.026 -0.022   True
+18            ruzic-antonia         siskova-anna  3.40  3.75    0.436  0.356  0.381    0.073 -0.008  0.027  False
+19            monnet-carole       yaneva-elizara  2.85  3.70    0.468  0.479  0.431    0.051  0.154  0.087  False
+20         nguyen-tan-lucie        bennemann-eva  3.55  3.51    0.421  0.409  0.378    0.061  0.029 -0.012   True
+22            pigossi-laura     brancaccio-nuria  3.25  3.10    0.435  0.377  0.360    0.060 -0.044 -0.066  False
+23             feistel-gina           lukas-tena  3.00  3.00    0.469  0.436  0.484    0.063  0.023  0.082  False
+25          paolini-jasmine    bartunkova-nikola  2.75  2.75    0.479  0.477  0.464    0.057  0.055  0.040   True
+27           krueger-ashlyn    tararudee-lanlana  2.27  2.27    0.592  0.548  0.545    0.104  0.059  0.056   True
+29           matoula-martha       georgia-pedone  2.20  2.23    0.579  0.545  0.545    0.062  0.040  0.040  False
+30              bondar-anna        pohankova-mia  2.22  2.22    0.671  0.500  0.502    0.175  0.001  0.003  False
+33         knutson-gabriela      bandecchi-susan  1.95  1.98    0.625  0.494  0.480    0.063 -0.051 -0.063  False
+35          arango-emiliana     knutson-gabriela  2.17  1.95    0.709  0.505  0.501    0.201 -0.038 -0.041  False
+36          paolini-jasmine          bejlek-sara  2.07  1.95    0.578  0.591  0.545    0.050  0.042  0.001   True
+41          masarova-rebeka     akugue-noha-noma  1.67  1.69    0.697  0.619  0.585    0.057  0.001 -0.024   True
+42            pohankova-mia            wang-xiyu  1.67  1.67    0.755  0.614  0.617    0.109 -0.004 -0.002  False
+46      romero-gormaz-leyre           rame-alice  1.39  1.42    0.803  0.757  0.748    0.051  0.028  0.022   True
+48          zidansek-tamara  papamichail-despina  1.33  1.33    0.839  0.788  0.772    0.053  0.020  0.009   True
+mean q: live 0.608 prod 0.559 holdout 0.555
+
+plan bets (either model, open price) NOT in the live ledger:
+       fs_mid tour lvl     o    q_m      q  evb_m    evb   won   pnl
+243  UZTuKolB  atp   C  2.30  0.548  0.533  0.058  0.042  True  1.30
+244  l2a63VSj  atp   C  2.30  0.547  0.554  0.056  0.063  True  1.30
+336  M33xmAmA  atp   C  1.76  0.724  0.734  0.094  0.103  True  0.76
+353  CMPcF6eD  atp   C  1.69  0.718  0.720  0.070  0.071  True  0.69
+356  dGEDGtIa  atp   C  1.68  0.737  0.755  0.087  0.104  True  0.68
+361  ITTOOSog  atp   C  1.66  0.721  0.727  0.060  0.066  True  0.66
+457  K6a2r5Pa  atp   C  1.36  0.806  0.840  0.039  0.063  True  0.36
+489  8bSF1uNM  atp   C  1.26  0.883  0.892  0.054  0.061  True  0.26
+727  byFpzSEk  wta   C  3.55  0.408  0.426  0.058  0.084  True  2.55
+979  82WqCk2m  wta   C  1.34  0.851  0.854  0.065  0.067  True  0.34
+
+logged before the rebuild (10-13 22:30 UTC): 25 bets, mean live q 0.608, replay q 0.559, diff +0.048, mean abs 0.051
+
+logged after: 0 bets, mean live q nan, replay q nan, diff +nan, mean abs nan
+
+live bets the corrected model (replay, blend EV at the price we actually took) would still play: 12 of 25; wins 6, flat ROI +6.8%
+live bets it would NOT play: 13; wins 5, flat ROI -10.1%
+all live bets flat ROI -2.0%
+
+would still play: 12 bets, staked 25,388, profit -2,378
+                       home                 away  odds_l  q_model    q_m  ev_replay_at_taken  stake  profit
+1            giunta-massimo         searle-henry    3.10    0.484  0.421               0.063   1115   -1115
+2           onclin-gauthier        balshaw-felix    2.63    0.550  0.522               0.203   1501   -1501
+3           ribecai-michele     papoe-radu-mihai    2.28    0.569  0.559               0.088   1165    1491
+4   olivieri-genaro-alberto          ratti-lucio    2.05    0.675  0.646               0.106   3013    3164
+5               kumstat-jan        butvilas-edas    1.80    0.674  0.669               0.092   1885   -1885
+6        villanueva-gonzalo  zarate-carlos-maria    1.59    0.725  0.732               0.063   2333   -2333
+7              smith-keegan          kopriva-vit    1.60    0.733  0.739               0.072   2453   -2453
+8             tiago-pereira          mikrut-luka    1.40    0.821  0.802               0.156   3756    1502
+14          paolini-jasmine    bartunkova-nikola    2.75    0.479  0.477               0.055    784    1372
+15           krueger-ashlyn    tararudee-lanlana    2.27    0.592  0.548               0.059   1908    2423
+19          arango-emiliana     knutson-gabriela    2.17    0.709  0.505               0.071   4300   -4300
+20          paolini-jasmine          bejlek-sara    2.07    0.578  0.591               0.106   1175    1257
+
+would not play: 13 bets, staked 23,644, profit -6,657
+                   home                 away  odds_l  q_model    q_m  ev_replay_at_taken  stake  profit
+0      cecchinato-marco   vives-marcos-pedro    3.75    0.404  0.395               0.015    423    1163
+9         ruzic-antonia         siskova-anna    3.40    0.436  0.356              -0.101    759    -759
+10        monnet-carole       yaneva-elizara    2.85    0.468  0.479              -0.111    657    -657
+11     nguyen-tan-lucie        bennemann-eva    3.55    0.421  0.409               0.040    555    1415
+12        pigossi-laura     brancaccio-nuria    3.25    0.435  0.377               0.002    648    -648
+13         feistel-gina           lukas-tena    3.00    0.469  0.436               0.023    787    -787
+16       matoula-martha       georgia-pedone    2.20    0.579  0.545               0.026   1287   -1287
+17          bondar-anna        pohankova-mia    2.22    0.671  0.500               0.001   3583   -3583
+18     knutson-gabriela      bandecchi-susan    1.95    0.625  0.494              -0.065   1597   -1597
+21      masarova-rebeka     akugue-noha-noma    1.67    0.697  0.619              -0.010   2133    1429
+22        pohankova-mia            wang-xiyu    1.67    0.755  0.614              -0.004   3941   -3941
+23  romero-gormaz-leyre           rame-alice    1.39    0.803  0.757               0.006   3239    1263
+24      zidansek-tamara  papamichail-despina    1.33    0.839  0.788               0.020   4035    1332
+max logged_at 2026-10-13 13:33:08.214895  min 2026-10-11 21:21:39.695839

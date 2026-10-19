@@ -1,0 +1,229 @@
+=== 2023 atp
+atp: Flashscore 5164 matches, build 10097 rows in the window
+found: by id 0, by id-pair 4890, by names 3; in none: 274 (5.3%)
+build rows of the same events (name, month) that Flashscore does not list: 595 of 4008
+               matches  missing  missing_%
+tourney_level                             
+15                2170       83        3.8
+25                1098       34        3.1
+A                  479       74       15.4
+C                 1417       83        5.9
+events with the most missing matches:
+tourney_name           td     
+Davis Cup - Group V    2023-10    42
+Davis Cup - Group IV   2023-10    32
+Yokkaichi              2023-11    10
+Yokohama               2023-11     8
+M15 Ipoh Perak         2023-11     6
+M25 Sharm ElSheikh 5   2023-11     6
+Kobe                   2023-11     6
+Playford 2             2023-10     6
+Matsuyama              2023-11     6
+M15 Yanagawa 2         2023-12     5
+M15 Sharm ElSheikh 18  2023-11     5
+M15 Sharm ElSheikh 16  2023-11     5
+M25 Saint-Augustin     2023-10     5
+M15 Yanagawa           2023-12     5
+Calgary                2023-11     4
+=== 2023 wta
+wta: Flashscore 3874 matches, build 12317 rows in the window
+found: by id 0, by id-pair 3628, by names 3; in none: 246 (6.4%)
+build rows of the same events (name, month) that Flashscore does not list: 4098 of 7669
+               matches  missing  missing_%
+tourney_level                             
+100                244        6        2.5
+15                1273       80        6.3
+25                1093       44        4.0
+40                 251        3        1.2
+60                 403       15        3.7
+80                  93        5        5.4
+C                  246       39       15.9
+P                  271       54       19.9
+events with the most missing matches:
+tourney_name                      td     
+Billie Jean King Cup - Group III  2023-10    48
+W25 Faro                          2023-10     9
+Angers                            2023-12     8
+W15 Valencia                      2023-11     8
+W15 Melilla                       2023-12     7
+Colina                            2023-11     7
+Midland                           2023-10     6
+W15 Nasbypark                     2023-10     5
+Limoges                           2023-12     5
+Florianopolis                     2023-11     5
+W15 Wellington                    2023-12     5
+W25 Nairobi 2                     2023-12     5
+W15 Valencia 2                    2023-12     5
+W25 Monastir 6                    2023-12     5
+W15 Castellon                     2023-11     5
+=== 2024 atp
+atp: Flashscore 33101 matches, build 35090 rows in the window
+found: by id 0, by id-pair 30808, by names 23; in none: 2293 (6.9%)
+build rows of the same events (name, month) that Flashscore does not list: 813 of 20230
+               matches  missing  missing_%
+tourney_level                             
+15               11153      602        5.4
+25                7256      223        3.1
+A                 4741      881       18.6
+C                 9951      587        5.9
+events with the most missing matches:
+tourney_name                td     
+Davis Cup - Group III       2024-06    144
+Indian Wells                2024-01    131
+Shanghai                    2024-09    130
+Davis Cup - Group IV        2024-06    128
+Davis Cup - Group V         2024-07    112
+Davis Cup - World Group     2024-02     59
+Lyon 2                      2024-05     49
+Mallorca                    2024-06     47
+Tenerife 3                  2024-02     47
+Acapulco                    2024-02     47
+Davis Cup - World Group II  2024-02     46
+Buenos Aires                2024-01     43
+Hamburg                     2024-03     40
+Davis Cup - World Group I   2024-02     39
+M15 Bali 4                  2024-12     30
+=== 2024 wta
+wta: Flashscore 24720 matches, build 42954 rows in the window
+found: by id 0, by id-pair 23153, by names 22; in none: 1567 (6.3%)
+build rows of the same events (name, month) that Flashscore does not list: 16598 of 38443
+               matches  missing  missing_%
+tourney_level                             
+100                774       36        4.7
+15                7915      422        5.3
+35                5733      155        2.7
+50                2228       66        3.0
+75                2218       49        2.2
+C                 1348      134        9.9
+P                 4504      705       15.7
+events with the most missing matches:
+tourney_name                        td     
+Billie Jean King Cup - Group III    2024-06    226
+Billie Jean King Cup - Group II     2024-04    128
+Billie Jean King Cup - Group I      2024-04    119
+Billie Jean King Cup - Group IV     2024-06     50
+Billie Jean King Cup - World Group  2024-04     50
+W15 Ahmedabad                       2024-12     31
+W15 Antalya 22                      2024-12     30
+W15 Kursumlijska Banja              2024-04     29
+W15 Shymkent                        2024-04     27
+Wimbledon                           2024-06     16
+W15 Antalya 10                      2024-04     13
+French Open                         2024-05     10
+Puerto Vallarta                     2024-02      9
+Australian Open                     2024-01      9
+Beijing                             2024-09      9
+=== 2025 atp
+atp: Flashscore 34044 matches, build 34944 rows in the window
+found: by id 0, by id-pair 30741, by names 27; in none: 3303 (9.7%)
+build rows of the same events (name, month) that Flashscore does not list: 823 of 19594
+               matches  missing  missing_%
+tourney_level                             
+15               12170     1460       12.0
+25                7314      948       13.0
+A                 4261      444       10.4
+C                10299      451        4.4
+events with the most missing matches:
+tourney_name                td     
+Shanghai                    2025-08    126
+Davis Cup - Group III       2025-06     61
+Davis Cup - Group IV        2025-06     56
+Mallorca                    2025-06     49
+Davis Cup - World Group II  2025-01     47
+Hamburg                     2025-05     47
+Davis Cup - World Group I   2025-01     45
+Davis Cup - World Group     2025-01     38
+M25+H Plaisir               2025-09     31
+M25+H Tauste                2025-08     31
+M25 Sintra                  2025-10     31
+M25 Xalapa                  2025-05     31
+M15 Huamantla               2025-01     31
+M15 Sharm ElSheikh 6        2025-03     31
+M25 Manzanillo              2025-11     31
+=== 2025 wta
+wta: Flashscore 25700 matches, build 26368 rows in the window
+found: by id 0, by id-pair 22860, by names 29; in none: 2840 (11.1%)
+build rows of the same events (name, month) that Flashscore does not list: 848 of 22258
+               matches  missing  missing_%
+tourney_level                             
+100                774      129       16.7
+15                9375      871        9.3
+35                5344      536       10.0
+50                2057      307       14.9
+75                1961      235       12.0
+C                 1982      247       12.5
+P                 4207      515       12.2
+events with the most missing matches:
+tourney_name                        td     
+Billie Jean King Cup - Group II     2025-04    131
+Billie Jean King Cup - Group I      2025-04    102
+Billie Jean King Cup - Group III    2025-06     84
+Billie Jean King Cup - World Group  2025-04     58
+W50 Santo Domingo                   2025-03     46
+Antalya 3                           2025-03     43
+Rome                                2025-05     38
+Austin                              2025-02     34
+W15 Antalya 7                       2025-03     31
+W75 Vero Beach, FL                  2025-01     31
+W35 Sunderland                      2025-01     31
+W35 Sabadell                        2025-03     31
+W35 Orlando, FL 2                   2025-11     31
+W35 Berkeley, CA                    2025-09     31
+W75 Saguenay                        2025-10     31
+=== 2026 atp
+atp: Flashscore 29197 matches, build 29036 rows in the window
+found: by id 14531, by id-pair 28000, by names 14414; in none: 1046 (3.6%)
+build rows of the same events (name, month) that Flashscore does not list: 353 of 22314
+               matches  missing  missing_%
+tourney_level                             
+15                9623      451        4.7
+25                5736      185        3.2
+A                 3785      154        4.1
+C                10053      256        2.5
+events with the most missing matches:
+tourney_name          td     
+French Open           2026-05    113
+Barletta              2026-03     45
+M25 Nussloch          2026-01     31
+M25 San Jose          2026-02     31
+M15 Naples, FL        2026-01     30
+M15 Monastir 3        2026-01     30
+M25 Maanshan 2        2026-04     30
+M15 Orlando, FL 2     2026-04     30
+M15 Hyderabad 2       2026-01     30
+M15 Zahra             2026-01     29
+M15 Punta del Este 2  2026-03     29
+M15 Monastir 15       2026-04     28
+M15 Monastir 14       2026-04     28
+M25 Antalya 3         2026-01     18
+M15 Antalya 5         2026-03     16
+=== 2026 wta
+wta: Flashscore 20443 matches, build 20464 rows in the window
+found: by id 9912, by id-pair 19553, by names 9899; in none: 842 (4.1%)
+build rows of the same events (name, month) that Flashscore does not list: 354 of 19166
+               matches  missing  missing_%
+tourney_level                             
+100                649       34        5.2
+15                6886      216        3.1
+35                4125       70        1.7
+50                1685       73        4.3
+75                1514       99        6.5
+C                 1840       55        3.0
+P                 3744      295        7.9
+events with the most missing matches:
+tourney_name                    td     
+Billie Jean King Cup - Group I  2026-04    125
+French Open                     2026-05    113
+W100 San Diego, CA              2026-01     31
+W50 Monastir 2                  2026-01     31
+W50 Chihuahua                   2026-03     31
+W15 Antalya 2                   2026-01     31
+W75 Porto                       2026-01     30
+W75 Vero Beach, FL              2026-01     30
+W15 Sharm ElSheikh              2026-01     30
+W15 Antalya                     2026-01     19
+W15 Antalya 5                   2026-03     16
+Madrid                          2026-04     16
+Austin                          2026-02      9
+Paris                           2026-05      9
+W15 Sharm ElSheikh 2            2026-02      8

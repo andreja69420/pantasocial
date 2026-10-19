@@ -1,0 +1,9 @@
+2026-01-02..10-10, start 300.000, 1/4 Kelly od trenutnog kapitala; opening 1856 opklada ROI +16.7%, closing 987 opklada ROI +5.8%
+                                                 scenario  opklada    kraj   dobit  najniže  najveći pad %  uloženo
+                         početne kvote, max 30.000 (test)     1856 8617220 8317220   281976           15.3 50119156
+             početne kvote, max 10.000 (limit kladionica)     1856 3306335 3006335   281741           10.9 17964588
+                                 početne kvote, max 5.000     1856 1850823 1550823   287468            7.2  9207052
+        početne kvote, 10% dobitaka poništeno, max 30.000     1856 5430275 5130275   278188           17.0 48220735
+     zatvarajuće kvote (početna se ne uhvati), max 30.000      987 1108043  808043   265672           32.1 18389458
+                            zatvarajuće kvote, max 10.000      987  697693  397693   272729           23.2  8393765
+NAJGORE: zatvarajuće + max 5.000 + 10% dobitaka poništeno      987  286673  -13327   260129           37.7  4531058

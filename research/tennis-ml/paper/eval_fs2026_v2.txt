@@ -1,0 +1,123 @@
+fresh test 2026-06-08..2026-10-11: 22127 matches with odds; books with most matches: {'7BetUK': 21475, 'Midnite': 20948, 'Unibetuk': 20580, 'Betway': 19854, 'SpreadEX': 19723, 'William Hill': 19042, 'Ladbrokes': 18707, 'Coral': 18702}
+
+== bet365: 2927 matches, median margin 5.5%
+  random sides odds<=2          3325  ROI@open -5.47% (lo -7.6%)  @close -5.57%  void -5.79%  CLV -0.09% | ATP T -5.8%(1153) Chall -6.7%(1006) WTA T -4.0%(1163) Women -42.3%(3)
+  raw EV>5% odds<=2              488  ROI@open +5.16% (lo -0.7%)  @close +0.03%  void +3.15%  CLV +4.91% | ATP T +1.4%(143) Chall +2.1%(133) WTA T +10.1%(211) Women -100.0%(1)
+  blend EV>5% odds<=2            156  ROI@open +5.87% (lo -4.4%)  @close +0.31%  void +4.33%  CLV +4.71% | ATP T +7.7%(45) Chall -0.6%(24) WTA T +6.7%(87)
+  blend EV>10% odds<=2            48  ROI@open -0.10% (lo -19.9%)  @close -5.31%  void -0.10%  CLV +3.62% | ATP T +17.6%(8) Chall -100.0%(3) WTA T +4.2%(37)
+  blend EV>5% odds<=5            270  ROI@open +4.37% (lo -6.3%)  @close -3.31%  void +1.86%  CLV +6.61% | ATP T +6.6%(78) Chall -3.5%(46) WTA T +5.6%(146)
+  blend EV>10% odds<=5           102  ROI@open +5.45% (lo -14.3%)  @close -3.18%  void +5.35%  CLV +6.11% | ATP T +22.0%(20) Chall -29.0%(10) WTA T +5.7%(72)
+  blend EV>15% odds<=5            61  ROI@open +17.92% (lo -10.7%)  @close +7.38%  void +16.11%  CLV +5.48% | ATP T +42.5%(14) Chall +18.3%(6) WTA T +9.5%(41)
+
+== 7BetUK: 21475 matches, median margin 10.1%
+  random sides odds<=2         24532  ROI@open -6.97% (lo -7.7%)  @close -6.32%  void -7.43%  CLV -0.87% | ATP T -8.0%(1585) Chall -6.9%(5090) Men I -6.9%(8533) WTA T -5.3%(1549) Women -7.2%(7775)
+  raw EV>5% odds<=2             3103  ROI@open +0.37% (lo -1.9%)  @close -5.15%  void -1.82%  CLV +5.64% | ATP T +0.3%(150) Chall +5.2%(715) Men I -3.6%(936) WTA T +5.3%(230) Women -0.4%(1072)
+  blend EV>5% odds<=2            764  ROI@open +7.24% (lo +2.8%)  @close -0.12%  void +4.13%  CLV +7.40% | ATP T -3.3%(29) Chall +4.5%(132) Men I +14.9%(227) WTA T +7.3%(75) Women +3.7%(301)
+  blend EV>10% odds<=2           269  ROI@open +13.46% (lo +5.6%)  @close +4.49%  void +10.29%  CLV +8.31% | ATP T +15.5%(10) Chall -5.1%(34) Men I +29.0%(82) WTA T +8.0%(24) Women +9.0%(119)
+  blend EV>15% odds<=2           126  ROI@open +15.01% (lo +3.4%)  @close +7.19%  void +14.70%  CLV +7.63% | ATP T +3.7%(3) Chall -11.6%(8) Men I +36.3%(32) WTA T +19.1%(15) Women +7.7%(68)
+  blend EV>5% odds<=5           1346  ROI@open +3.71% (lo -1.0%)  @close -4.36%  void +0.74%  CLV +9.36% | ATP T +4.5%(50) Chall +11.9%(200) Men I +2.5%(465) WTA T +2.9%(120) Women +1.7%(511)
+  blend EV>10% odds<=5           620  ROI@open +5.86% (lo -1.9%)  @close -3.77%  void +1.82%  CLV +9.97% | ATP T +35.6%(21) Chall +22.5%(66) Men I -1.7%(220) WTA T +15.1%(58) Women +3.6%(255)
+  blend EV>15% odds<=5           364  ROI@open +3.44% (lo -7.2%)  @close -5.13%  void +3.04%  CLV +9.66% | ATP T +10.7%(9) Chall +33.2%(27) Men I -8.5%(124) WTA T +21.1%(41) Women +2.7%(163)
+
+== Midnite: 20948 matches, median margin 8.6%
+  random sides odds<=2         23648  ROI@open -6.05% (lo -6.8%)  @close -6.10%  void -6.19%  CLV -0.04% | ATP T -7.5%(1604) Chall -5.9%(5020) Men I -5.8%(8081) WTA T -4.5%(1561) Women -6.4%(7382)
+  raw EV>5% odds<=2             2858  ROI@open -4.25% (lo -6.6%)  @close -6.88%  void -5.06%  CLV +2.73% | ATP T -1.7%(190) Chall +0.6%(715) Men I -9.6%(803) WTA T +6.8%(263) Women -7.1%(887)
+  blend EV>5% odds<=2            702  ROI@open -1.69% (lo -6.4%)  @close -5.40%  void -3.07%  CLV +3.69% | ATP T -3.3%(44) Chall +4.4%(156) Men I -4.2%(175) WTA T +1.6%(89) Women -4.7%(238)
+  blend EV>10% odds<=2           203  ROI@open +1.73% (lo -7.5%)  @close -1.67%  void +2.08%  CLV +3.05% | ATP T +7.4%(11) Chall -1.2%(41) Men I -18.8%(40) WTA T +25.2%(26) Women +4.9%(85)
+  blend EV>15% odds<=2            88  ROI@open -3.11% (lo -17.7%)  @close -6.31%  void -0.08%  CLV +2.76% | ATP T +8.0%(3) Chall -14.2%(19) Men I -7.4%(14) WTA T +20.4%(13) Women -4.8%(39)
+  blend EV>5% odds<=5           1241  ROI@open -2.65% (lo -7.7%)  @close -7.19%  void -4.87%  CLV +4.59% | ATP T +1.8%(78) Chall +15.7%(246) Men I -15.6%(353) WTA T +3.0%(141) Women -5.2%(423)
+  blend EV>10% odds<=5           494  ROI@open -6.72% (lo -15.5%)  @close -11.56%  void -9.30%  CLV +4.67% | ATP T +14.3%(24) Chall +10.1%(81) Men I -30.2%(141) WTA T +8.7%(59) Women -3.9%(189)
+  blend EV>15% odds<=5           281  ROI@open -6.56% (lo -19.2%)  @close -11.59%  void -8.90%  CLV +4.23% | ATP T +38.7%(10) Chall +24.0%(45) Men I -33.3%(69) WTA T +10.1%(41) Women -12.3%(116)
+
+== Unibetuk: 20580 matches, median margin 7.7%
+  random sides odds<=2         22630  ROI@open -5.56% (lo -6.3%)  @close -5.35%  void -5.87%  CLV -0.38% | ATP T -6.9%(1515) Chall -5.3%(4656) Men I -5.3%(7707) WTA T -5.4%(1492) Women -5.7%(7260)
+  raw EV>5% odds<=2             3318  ROI@open +0.04% (lo -2.1%)  @close -5.22%  void -1.71%  CLV +5.18% | ATP T +0.8%(169) Chall +7.3%(879) Men I -5.8%(918) WTA T +7.4%(257) Women -2.7%(1095)
+  blend EV>5% odds<=2            994  ROI@open +5.79% (lo +1.9%)  @close -1.81%  void +2.66%  CLV +7.42% | ATP T +8.2%(49) Chall +10.8%(241) Men I +4.0%(261) WTA T +6.5%(101) Women +3.1%(342)
+  blend EV>10% odds<=2           282  ROI@open +9.31% (lo +1.5%)  @close +0.18%  void +7.12%  CLV +8.84% | ATP T -1.2%(10) Chall +14.0%(60) Men I +19.0%(70) WTA T -3.8%(32) Women +5.4%(110)
+  blend EV>15% odds<=2           118  ROI@open +11.58% (lo -0.6%)  @close +2.19%  void +10.79%  CLV +9.00% | ATP T +24.5%(4) Chall -7.4%(19) Men I +26.4%(24) WTA T +20.9%(15) Women +8.2%(56)
+  blend EV>5% odds<=5           1732  ROI@open +2.32% (lo -1.8%)  @close -6.81%  void -1.70%  CLV +9.57% | ATP T +9.9%(81) Chall +15.2%(370) Men I -4.8%(517) WTA T +13.9%(161) Women -3.6%(603)
+  blend EV>10% odds<=5           694  ROI@open +2.40% (lo -4.8%)  @close -8.83%  void -4.00%  CLV +11.26% | ATP T +16.8%(28) Chall +24.7%(113) Men I -8.0%(221) WTA T +7.3%(70) Women -1.3%(262)
+  blend EV>15% odds<=5           378  ROI@open -0.72% (lo -11.0%)  @close -11.06%  void -4.95%  CLV +11.38% | ATP T +41.0%(16) Chall +25.2%(49) Men I -19.5%(112) WTA T +22.9%(44) Women -6.3%(157)
+
+== SpreadEX: 19723 matches, median margin 7.1%
+  random sides odds<=2         22275  ROI@open -5.68% (lo -6.4%)  @close -5.58%  void -5.86%  CLV -0.11% | ATP T -5.1%(1568) Chall -5.3%(4352) Men I -5.9%(7898) WTA T -4.9%(1506) Women -6.0%(6951)
+  raw EV>5% odds<=2             2895  ROI@open -6.33% (lo -8.7%)  @close -7.20%  void -6.57%  CLV +0.77% | ATP T -7.3%(175) Chall -10.0%(467) Men I -5.5%(988) WTA T +0.6%(212) Women -6.7%(1053)
+  blend EV>5% odds<=2            860  ROI@open -2.41% (lo -6.7%)  @close -3.54%  void -2.88%  CLV +0.70% | ATP T -14.3%(40) Chall -2.7%(96) Men I -3.4%(315) WTA T -1.3%(65) Women -0.2%(344)
+  blend EV>10% odds<=2           286  ROI@open +1.95% (lo -5.8%)  @close +0.35%  void +1.00%  CLV +1.16% | ATP T -25.2%(12) Chall -0.6%(31) Men I +6.5%(84) WTA T +1.8%(25) Women +2.1%(134)
+  blend EV>15% odds<=2           116  ROI@open +7.35% (lo -4.9%)  @close +5.69%  void +5.38%  CLV +0.91% | ATP T -25.5%(4) Chall -28.3%(10) Men I +13.0%(33) WTA T +21.1%(10) Women +10.2%(59)
+  blend EV>5% odds<=5           1550  ROI@open -4.59% (lo -9.1%)  @close -6.59%  void -5.48%  CLV +1.28% | ATP T -0.7%(69) Chall -3.0%(169) Men I -7.3%(598) WTA T -3.5%(120) Women -3.0%(594)
+  blend EV>10% odds<=5           690  ROI@open -6.27% (lo -13.7%)  @close -8.56%  void -7.32%  CLV +1.23% | ATP T +8.5%(24) Chall +8.1%(71) Men I -8.2%(250) WTA T -9.0%(61) Women -8.8%(284)
+  blend EV>15% odds<=5           373  ROI@open -8.53% (lo -19.4%)  @close -10.09%  void -8.68%  CLV +0.62% | ATP T -25.2%(10) Chall +23.9%(29) Men I -22.6%(132) WTA T -0.5%(40) Women -3.8%(162)
+
+== Betway: 19854 matches, median margin 6.9%
+  random sides odds<=2         22257  ROI@open -5.18% (lo -5.9%)  @close -5.30%  void -5.47%  CLV +0.01% | ATP T -6.4%(1551) Chall -6.3%(4670) Men I -4.6%(7645) WTA T -3.2%(1479) Women -5.2%(6912)
+  raw EV>5% odds<=2             3174  ROI@open -0.81% (lo -3.1%)  @close -5.10%  void -2.40%  CLV +4.25% | ATP T -1.2%(191) Chall +2.8%(690) Men I -3.5%(963) WTA T +10.0%(288) Women -3.6%(1042)
+  blend EV>5% odds<=2            977  ROI@open +3.45% (lo -0.5%)  @close -2.58%  void +0.48%  CLV +5.72% | ATP T +1.5%(66) Chall +4.9%(156) Men I +1.1%(304) WTA T +12.4%(112) Women +2.3%(339)
+  blend EV>10% odds<=2           283  ROI@open +8.89% (lo +1.2%)  @close +1.76%  void +4.08%  CLV +6.29% | ATP T -14.7%(13) Chall +3.0%(40) Men I +15.6%(79) WTA T +9.4%(38) Women +8.8%(113)
+  blend EV>15% odds<=2           111  ROI@open +10.44% (lo -2.1%)  @close +1.51%  void +3.28%  CLV +7.43% | ATP T -3.0%(5) Chall -44.7%(12) Men I +22.4%(32) WTA T +36.7%(17) Women +8.2%(45)
+  blend EV>5% odds<=5           1790  ROI@open +0.27% (lo -3.9%)  @close -6.44%  void -2.00%  CLV +7.28% | ATP T +6.2%(118) Chall +10.4%(263) Men I -4.7%(608) WTA T +5.7%(191) Women -2.0%(610)
+  blend EV>10% odds<=5           734  ROI@open -0.30% (lo -7.6%)  @close -8.02%  void -3.67%  CLV +8.06% | ATP T +3.1%(38) Chall +20.3%(86) Men I -7.2%(258) WTA T -0.3%(80) Women -0.8%(272)
+  blend EV>15% odds<=5           383  ROI@open -6.01% (lo -16.4%)  @close -13.66%  void -11.18%  CLV +7.64% | ATP T +28.9%(19) Chall +25.9%(39) Men I -19.1%(133) WTA T +14.5%(49) Women -14.2%(143)
+
+== William Hill: 19042 matches, median margin 8.4%
+  random sides odds<=2         21418  ROI@open -5.86% (lo -6.6%)  @close -5.70%  void -6.00%  CLV -0.26% | ATP T -6.2%(1512) Chall -6.1%(4665) Men I -5.7%(7096) WTA T -3.2%(1502) Women -6.3%(6643)
+  raw EV>5% odds<=2             3051  ROI@open -0.53% (lo -2.8%)  @close -5.36%  void -1.28%  CLV +5.05% | ATP T +4.7%(210) Chall +1.7%(718) Men I -3.0%(864) WTA T +8.5%(294) Women -3.9%(965)
+  blend EV>5% odds<=2            808  ROI@open +3.53% (lo -0.8%)  @close -3.33%  void +1.97%  CLV +7.13% | ATP T +5.4%(64) Chall +1.0%(165) Men I +9.2%(202) WTA T +6.6%(117) Women -1.1%(260)
+  blend EV>10% odds<=2           242  ROI@open +1.98% (lo -6.5%)  @close -5.77%  void +2.28%  CLV +7.86% | ATP T +6.3%(9) Chall -13.7%(40) Men I +3.0%(47) WTA T +2.3%(42) Women +7.1%(104)
+  blend EV>15% odds<=2            94  ROI@open -2.24% (lo -16.3%)  @close -10.47%  void -0.43%  CLV +8.96% | ATP T +22.7%(4) Chall -32.5%(15) Men I -14.2%(13) WTA T +29.3%(15) Women -1.5%(47)
+  blend EV>5% odds<=5           1366  ROI@open +0.71% (lo -3.8%)  @close -7.22%  void -1.06%  CLV +9.81% | ATP T -4.8%(100) Chall +10.0%(261) Men I +0.4%(383) WTA T +2.3%(168) Women -3.8%(454)
+  blend EV>10% odds<=5           545  ROI@open -0.73% (lo -8.5%)  @close -8.61%  void -1.33%  CLV +10.71% | ATP T +12.6%(24) Chall +1.0%(82) Men I -10.3%(147) WTA T +2.8%(76) Women +2.4%(216)
+  blend EV>15% odds<=5           282  ROI@open -3.43% (lo -15.0%)  @close -10.95%  void -3.26%  CLV +11.76% | ATP T +22.3%(14) Chall +9.1%(39) Men I -19.6%(68) WTA T +11.4%(43) Women -6.7%(118)
+
+== Ladbrokes: 18707 matches, median margin 7.7%
+  random sides odds<=2         21169  ROI@open -5.68% (lo -6.5%)  @close -5.51%  void -5.86%  CLV -0.27% | ATP T -6.5%(1547) Chall -5.7%(4930) Men I -5.8%(6369) WTA T -5.4%(1517) Women -5.4%(6806)
+  raw EV>5% odds<=2             2796  ROI@open -2.63% (lo -5.0%)  @close -6.91%  void -3.66%  CLV +4.27% | ATP T -4.4%(157) Chall +0.1%(613) Men I -6.3%(763) WTA T +1.7%(223) Women -2.2%(1040)
+  blend EV>5% odds<=2            763  ROI@open +1.32% (lo -3.3%)  @close -5.14%  void -0.67%  CLV +6.44% | ATP T -12.2%(35) Chall -4.2%(116) Men I +5.1%(225) WTA T +3.2%(69) Women +1.7%(318)
+  blend EV>10% odds<=2           245  ROI@open +0.27% (lo -8.3%)  @close -7.25%  void -1.66%  CLV +7.45% | ATP T -12.8%(9) Chall -3.8%(31) Men I +6.2%(54) WTA T +0.5%(27) Women -0.4%(124)
+  blend EV>15% odds<=2           103  ROI@open +7.03% (lo -6.1%)  @close -2.32%  void +3.70%  CLV +8.36% | ATP T -3.2%(5) Chall -13.3%(11) Men I +34.3%(15) WTA T +15.7%(12) Women +3.1%(60)
+  blend EV>5% odds<=5           1341  ROI@open +2.18% (lo -2.7%)  @close -6.58%  void -0.35%  CLV +9.99% | ATP T +8.4%(60) Chall +9.1%(217) Men I -3.3%(407) WTA T +5.8%(117) Women +2.0%(540)
+  blend EV>10% odds<=5           567  ROI@open +2.15% (lo -6.1%)  @close -7.74%  void -1.18%  CLV +12.69% | ATP T +32.9%(19) Chall +20.6%(80) Men I -19.8%(157) WTA T +11.0%(59) Women +5.6%(252)
+  blend EV>15% odds<=5           315  ROI@open +1.88% (lo -9.7%)  @close -9.11%  void -4.46%  CLV +14.22% | ATP T +25.8%(12) Chall +31.2%(42) Men I -26.7%(79) WTA T +14.3%(38) Women +3.8%(144)
+
+== Coral: 18702 matches, median margin 7.7%
+  random sides odds<=2         21163  ROI@open -5.71% (lo -6.5%)  @close -5.54%  void -5.89%  CLV -0.27% | ATP T -6.5%(1547) Chall -5.7%(4928) Men I -5.8%(6365) WTA T -5.4%(1517) Women -5.5%(6806)
+  raw EV>5% odds<=2             2798  ROI@open -2.47% (lo -4.9%)  @close -6.76%  void -3.53%  CLV +4.27% | ATP T -3.6%(159) Chall -0.0%(615) Men I -6.2%(761) WTA T +2.1%(224) Women -2.0%(1039)
+  blend EV>5% odds<=2            760  ROI@open +1.54% (lo -3.1%)  @close -4.77%  void -0.35%  CLV +6.30% | ATP T -7.8%(35) Chall -4.2%(116) Men I +5.3%(226) WTA T +3.1%(69) Women +1.7%(314)
+  blend EV>10% odds<=2           245  ROI@open +0.27% (lo -8.3%)  @close -6.84%  void -1.31%  CLV +7.15% | ATP T -12.8%(9) Chall -3.8%(31) Men I +7.1%(55) WTA T +0.4%(27) Women -0.8%(123)
+  blend EV>15% odds<=2           104  ROI@open +5.88% (lo -7.2%)  @close -2.63%  void +4.37%  CLV +8.02% | ATP T -3.2%(5) Chall -13.3%(11) Men I +26.1%(16) WTA T +15.4%(12) Women +2.9%(60)
+  blend EV>5% odds<=5           1336  ROI@open +2.30% (lo -2.6%)  @close -6.40%  void -0.32%  CLV +9.91% | ATP T +12.8%(59) Chall +9.1%(217) Men I -3.5%(407) WTA T +5.8%(117) Women +2.0%(536)
+  blend EV>10% odds<=5           566  ROI@open +1.87% (lo -6.4%)  @close -7.85%  void -1.35%  CLV +12.54% | ATP T +25.1%(18) Chall +20.6%(80) Men I -19.4%(158) WTA T +11.0%(59) Women +5.5%(251)
+  blend EV>15% odds<=5           317  ROI@open +1.94% (lo -9.6%)  @close -8.83%  void -3.84%  CLV +14.10% | ATP T +25.8%(12) Chall +33.0%(43) Men I -27.6%(80) WTA T +14.3%(38) Women +3.8%(144)
+
+== BetMGM.uk: 3554 matches, median margin 8.0%
+  random sides odds<=2          4026  ROI@open -5.62% (lo -7.5%)  @close -5.61%  void -5.93%  CLV -0.56% | ATP T -6.4%(743) Chall -5.8%(2592) WTA T -4.3%(690) Women +14.0%(1)
+  raw EV>5% odds<=2              550  ROI@open +6.61% (lo +1.2%)  @close -0.89%  void +5.24%  CLV +7.54% | ATP T -9.7%(70) Chall +8.9%(383) WTA T +9.3%(97)
+  blend EV>5% odds<=2            134  ROI@open +6.10% (lo -4.9%)  @close -5.12%  void +2.43%  CLV +10.19% | ATP T -13.6%(14) Chall +11.6%(91) WTA T -1.8%(29)
+  blend EV>10% odds<=2            39  ROI@open -1.85% (lo -24.0%)  @close -12.36%  void +0.10%  CLV +11.52% | ATP T -6.8%(4) Chall +4.0%(24) WTA T -12.8%(11)
+  blend EV>5% odds<=5            218  ROI@open +19.95% (lo +7.7%)  @close +4.41%  void +12.49%  CLV +12.77% | ATP T +10.8%(28) Chall +30.0%(140) WTA T -1.1%(49) Women -100.0%(1)
+  blend EV>10% odds<=5            74  ROI@open +19.92% (lo -3.4%)  @close +0.84%  void +6.28%  CLV +14.24% | ATP T +55.8%(10) Chall +38.7%(40) WTA T -23.2%(23) Women -100.0%(1)
+  blend EV>15% odds<=5            32  ROI@open +33.50% (lo -10.0%)  @close +4.63%  void -0.41%  CLV +17.49% | ATP T +141.7%(3) Chall +88.0%(14) WTA T -34.6%(14) Women -100.0%(1)
+
+== Skybet: 6913 matches, median margin 7.5%
+  random sides odds<=2          7732  ROI@open -6.61% (lo -7.9%)  @close -6.58%  void -7.04%  CLV -0.17% | ATP T -7.3%(1580) Chall -6.8%(4620) Men I -13.9%(12) WTA T -5.3%(1500) Women -7.9%(20)
+  raw EV>5% odds<=2             1034  ROI@open +4.02% (lo +0.1%)  @close -2.03%  void +2.15%  CLV +6.27% | ATP T +2.0%(149) Chall +4.7%(655) Men I -52.0%(3) WTA T +4.0%(224) Women +4.0%(3)
+  blend EV>5% odds<=2            258  ROI@open +4.88% (lo -3.0%)  @close -2.51%  void +1.90%  CLV +7.01% | ATP T +2.8%(44) Chall +6.1%(140) Men I -100.0%(2) WTA T +6.8%(69) Women +4.0%(3)
+  blend EV>10% odds<=2            91  ROI@open +11.62% (lo -2.6%)  @close +5.34%  void +12.22%  CLV +4.37% | ATP T +18.7%(15) Chall +7.9%(41) WTA T +14.3%(33) Women -8.5%(2)
+  blend EV>15% odds<=2            49  ROI@open +18.59% (lo -1.3%)  @close +12.88%  void +20.73%  CLV +4.60% | ATP T +44.5%(11) Chall +1.6%(20) WTA T +25.5%(16) Women -8.5%(2)
+  blend EV>5% odds<=5            474  ROI@open +10.69% (lo +2.6%)  @close -0.46%  void +4.59%  CLV +11.00% | ATP T +8.1%(80) Chall +14.6%(257) Men I -100.0%(2) WTA T +6.5%(130) Women +7.4%(5)
+  blend EV>10% odds<=5           196  ROI@open +21.66% (lo +7.5%)  @close +7.36%  void +12.33%  CLV +11.24% | ATP T +26.1%(32) Chall +23.7%(88) WTA T +18.3%(72) Women +2.0%(4)
+  blend EV>15% odds<=5           119  ROI@open +30.09% (lo +11.3%)  @close +15.87%  void +20.72%  CLV +11.21% | ATP T +40.4%(24) Chall +33.5%(49) WTA T +22.9%(42) Women +2.0%(4)
+
+== Paddy Power: 6466 matches, median margin 7.0%
+  random sides odds<=2          7321  ROI@open -6.37% (lo -7.8%)  @close -6.53%  void -6.72%  CLV +0.00% | ATP T -7.7%(1518) Chall -5.9%(4319) Men I -23.0%(11) WTA T -6.2%(1453) Women -8.4%(20)
+  raw EV>5% odds<=2             1041  ROI@open +5.46% (lo +1.5%)  @close -1.14%  void +3.19%  CLV +6.58% | ATP T +3.2%(137) Chall +6.2%(688) Men I -30.0%(2) WTA T +5.0%(211) Women +4.0%(3)
+  blend EV>5% odds<=2            295  ROI@open +9.76% (lo +2.4%)  @close +0.80%  void +6.18%  CLV +8.16% | ATP T +8.4%(37) Chall +12.0%(195) WTA T +3.6%(60) Women +4.0%(3)
+  blend EV>10% odds<=2            94  ROI@open +9.33% (lo -4.7%)  @close +2.12%  void +10.22%  CLV +5.60% | ATP T +32.8%(13) Chall +4.5%(52) WTA T +8.7%(27) Women -8.5%(2)
+  blend EV>15% odds<=2            47  ROI@open +15.79% (lo -4.8%)  @close +10.06%  void +17.64%  CLV +4.63% | ATP T +53.2%(8) Chall +4.3%(23) WTA T +16.8%(14) Women -8.5%(2)
+  blend EV>5% odds<=5            520  ROI@open +15.28% (lo +7.3%)  @close +3.08%  void +10.06%  CLV +11.61% | ATP T +19.0%(72) Chall +18.0%(325) WTA T +4.9%(119) Women +34.2%(4)
+  blend EV>10% odds<=5           204  ROI@open +17.25% (lo +3.0%)  @close +3.27%  void +12.73%  CLV +11.35% | ATP T +35.1%(31) Chall +14.6%(106) WTA T +12.0%(64) Women +36.0%(3)
+  blend EV>15% odds<=5           117  ROI@open +30.68% (lo +10.6%)  @close +15.71%  void +22.24%  CLV +10.43% | ATP T +53.0%(21) Chall +32.2%(54) WTA T +16.2%(39) Women +36.0%(3)
+
+== best opening price across books: 22127 matches
+  blend EV>5% odds<=2           1829  ROI@open +9.78% (lo +6.9%)  @close +0.07%  void +5.87%  CLV +9.86% | ATP T +13.6%(105) Chall +15.6%(344) Men I +9.0%(566) WTA T +13.1%(161) Women +5.9%(653)
+  blend EV>5% odds<=5           3345  ROI@open +10.56% (lo +7.4%)  @close -2.52%  void +4.99%  CLV +14.03% | ATP T +17.0%(188) Chall +21.0%(607) Men I +5.8%(1092) WTA T +13.5%(264) Women +8.0%(1194)
